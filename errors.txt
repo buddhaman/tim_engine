@@ -1,0 +1,30 @@
+src/main.c: In function ‘main’:
+src/main.c:162:41: warning: pointer targets in initialization of ‘const char * const’ from ‘const unsigned char *’ differ in signedness [-Wpointer-sign]
+  162 |     const char *const solidFragSource = shaders_solid_frag;
+      |                                         ^~~~~~~~~~~~~~~~~~
+src/main.c:163:41: warning: pointer targets in initialization of ‘const char * const’ from ‘const unsigned char *’ differ in signedness [-Wpointer-sign]
+  163 |     const char *const solidVertSource = shaders_solid_vert;
+      |                                         ^~~~~~~~~~~~~~~~~~
+src/main.c:337:13: warning: unused variable ‘menuHeight’ [-Wunused-variable]
+  337 |         r32 menuHeight = 250;
+      |             ^~~~~~~~~~
+src/main.c:336:13: warning: unused variable ‘menuWidth’ [-Wunused-variable]
+  336 |         r32 menuWidth = 330;
+      |             ^~~~~~~~~
+src/main.c:273:13: warning: unused variable ‘camSpeed’ [-Wunused-variable]
+  273 |         r32 camSpeed = 2;
+      |             ^~~~~~~~
+src/main.c:196:9: warning: unused variable ‘aiSpeed’ [-Wunused-variable]
+  196 |     r32 aiSpeed = 1.0;
+      |         ^~~~~~~
+src/main.c:173:9: warning: unused variable ‘vertices’ [-Wunused-variable]
+  173 |     r32 vertices[] = {-tSize, -tSize, 0.0,
+      |         ^~~~~~~~
+In file included from src/main.c:36:
+At top level:
+src/renderer.c:300:1: warning: ‘PushHeightField’ defined but not used [-Wunused-function]
+  300 | PushHeightField(Mesh *mesh, r32 tileSize, int width, int height)
+      | ^~~~~~~~~~~~~~~
+src/renderer.c:293:1: warning: ‘PushFlatField’ defined but not used [-Wunused-function]
+  293 | PushFlatField(Mesh *mesh, r32 width, r32 height)
+      | ^~~~~~~~~~~~~
