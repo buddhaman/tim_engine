@@ -219,12 +219,12 @@ main(int argc, char**argv)
     MemoryArena *renderArena = CreateMemoryArena(128*1000*1000);
 
     Model *groundModel = PushStruct(renderArena, Model);
-    Mesh *groundMesh = CreateMesh(renderArena, 10000);
-    InitModel(renderArena, groundModel,10000);
+    Mesh *groundMesh = CreateMesh(renderArena, 0, 10000);
+    InitModel(renderArena, groundModel, 0, 10000);
 
-    Mesh *dynamicMesh = CreateMesh(renderArena, 100000);
+    Mesh *dynamicMesh = CreateMesh(renderArena, 0, 100000);
     Model *dynamicModel = PushStruct(renderArena, Model);
-    InitModel(renderArena, dynamicModel, 100000);
+    InitModel(renderArena, dynamicModel, 0, 100000);
 
     DebugOut("render arena : %lu / %lu bytes used. %lu procent", 
             renderArena->used, renderArena->size, (renderArena->used*100)/renderArena->size);

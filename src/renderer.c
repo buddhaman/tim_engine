@@ -88,24 +88,29 @@ UpdateCamera(Camera *camera, r32 width, r32 height)
 }
 
 internal void
-InitMesh(MemoryArena *arena, Mesh *mesh, int maxVertices)
+InitMesh(MemoryArena *arena, Mesh *mesh, b32 isTextured, int maxVertices)
 {
+    *mesh = (Mesh){};
     mesh->colorState = vec3(1,1,1);
     mesh->nVertices = 0;
     mesh->maxVertices = maxVertices;
     mesh->vertices = PushArray(arena, Vec3, maxVertices);
     mesh->colors = PushArray(arena, Vec3, maxVertices);
     mesh->normals = PushArray(arena, Vec3, maxVertices);
+    if(isTextured)
+    {
+        mesh->texCoords = PushArray(arena, Vec2, maxVertices);
+    }
     mesh->nIndices = 0;
     mesh->maxIndices = maxVertices;
     mesh->indices = PushArray(arena, ui32, maxVertices);
 }
 
 internal Mesh *
-CreateMesh(MemoryArena *arena, int maxVertices)
+CreateMesh(MemoryArena *arena, b32 isTextured, int maxVertices)
 {
     Mesh *mesh = PushStruct(arena, Mesh);
-    InitMesh(arena, mesh, maxVertices);
+    InitMesh(arena, mesh, isTextured, maxVertices);
     return mesh;
 }
 
@@ -117,7 +122,7 @@ ClearMesh(Mesh *mesh)
 }
 
 internal void
-InitModel(MemoryArena *arena, Model *model, int maxVertices)
+InitModel(MemoryArena *arena, Model *model, b32 isTextured, int maxVertices)
 {
     glGenVertexArrays(1, &model->vao);
     glGenBuffers(1, &model->vbo);
@@ -144,11 +149,31 @@ InitModel(MemoryArena *arena, Model *model, int maxVertices)
             model->stride*sizeof(r32), (void *)(6*sizeof(r32)));
 }
 
-internal void
-SetModelFromMesh(Model *model, Mesh *mesh, GLenum drawMode)
+internal inline void
+InterlaceVerticesTextured(Model *model, Mesh *mesh)
 {
-    model->vertexBufferSize = 0;
-    model->indexBufferSize = 0;
+    for(int vertexIdx = 0;
+            vertexIdx < mesh->nIndices;
+            vertexIdx++)
+    {
+        Vec3 vert = mesh->vertices[vertexIdx];
+        Vec2 tex = mesh->texCoords[vertexIdx];
+        Vec3 norm = mesh->normals[vertexIdx];
+        model->vertexBuffer[model->vertexBufferSize++] = vert.x;
+        model->vertexBuffer[model->vertexBufferSize++] = vert.y;
+        model->vertexBuffer[model->vertexBufferSize++] = vert.z;
+        model->vertexBuffer[model->vertexBufferSize++] = tex.x;
+        model->vertexBuffer[model->vertexBufferSize++] = tex.y;
+        model->vertexBuffer[model->vertexBufferSize++] = norm.x;
+        model->vertexBuffer[model->vertexBufferSize++] = norm.y;
+        model->vertexBuffer[model->vertexBufferSize++] = norm.z;
+        Assert(model->vertexBufferSize < model->maxVertexBufferSize);
+    }
+}
+
+internal inline void
+InterlaceVerticesColored(Model *model, Mesh *mesh)
+{
     for(int vertexIdx = 0;
             vertexIdx < mesh->nIndices;
             vertexIdx++)
@@ -167,7 +192,18 @@ SetModelFromMesh(Model *model, Mesh *mesh, GLenum drawMode)
         model->vertexBuffer[model->vertexBufferSize++] = norm.z;
         Assert(model->vertexBufferSize < model->maxVertexBufferSize);
     }
+}
+
+internal void
+SetModelFromMesh(Model *model, Mesh *mesh, GLenum drawMode)
+{
+    model->vertexBufferSize = 0;
+    model->indexBufferSize = 0;
+
+    InterlaceVerticesColored(model, mesh);
+
     Assert(model->maxIndexBufferSize > mesh->nIndices);
+
     memcpy(model->indexBuffer, mesh->indices, mesh->nIndices*sizeof(ui32));
     glBindVertexArray(model->vao);
     model->indexBufferSize = mesh->nIndices;
@@ -189,6 +225,17 @@ PushVertex(Mesh *mesh, Vec3 pos, Vec3 normal)
     mesh->normals[mesh->nVertices] = normal;
     mesh->nVertices++;
     Assert(mesh->nVertices < mesh->maxIndices);
+}
+
+internal inline void
+PushTexturedVertex(Mesh *mesh, Vec3 pos, Vec3 normal, Vec2 texCoords)
+{
+    mesh->vertices[mesh->nVertices] = pos;
+    mesh->normals[mesh->nVertices] = normal;
+    mesh->texCoords[mesh->nVertices] = texCoords;
+    mesh->nVertices++;
+    Assert(mesh->nVertices < mesh->maxIndices);
+    Assert(!mesh->isTextured);
 }
 
 internal inline void 

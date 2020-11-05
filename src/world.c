@@ -47,9 +47,8 @@ Connect(World *world, Body *body, int idx0, int idx1)
 }
 
 void
-InitPerson(World *world, Body *body, Vec3 pos)
+InitPerson(World *world, Body *body, Vec3 pos, r32 unit)
 {
-    r32 unit = 1;
     AddParticle(world, body, v3_add(pos, vec3(0,0,0)));                     // 0  butt 
     Verlet *head = AddParticle(world, body, v3_add(pos, vec3(0,0,2*unit))); // 1  neck 
     AddParticle(world, body, v3_add(pos, vec3(0,0,2.5*unit)));              // 2  head 
@@ -89,11 +88,11 @@ InitBody(World *world, Body *body)
 }
 
 Body *
-CreateBodyAsPerson(World *world, Vec3 pos)
+CreateBodyAsPerson(World *world, Vec3 pos, r32 unit)
 {
     Body *body = world->bodies + world->nBodies++;
     InitBody(world, body);
-    InitPerson(world, body, pos);
+    InitPerson(world, body, pos, unit);
     return body;
 }
 

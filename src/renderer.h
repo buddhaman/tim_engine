@@ -1,11 +1,13 @@
 typedef struct 
 {
+    b32 isTextured;
     Vec3 colorState;
     int nVertices;
     int maxVertices;
     Vec3 *vertices;
     Vec3 *colors;
     Vec3 *normals;
+    Vec2 *texCoords;
     int nIndices;
     int maxIndices;
     ui32 *indices;
