@@ -15,6 +15,7 @@ typedef struct
 
 typedef struct 
 {
+    b32 isTextured;
     ui32 vao;
     ui32 vbo;
     ui32 ebo;

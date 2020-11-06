@@ -127,6 +127,7 @@ InitModel(MemoryArena *arena, Model *model, b32 isTextured, int maxVertices)
     glGenVertexArrays(1, &model->vao);
     glGenBuffers(1, &model->vbo);
     glGenBuffers(1, &model->ebo);
+    model->isTextured = isTextured;      //TODO: BIG dumb. Replace with attributes.
     model->stride = 9;
     model->vertexBufferSize = 0;
     model->maxVertexBufferSize = maxVertices*model->stride;
@@ -147,28 +148,6 @@ InitModel(MemoryArena *arena, Model *model, b32 isTextured, int maxVertices)
     glEnableVertexAttribArray(2);       // Normals
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 
             model->stride*sizeof(r32), (void *)(6*sizeof(r32)));
-}
-
-internal inline void
-InterlaceVerticesTextured(Model *model, Mesh *mesh)
-{
-    for(int vertexIdx = 0;
-            vertexIdx < mesh->nIndices;
-            vertexIdx++)
-    {
-        Vec3 vert = mesh->vertices[vertexIdx];
-        Vec2 tex = mesh->texCoords[vertexIdx];
-        Vec3 norm = mesh->normals[vertexIdx];
-        model->vertexBuffer[model->vertexBufferSize++] = vert.x;
-        model->vertexBuffer[model->vertexBufferSize++] = vert.y;
-        model->vertexBuffer[model->vertexBufferSize++] = vert.z;
-        model->vertexBuffer[model->vertexBufferSize++] = tex.x;
-        model->vertexBuffer[model->vertexBufferSize++] = tex.y;
-        model->vertexBuffer[model->vertexBufferSize++] = norm.x;
-        model->vertexBuffer[model->vertexBufferSize++] = norm.y;
-        model->vertexBuffer[model->vertexBufferSize++] = norm.z;
-        Assert(model->vertexBufferSize < model->maxVertexBufferSize);
-    }
 }
 
 internal inline void
@@ -232,10 +211,9 @@ PushTexturedVertex(Mesh *mesh, Vec3 pos, Vec3 normal, Vec2 texCoords)
 {
     mesh->vertices[mesh->nVertices] = pos;
     mesh->normals[mesh->nVertices] = normal;
-    mesh->texCoords[mesh->nVertices] = texCoords;
+    mesh->colors[mesh->nVertices] = vec3(texCoords.x, texCoords.y, 0);
     mesh->nVertices++;
     Assert(mesh->nVertices < mesh->maxIndices);
-    Assert(!mesh->isTextured);
 }
 
 internal inline void 
@@ -272,6 +250,26 @@ PushQuad(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3)
     PushVertex(mesh, p1, normal);
     PushVertex(mesh, p2, normal);
     PushVertex(mesh, p3, normal);
+    PushIndex(mesh, nVertices);
+    PushIndex(mesh, nVertices+1);
+    PushIndex(mesh, nVertices+2);
+    PushIndex(mesh, nVertices+2);
+    PushIndex(mesh, nVertices+3);
+    PushIndex(mesh, nVertices);
+}
+
+// Assume in same plane
+internal void
+PushTexturedQuad(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3, Vec2 texCorner, Vec2 texSize)
+{
+    Vec3 diff0 = v3_sub(p1, p0);
+    Vec3 diff1 = v3_sub(p2, p0);
+    Vec3 normal = v3_norm(v3_cross(diff0, diff1));
+    ui32 nVertices = mesh->nVertices;
+    PushTexturedVertex(mesh, p0, normal, texCorner);
+    PushTexturedVertex(mesh, p1, normal, vec2(texCorner.x+texSize.x, texCorner.y));
+    PushTexturedVertex(mesh, p2, normal, vec2(texCorner.x+texSize.x, texCorner.y+texSize.y));
+    PushTexturedVertex(mesh, p3, normal, vec2(texSize.x, texCorner.y+texSize.y));
     PushIndex(mesh, nVertices);
     PushIndex(mesh, nVertices+1);
     PushIndex(mesh, nVertices+2);

@@ -45,10 +45,6 @@ typedef i32 b32;
 #include "shaderVert.h"
 #include "shaderFrag.h"
 
-// stb
-#define STB_DS_IMPLEMENTATION
-#include "stb_ds.h"
-
 #define FRAMES_PER_SECOND 60
 
 const char *
@@ -162,9 +158,30 @@ main(int argc, char**argv)
         DebugOut("Failed to initialize OpenGl Loader!\n");
     }
 
+    // Load bitmaps
+    int width, height, n;
+    unsigned char *image = stbi_load("l.png", &width, &height, &n, 4);
+    DebugOut("Image loaded with %d components per pixel, (%dx%d)", n, width, height);
+#if 0
+    for(int x = 0; x < width; x++)
+    for(int y = 0; y < height; y++)
+    {
+        int idx = x*4+y*4*width;
+        image[idx] = 255;
+        image[idx+1] = 255;
+        image[idx+2] = 255;
+        image[idx+3] = 255;
+    }
+#endif
+
+    ui32 texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+
     // Setup shaders
-    const char *const solidFragSource = (const char *const)shaders_solid_frag;
-    const char *const solidVertSource = (const char *const)shaders_solid_vert;
+    const char *const solidFragSource = ReadEntireFile("shaders/texture.frag");
+    const char *const solidVertSource = ReadEntireFile("shaders/texture.vert");
     
     ui32 fragmentShader = CreateAndCompileShaderSource(&solidFragSource, GL_FRAGMENT_SHADER);
     ui32 vertexShader = CreateAndCompileShaderSource(&solidVertSource, GL_VERTEX_SHADER);
@@ -331,12 +348,20 @@ main(int argc, char**argv)
 
         // Update entire world physics step
         DoPhysicsStep(world);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        PushTexturedQuad(dynamicMesh, vec3(0,0,1), vec3(1,0,1), vec3(1,1,1), vec3(0,1,1),
+                vec2(0,0), vec2(1,1));
 
         // Guys
         UpdateGuys(world);
         DrawGuys(dynamicMesh, world);
 
         // Render dynamic model
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
         SetModelFromMesh(dynamicModel, dynamicMesh, GL_DYNAMIC_DRAW);
         glDisable(GL_CULL_FACE);
         RenderModel(dynamicModel);

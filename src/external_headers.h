@@ -12,3 +12,7 @@
 #include "nuklear_sdl_gl3.h"
 #include "math_3d.h"
 #include "miniaudio.h"
+
+#include "stb_ds.h"
+#include "stb_image.h"
+
