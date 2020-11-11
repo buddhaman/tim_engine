@@ -55,6 +55,34 @@ float perlin2d(float x, float y, float freq, int depth)
     return fin/div;
 }
 
+internal inline int
+GetAttributeSize(VertexAttributeFlag attr)
+{
+    switch(attr)
+    {
+    case ATTR_POS2: { return 2; } break;
+    case ATTR_POS3: { return 3; } break;
+    case ATTR_COL3: { return 3; } break;
+    case ATTR_COL4: { return 4; } break;
+    case ATTR_TEX: { return 2; } break;
+    case ATTR_NORM3: { return 3; } break;
+    default: { return 0; } break;
+    }
+}
+
+internal inline int
+GetStride(ui32 attributes)
+{
+    ui32 attrValue = 1;
+    int stride = 0;
+    for(int i = 0; i < N_ATTRIBUTES; i++)
+    {
+        stride+=GetAttributeSize(attrValue & attributes);
+        attrValue<<=1;
+    }
+    return stride;
+}
+
 internal inline Vec3
 ARGBToVec3(ui32 hex)
 {
@@ -88,29 +116,30 @@ UpdateCamera(Camera *camera, r32 width, r32 height)
 }
 
 internal void
-InitMesh(MemoryArena *arena, Mesh *mesh, b32 isTextured, int maxVertices)
+InitMesh(MemoryArena *arena, Mesh *mesh, ui32 vertexAttributes, int maxVertices)
 {
     *mesh = (Mesh){};
     mesh->colorState = vec3(1,1,1);
     mesh->nVertices = 0;
+    mesh->vertexAttributes = vertexAttributes;
+
+    // TODO: always allocate everything or based on vertexattributes? 
     mesh->maxVertices = maxVertices;
     mesh->vertices = PushArray(arena, Vec3, maxVertices);
     mesh->colors = PushArray(arena, Vec3, maxVertices);
     mesh->normals = PushArray(arena, Vec3, maxVertices);
-    if(isTextured)
-    {
-        mesh->texCoords = PushArray(arena, Vec2, maxVertices);
-    }
+    mesh->texCoords = PushArray(arena, Vec2, maxVertices);
+
     mesh->nIndices = 0;
     mesh->maxIndices = maxVertices;
     mesh->indices = PushArray(arena, ui32, maxVertices);
 }
 
 internal Mesh *
-CreateMesh(MemoryArena *arena, b32 isTextured, int maxVertices)
+CreateMesh(MemoryArena *arena, ui32 vertexAttributes, int maxVertices)
 {
     Mesh *mesh = PushStruct(arena, Mesh);
-    InitMesh(arena, mesh, isTextured, maxVertices);
+    InitMesh(arena, mesh, vertexAttributes, maxVertices);
     return mesh;
 }
 
@@ -122,13 +151,25 @@ ClearMesh(Mesh *mesh)
 }
 
 internal void
-InitModel(MemoryArena *arena, Model *model, b32 isTextured, int maxVertices)
+PrintAttributes(Model *model)
+{
+    for(int aIdx = 0;
+            aIdx < model->nVertexAttributes;
+            aIdx++)
+    {
+        VertexAttribute *attr = model->vertexAttributes+aIdx;
+        DebugOut("flag %u, offset %lu", attr->type, attr->offset);
+    }
+}
+
+internal void
+InitModel(MemoryArena *arena, Model *model, ui32 vertexAttributes, int maxVertices)
 {
     glGenVertexArrays(1, &model->vao);
     glGenBuffers(1, &model->vbo);
     glGenBuffers(1, &model->ebo);
-    model->isTextured = isTextured;      //TODO: BIG dumb. Replace with attributes.
-    model->stride = 9;
+
+    model->stride = GetStride(vertexAttributes);
     model->vertexBufferSize = 0;
     model->maxVertexBufferSize = maxVertices*model->stride;
     model->maxIndexBufferSize = maxVertices;
@@ -139,6 +180,35 @@ InitModel(MemoryArena *arena, Model *model, b32 isTextured, int maxVertices)
 
     glBindVertexArray(model->vao);
     glBindBuffer(GL_ARRAY_BUFFER, model->vbo);
+
+    DebugOut("Now making a model with stride %d", model->stride);
+    ui32 attribute = 1;
+    model->nVertexAttributes = 0;
+    size_t memOffset = 0;
+    for(int attrIdx = 0; 
+            attrIdx < N_ATTRIBUTES; 
+            attrIdx++)
+    {
+        if(attribute & vertexAttributes)
+        {
+            int attributeSize = GetAttributeSize(attribute);
+
+            DebugOut("Enable attribute %u with size %d", attribute, attributeSize);
+            glEnableVertexAttribArray(model->nVertexAttributes);       // Positions
+            glVertexAttribPointer(model->nVertexAttributes, attributeSize, GL_FLOAT, GL_FALSE, 
+                    model->stride*sizeof(r32), (void*)memOffset);
+            memOffset+=attributeSize*sizeof(r32);
+
+            VertexAttribute *attr = model->vertexAttributes+model->nVertexAttributes;
+            attr->type = attribute;
+            attr->offset = memOffset;
+
+            model->nVertexAttributes++;
+        }
+        attribute<<=1;
+    }
+    PrintAttributes(model);
+#if 0
     glEnableVertexAttribArray(0);       // Positions
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 
             model->stride*sizeof(r32), (void *)0);
@@ -148,6 +218,7 @@ InitModel(MemoryArena *arena, Model *model, b32 isTextured, int maxVertices)
     glEnableVertexAttribArray(2);       // Normals
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 
             model->stride*sizeof(r32), (void *)(6*sizeof(r32)));
+#endif
 }
 
 internal inline void
@@ -269,7 +340,7 @@ PushTexturedQuad(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3, Vec2 texCorner,
     PushTexturedVertex(mesh, p0, normal, texCorner);
     PushTexturedVertex(mesh, p1, normal, vec2(texCorner.x+texSize.x, texCorner.y));
     PushTexturedVertex(mesh, p2, normal, vec2(texCorner.x+texSize.x, texCorner.y+texSize.y));
-    PushTexturedVertex(mesh, p3, normal, vec2(texSize.x, texCorner.y+texSize.y));
+    PushTexturedVertex(mesh, p3, normal, vec2(texCorner.x,texCorner.y+texSize.y));
     PushIndex(mesh, nVertices);
     PushIndex(mesh, nVertices+1);
     PushIndex(mesh, nVertices+2);

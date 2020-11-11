@@ -162,17 +162,6 @@ main(int argc, char**argv)
     int width, height, n;
     unsigned char *image = stbi_load("l.png", &width, &height, &n, 4);
     DebugOut("Image loaded with %d components per pixel, (%dx%d)", n, width, height);
-#if 0
-    for(int x = 0; x < width; x++)
-    for(int y = 0; y < height; y++)
-    {
-        int idx = x*4+y*4*width;
-        image[idx] = 255;
-        image[idx+1] = 255;
-        image[idx+2] = 255;
-        image[idx+3] = 255;
-    }
-#endif
 
     ui32 texture;
     glGenTextures(1, &texture);
@@ -225,6 +214,7 @@ main(int argc, char**argv)
     hmput(hash, 12.5, 'l');
     hmput(hash, 22.5, 'l');
     hmput(hash, 22.2, 'o');
+    hmput(hash, 23.2, 'o');
 
     DebugOut("%c - ", hmget(hash, 11.5));
 
@@ -235,19 +225,20 @@ main(int argc, char**argv)
 
     MemoryArena *renderArena = CreateMemoryArena(128*1000*1000);
 
+    ui32 vertexAttributes = ATTR_POS3 | ATTR_COL3 | ATTR_NORM3;
     Model *groundModel = PushStruct(renderArena, Model);
-    Mesh *groundMesh = CreateMesh(renderArena, 0, 10000);
-    InitModel(renderArena, groundModel, 0, 10000);
+    Mesh *groundMesh = CreateMesh(renderArena, vertexAttributes, 100000);
+    InitModel(renderArena, groundModel, vertexAttributes, 100000);
 
-    Mesh *dynamicMesh = CreateMesh(renderArena, 0, 100000);
+    Mesh *dynamicMesh = CreateMesh(renderArena, vertexAttributes, 100000);
     Model *dynamicModel = PushStruct(renderArena, Model);
-    InitModel(renderArena, dynamicModel, 0, 100000);
+    InitModel(renderArena, dynamicModel, vertexAttributes, 100000);
 
     DebugOut("render arena : %lu / %lu bytes used. %lu procent", 
             renderArena->used, renderArena->size, (renderArena->used*100)/renderArena->size);
     ClearMesh(groundMesh);
 
-    PushHeightField(groundMesh, 1, 20, 20);
+    PushHeightField(groundMesh, 0.31, 100, 100);
 
     World *world = PushStruct(renderArena, World);
     InitWorld(renderArena, world, 1000, 1000, 100);

@@ -1,6 +1,23 @@
+#define N_ATTRIBUTES 6
+typedef enum
+{
+    ATTR_POS2       = 1 << 0,
+    ATTR_POS3       = 1 << 1,
+    ATTR_COL3       = 1 << 2,
+    ATTR_COL4       = 1 << 3,
+    ATTR_TEX        = 1 << 4,
+    ATTR_NORM3      = 1 << 5,
+} VertexAttributeFlag;
+
+typedef struct
+{
+    VertexAttributeFlag type;
+    size_t offset;
+} VertexAttribute;
+
 typedef struct 
 {
-    b32 isTextured;
+    ui32 vertexAttributes;
     Vec3 colorState;
     int nVertices;
     int maxVertices;
@@ -15,12 +32,13 @@ typedef struct
 
 typedef struct 
 {
-    b32 isTextured;
     ui32 vao;
     ui32 vbo;
     ui32 ebo;
     int stride;
 
+    int nVertexAttributes;
+    VertexAttribute vertexAttributes[N_ATTRIBUTES];
     int vertexBufferSize;
     int maxVertexBufferSize;
     r32 *vertexBuffer;
@@ -29,7 +47,6 @@ typedef struct
     int maxIndexBufferSize;
     ui32 *indexBuffer;
 } Model;
-
 
 typedef struct
 {
