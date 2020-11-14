@@ -158,7 +158,7 @@ PrintAttributes(Model *model)
             aIdx++)
     {
         VertexAttribute *attr = model->vertexAttributes+aIdx;
-        DebugOut("flag %u, offset %lu", attr->type, attr->offset);
+        DebugOut("flag %u, offset %d", attr->type, attr->offset);
     }
 }
 
@@ -184,6 +184,7 @@ InitModel(MemoryArena *arena, Model *model, ui32 vertexAttributes, int maxVertic
     DebugOut("Now making a model with stride %d", model->stride);
     ui32 attribute = 1;
     model->nVertexAttributes = 0;
+    int offset = 0;
     size_t memOffset = 0;
     for(int attrIdx = 0; 
             attrIdx < N_ATTRIBUTES; 
@@ -197,13 +198,14 @@ InitModel(MemoryArena *arena, Model *model, ui32 vertexAttributes, int maxVertic
             glEnableVertexAttribArray(model->nVertexAttributes);       // Positions
             glVertexAttribPointer(model->nVertexAttributes, attributeSize, GL_FLOAT, GL_FALSE, 
                     model->stride*sizeof(r32), (void*)memOffset);
-            memOffset+=attributeSize*sizeof(r32);
 
             VertexAttribute *attr = model->vertexAttributes+model->nVertexAttributes;
             attr->type = attribute;
-            attr->offset = memOffset;
+            attr->offset = offset;
 
             model->nVertexAttributes++;
+            offset+=attributeSize;
+            memOffset=offset*sizeof(r32);
         }
         attribute<<=1;
     }
@@ -221,43 +223,108 @@ InitModel(MemoryArena *arena, Model *model, ui32 vertexAttributes, int maxVertic
 #endif
 }
 
-internal inline void
-InterlaceVerticesColored(Model *model, Mesh *mesh)
+internal void
+SetVertexBufferValuesFromVec2(size_t nVertices, 
+        size_t offset, 
+        size_t stride,
+        r32 dest[nVertices*stride],
+        Vec2 src[nVertices])
 {
-    for(int vertexIdx = 0;
-            vertexIdx < mesh->nIndices;
-            vertexIdx++)
+    for(int idx = 0;
+            idx < nVertices;
+            idx++)
     {
-        Vec3 vert = mesh->vertices[vertexIdx];
-        Vec3 col = mesh->colors[vertexIdx];
-        Vec3 norm = mesh->normals[vertexIdx];
-        model->vertexBuffer[model->vertexBufferSize++] = vert.x;
-        model->vertexBuffer[model->vertexBufferSize++] = vert.y;
-        model->vertexBuffer[model->vertexBufferSize++] = vert.z;
-        model->vertexBuffer[model->vertexBufferSize++] = col.x;
-        model->vertexBuffer[model->vertexBufferSize++] = col.y;
-        model->vertexBuffer[model->vertexBufferSize++] = col.z;
-        model->vertexBuffer[model->vertexBufferSize++] = norm.x;
-        model->vertexBuffer[model->vertexBufferSize++] = norm.y;
-        model->vertexBuffer[model->vertexBufferSize++] = norm.z;
-        Assert(model->vertexBufferSize < model->maxVertexBufferSize);
+        dest[idx*stride+offset] = src[idx].x;
+        dest[idx*stride+offset+1] = src[idx].y;
     }
 }
 
 internal void
+SetVertexBufferValuesFromVec3(size_t nVertices, 
+        size_t offset, 
+        size_t stride,
+        r32 dest[nVertices*stride],
+        Vec3 src[nVertices])
+{
+    for(int idx = 0;
+            idx < nVertices;
+            idx++)
+    {
+        dest[idx*stride+offset] = src[idx].x;
+        dest[idx*stride+offset+1] = src[idx].y;
+        dest[idx*stride+offset+2] = src[idx].z;
+    }
+}
+
+
+internal void
 SetModelFromMesh(Model *model, Mesh *mesh, GLenum drawMode)
 {
-    model->vertexBufferSize = 0;
-    model->indexBufferSize = 0;
+    model->vertexBufferSize = model->stride*mesh->nVertices;
+    model->indexBufferSize = mesh->nIndices;
 
-    InterlaceVerticesColored(model, mesh);
+    // InterlaceVerticesColored(model, mesh);
+    // Go over every attribute and place it into the vertex buffer
 
+    for(int vertexAttributeIdx = 0;
+            vertexAttributeIdx < model->nVertexAttributes;
+            vertexAttributeIdx++)
+    {
+        VertexAttribute attribute = model->vertexAttributes[vertexAttributeIdx];
+        size_t offset = attribute.offset;
+        size_t stride = model->stride;
+        size_t nVertices = mesh->nVertices;
+        switch(attribute.type)
+        {
+
+        case ATTR_POS3:
+        {
+            SetVertexBufferValuesFromVec3(nVertices, 
+                    offset, 
+                    stride, 
+                    model->vertexBuffer,
+                    mesh->vertices);
+        } break;
+
+        case ATTR_TEX:
+        {
+            SetVertexBufferValuesFromVec2(nVertices, 
+                    offset, 
+                    stride, 
+                    model->vertexBuffer,
+                    mesh->texCoords);
+        } break;
+
+        case ATTR_COL3:
+        {
+            SetVertexBufferValuesFromVec3(nVertices, 
+                    offset, 
+                    stride, 
+                    model->vertexBuffer,
+                    mesh->colors);
+        } break;
+
+        case ATTR_NORM3:
+        {
+            SetVertexBufferValuesFromVec3(nVertices, 
+                    offset,
+                    stride, 
+                    model->vertexBuffer,
+                    mesh->normals);
+        } break;
+
+        default:
+        {
+            DebugOut("Attribute with flag %d not implemented", attribute.type);
+        } break;
+
+        }
+    }
     Assert(model->maxIndexBufferSize > mesh->nIndices);
 
     memcpy(model->indexBuffer, mesh->indices, mesh->nIndices*sizeof(ui32));
-    glBindVertexArray(model->vao);
-    model->indexBufferSize = mesh->nIndices;
 
+    glBindVertexArray(model->vao);
     glBindBuffer(GL_ARRAY_BUFFER, model->vbo);
     glBufferData(GL_ARRAY_BUFFER, model->vertexBufferSize*sizeof(r32), 
             model->vertexBuffer, drawMode);
@@ -283,6 +350,7 @@ PushTexturedVertex(Mesh *mesh, Vec3 pos, Vec3 normal, Vec2 texCoords)
     mesh->vertices[mesh->nVertices] = pos;
     mesh->normals[mesh->nVertices] = normal;
     mesh->colors[mesh->nVertices] = vec3(texCoords.x, texCoords.y, 0);
+    mesh->texCoords[mesh->nVertices] = texCoords;
     mesh->nVertices++;
     Assert(mesh->nVertices < mesh->maxIndices);
 }

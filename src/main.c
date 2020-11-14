@@ -225,7 +225,7 @@ main(int argc, char**argv)
 
     MemoryArena *renderArena = CreateMemoryArena(128*1000*1000);
 
-    ui32 vertexAttributes = ATTR_POS3 | ATTR_COL3 | ATTR_NORM3;
+    ui32 vertexAttributes = ATTR_POS3 | ATTR_TEX | ATTR_NORM3;
     Model *groundModel = PushStruct(renderArena, Model);
     Mesh *groundMesh = CreateMesh(renderArena, vertexAttributes, 100000);
     InitModel(renderArena, groundModel, vertexAttributes, 100000);

@@ -12,7 +12,7 @@ typedef enum
 typedef struct
 {
     VertexAttributeFlag type;
-    size_t offset;
+    int offset;
 } VertexAttribute;
 
 typedef struct 
