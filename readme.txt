@@ -7,16 +7,24 @@ Cool.
 
 TODO:
 
+- Make texture atlas.
+- Efficient circle drawing (using masks & textures).
+- Make font spritesheet.
+- Make font renderer.
+
 - Make walking guy
 - Give guy sword
 - Offscreen rendering.
 - 2d spritebatch.
 - Mouse picking.
 - Shadow mapping
-- Texturing
 - In game text
-- Efficient circle drawing (using masks & textures)
-- automatic texture generation
+- Automatic texture generation
 
+DONE:
 
-
+- Texturing
+- Quick shader reloading
+- Write shader struct
+- Fix memory leak with shader reloading
+- Make 2d spritebatch.

@@ -55,6 +55,86 @@ float perlin2d(float x, float y, float freq, int depth)
     return fin/div;
 }
 
+ui32
+CreateAndCompileShaderSource(char *source, GLenum shaderType)
+{
+    const char *const* src = (const char *const *)&source;
+    ui32 shader = glCreateShader(shaderType);
+    glShaderSource(shader, 1, src, NULL);
+    glCompileShader(shader);
+    i32 succes;
+    char infolog[512];
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &succes);
+    if(!succes)
+    {
+        glGetShaderInfoLog(shader, 512, NULL, infolog);
+        printf("%s\n", infolog);
+        glDeleteShader(shader);
+    }
+    else
+    {
+        DebugOut("Shader %u compiled succesfully.", shader);
+    }
+    return shader;
+}
+
+ui32 
+CreateAndLinkShaderProgram(ui32 vertexShader, ui32 fragmentShader)
+{
+    ui32 shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    i32 succes;
+    char infolog[512];
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &succes);
+    if(!succes)
+    {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infolog);
+        DebugOut("%s", infolog);
+        glDetachShader(shaderProgram, vertexShader);
+        glDetachShader(shaderProgram, fragmentShader);
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+        glDeleteProgram(shaderProgram);
+    }
+    else
+    {
+        DebugOut("Shader program %u linked succesfully. Cleaning up.", shaderProgram);
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+    }
+    return shaderProgram;
+}
+
+void
+InitShader(Shader *shader, const char *vertexPath, const char *fragmentPath)
+{
+    shader->fragmentSourcePath = malloc(sizeof(strlen(fragmentPath)));
+    shader->vertexSourcePath = malloc(sizeof(strlen(vertexPath)));
+    strcpy(shader->fragmentSourcePath, fragmentPath);
+    strcpy(shader->vertexSourcePath, vertexPath);
+}
+
+void
+LoadShader(Shader *shader)
+{
+    shader->fragmentSource = ReadEntireFile(shader->fragmentSourcePath);
+    shader->vertexSource = ReadEntireFile(shader->vertexSourcePath);
+
+    ui32 fragmentShader = CreateAndCompileShaderSource(shader->fragmentSource, GL_FRAGMENT_SHADER);
+    ui32 vertexShader = CreateAndCompileShaderSource(shader->vertexSource, GL_VERTEX_SHADER);
+    shader->program = CreateAndLinkShaderProgram(fragmentShader, vertexShader);
+}
+
+void
+UnloadShader(Shader *shader)
+{
+    glDeleteProgram(shader->program);
+    free(shader->fragmentSource);
+    free(shader->vertexSource);
+}
+
 internal inline int
 GetAttributeSize(VertexAttributeFlag attr)
 {
@@ -125,6 +205,7 @@ InitMesh(MemoryArena *arena, Mesh *mesh, ui32 vertexAttributes, int maxVertices)
 
     // TODO: always allocate everything or based on vertexattributes? 
     mesh->maxVertices = maxVertices;
+    mesh->vertices2 = PushArray(arena, Vec2, maxVertices);
     mesh->vertices = PushArray(arena, Vec3, maxVertices);
     mesh->colors = PushArray(arena, Vec3, maxVertices);
     mesh->normals = PushArray(arena, Vec3, maxVertices);
@@ -256,7 +337,6 @@ SetVertexBufferValuesFromVec3(size_t nVertices,
     }
 }
 
-
 internal void
 SetModelFromMesh(Model *model, Mesh *mesh, GLenum drawMode)
 {
@@ -276,6 +356,15 @@ SetModelFromMesh(Model *model, Mesh *mesh, GLenum drawMode)
         size_t nVertices = mesh->nVertices;
         switch(attribute.type)
         {
+
+        case ATTR_POS2:
+        {
+            SetVertexBufferValuesFromVec2(nVertices, 
+                    offset, 
+                    stride, 
+                    model->vertexBuffer,
+                    mesh->vertices2);
+        } break;
 
         case ATTR_POS3:
         {
@@ -352,14 +441,14 @@ PushTexturedVertex(Mesh *mesh, Vec3 pos, Vec3 normal, Vec2 texCoords)
     mesh->colors[mesh->nVertices] = vec3(texCoords.x, texCoords.y, 0);
     mesh->texCoords[mesh->nVertices] = texCoords;
     mesh->nVertices++;
-    Assert(mesh->nVertices < mesh->maxIndices);
+    Assert(mesh->nVertices < mesh->maxVertices);
 }
 
 internal inline void 
 PushIndex(Mesh *mesh, ui32 index)
 {
     mesh->indices[mesh->nIndices++] = index;
-    Assert(mesh->nIndices < mesh->maxVertices);
+    Assert(mesh->nIndices < mesh->maxIndices);
 }
 
 internal void
@@ -395,6 +484,43 @@ PushQuad(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3)
     PushIndex(mesh, nVertices+2);
     PushIndex(mesh, nVertices+3);
     PushIndex(mesh, nVertices);
+}
+
+internal inline void
+PushVertex2(Mesh *mesh, Vec2 vert, Vec2 texCoord)
+{
+    mesh->vertices2[mesh->nVertices] = vert;
+    mesh->texCoords[mesh->nVertices] = texCoord;
+    mesh->nVertices++;
+    Assert(mesh->nVertices <= mesh->maxVertices);
+}
+
+void
+PushQuad2(Mesh *mesh, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, Vec2 texSize)
+{
+    ui32 nVertices = mesh->nVertices;
+    PushVertex2(mesh, p0, texOrig);
+    PushVertex2(mesh, p1, vec2(texOrig.x+texSize.x, texOrig.y));
+    PushVertex2(mesh, p2, vec2(texOrig.x+texSize.x, texOrig.y+texSize.y));
+    PushVertex2(mesh, p3, vec2(texOrig.x, texOrig.y+texSize.y));
+    PushIndex(mesh, nVertices);
+    PushIndex(mesh, nVertices+1);
+    PushIndex(mesh, nVertices+2);
+    PushIndex(mesh, nVertices+2);
+    PushIndex(mesh, nVertices+3);
+    PushIndex(mesh, nVertices);
+}
+
+void
+PushRect2(Mesh *mesh, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
+{
+    PushQuad2(mesh, 
+            orig, 
+            vec2(orig.x+size.x, orig.y), 
+            vec2(orig.x+size.x, orig.y+size.y),
+            vec2(orig.x, orig.y+size.y),
+            texOrig, 
+            texSize);
 }
 
 // Assume in same plane
@@ -480,11 +606,11 @@ PushHeightField(Mesh *mesh, r32 tileSize, int width, int height)
     local_persist r32 yOffset = 0;
     xOffset+=0.05;
     yOffset+=0.07;
-    r32 xScale = 0.25;
-    r32 yScale = 0.25;
+    r32 xScale = 0.125;
+    r32 yScale = 0.125;
     Vec3 positions[(width)*(height)];
     mesh->colorState = ARGBToVec3(0xffffffff);
-    r32 depth = 2;
+    r32 depth = 3;
     for(int y = 0; y < height; y++)
     for(int x = 0; x < width; x++)
     {

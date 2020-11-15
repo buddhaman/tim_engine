@@ -37,3 +37,9 @@ IsKeyActionDown(AppState *appState, KeyAction action)
 {
     return appState->isActionDown[action];
 }
+
+b32
+IsKeyActionJustDown(AppState *appState, KeyAction action)
+{
+    return appState->isActionDown[action] && !appState->wasActionDown[action];
+}

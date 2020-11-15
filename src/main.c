@@ -18,6 +18,16 @@ typedef short i16;
 typedef int i32;
 typedef long i64;
 
+// Special file
+#include "math_2d.h"
+
+// User defined typedefs
+typedef vec2_t Vec2;
+typedef vec3_t Vec3;
+typedef vec4_t Vec4;
+typedef mat4_t Mat4;
+typedef mat3_t Mat3;
+
 typedef float r32;
 typedef double r64;
 
@@ -26,29 +36,8 @@ typedef i32 b32;
 #define MAX_VERTEX_MEMORY 512*1024
 #define MAX_ELEMENT_MEMORY 128*1024
 
-// Own files
-#include "cool_memory.h"
-#include "app_state.h"
-#include "renderer.h"
-#include "world.h"
-#include "world_renderer.h"
-#include "guy.h"
-
-#include "cool_memory.c"
-#include "app_state.c"
-#include "renderer.c"
-#include "world.c"
-#include "world_renderer.c"
-#include "guy.c"
-
-// shaders
-#include "shaderVert.h"
-#include "shaderFrag.h"
-
-#define FRAMES_PER_SECOND 60
-
-const char *
-ReadEntireFile(char *path)
+char *
+ReadEntireFile(const char *path)
 {
     char *buffer = NULL;
     size_t stringSize, readSize;
@@ -77,48 +66,29 @@ ReadEntireFile(char *path)
     }
 }
 
-ui32
-CreateAndCompileShaderSource(const char * const*source, GLenum shaderType)
-{
-    ui32 shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, source, NULL);
-    glCompileShader(shader);
-    i32 succes;
-    char infolog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &succes);
-    if(!succes)
-    {
-        glGetShaderInfoLog(shader, 512, NULL, infolog);
-        DebugOut("%s", infolog);
-    }
-    else
-    {
-        DebugOut("Shader %u compiled succesfully.", shader);
-    }
-    return shader;
-}
 
-ui32 
-CreateAndLinkShaderProgram(ui32 vertexShader, ui32 fragmentShader)
-{
-    ui32 shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    i32 succes;
-    char infolog[512];
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &succes);
-    if(!succes)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infolog);
-        DebugOut("%s", infolog);
-    }
-    else
-    {
-        DebugOut("Shader program %u linked succesfully.", shaderProgram);
-    }
-    return shaderProgram;
-}
+// Own files
+#include "cool_memory.h"
+#include "app_state.h"
+#include "renderer.h"
+#include "spritebatch.h"
+#include "world.h"
+#include "world_renderer.h"
+#include "guy.h"
+
+#include "cool_memory.c"
+#include "app_state.c"
+#include "renderer.c"
+#include "spritebatch.c"
+#include "world.c"
+#include "world_renderer.c"
+#include "guy.c"
+
+// shaders
+#include "shaderVert.h"
+#include "shaderFrag.h"
+
+#define FRAMES_PER_SECOND 60
 
 int 
 main(int argc, char**argv)
@@ -158,6 +128,14 @@ main(int argc, char**argv)
         DebugOut("Failed to initialize OpenGl Loader!\n");
     }
 
+    Vec2 v2 = vec2(1,0);
+
+    Mat3 mat = m3_translation(vec2(2,3));
+    Vec2 v3 = m3_mul_pos(mat, v2);
+
+    m3_fprintp(stdout, mat, 2, 2);
+    DebugOut("v3 = %f, %f", v3.x, v3.y);
+
     // Load bitmaps
     int width, height, n;
     unsigned char *image = stbi_load("l.png", &width, &height, &n, 4);
@@ -169,15 +147,17 @@ main(int argc, char**argv)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
     // Setup shaders
-    const char *const solidFragSource = ReadEntireFile("shaders/texture.frag");
-    const char *const solidVertSource = ReadEntireFile("shaders/texture.vert");
+    Shader simpleShader;
+    InitShader(&simpleShader, "shaders/texture.vert", "shaders/texture.frag");
+    LoadShader(&simpleShader);
     
-    ui32 fragmentShader = CreateAndCompileShaderSource(&solidFragSource, GL_FRAGMENT_SHADER);
-    ui32 vertexShader = CreateAndCompileShaderSource(&solidVertSource, GL_VERTEX_SHADER);
-    ui32 simpleShader = CreateAndLinkShaderProgram(fragmentShader, vertexShader);
+    ui32 transformLocation = glGetUniformLocation(simpleShader.program, "transform");
+    ui32 lightDirLocation = glGetUniformLocation(simpleShader.program, "lightDir");
 
-    ui32 transformLocation = glGetUniformLocation(simpleShader, "transform");
-    ui32 lightDirLocation = glGetUniformLocation(simpleShader, "lightDir");
+    Shader spriteShader;
+    InitShader(&spriteShader, "shaders/sprite.vert", "shaders/sprite.frag");
+    LoadShader(&spriteShader);
+    ui32 spriteTransformLocation = glGetUniformLocation(spriteShader.program, "transform");
 
     // Setup nuklear
     struct nk_context *ctx;
@@ -233,6 +213,12 @@ main(int argc, char**argv)
     Mesh *dynamicMesh = CreateMesh(renderArena, vertexAttributes, 100000);
     Model *dynamicModel = PushStruct(renderArena, Model);
     InitModel(renderArena, dynamicModel, vertexAttributes, 100000);
+
+    ui32 spriteAttributes = ATTR_POS2 | ATTR_TEX;
+    int spriteBatchSize = 10000;
+    Mesh *spriteMesh = CreateMesh(renderArena, spriteAttributes, spriteBatchSize);
+    Model *spriteModel = PushStruct(renderArena, Model);
+    InitModel(renderArena, spriteModel, spriteAttributes, spriteBatchSize);
 
     DebugOut("render arena : %lu / %lu bytes used. %lu procent", 
             renderArena->used, renderArena->size, (renderArena->used*100)/renderArena->size);
@@ -301,7 +287,6 @@ main(int argc, char**argv)
         Vec3 lightDir = v3_norm(vec3(-1,1,-1));
         
         // Update Camera
-        glUseProgram(simpleShader);
         r32 camSpeed = 0.2;
         r32 zoomSpeed = 0.99;
         if(IsKeyActionDown(appState, ACTION_Z)) { camera.spherical.z*=zoomSpeed; }
@@ -320,9 +305,14 @@ main(int argc, char**argv)
             camera.spherical.y+=0.1;
             if(camera.spherical.y > M_PI/2-0.1) camera.spherical.y = M_PI/2-0.1;
         }
-        if(IsKeyActionDown(appState, ACTION_R))
+        if(IsKeyActionJustDown(appState, ACTION_R))
         {
+            UnloadShader(&simpleShader);
+            LoadShader(&simpleShader);
+            UnloadShader(&spriteShader);
+            LoadShader(&spriteShader);
         }
+        glUseProgram(simpleShader.program);
         // Update loop pos
         UpdateCamera(&camera, appState->screenWidth, appState->screenHeight);
 
@@ -357,6 +347,23 @@ main(int argc, char**argv)
         glDisable(GL_CULL_FACE);
         RenderModel(dynamicModel);
         ClearMesh(dynamicMesh);
+
+        // Render spritebatch
+        glDisable(GL_DEPTH_TEST);
+        local_persist r32 xo = 0.0;
+        local_persist r32 yo = 0.0;
+        xo=sinf(time)*0.3;
+        yo=cosf(time)*0.3;
+        Mat3 t3 = m3_translation(vec2(xo , yo));
+
+        glUseProgram(spriteShader.program);
+        glUniformMatrix3fv(spriteTransformLocation, 1, GL_FALSE, (GLfloat*)&t3);
+
+        PushRect2(spriteMesh, vec2(0,0), vec2(0.5,0.5), vec2(0,0), vec2(1,1));
+
+        SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);
+        RenderModel(spriteModel);
+        ClearMesh(spriteMesh);
 
         nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
 

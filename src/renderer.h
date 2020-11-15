@@ -21,6 +21,7 @@ typedef struct
     Vec3 colorState;
     int nVertices;
     int maxVertices;
+    Vec2 *vertices2;
     Vec3 *vertices;
     Vec3 *colors;
     Vec3 *normals;
@@ -47,6 +48,17 @@ typedef struct
     int maxIndexBufferSize;
     ui32 *indexBuffer;
 } Model;
+
+typedef struct
+{
+    ui32 program;
+
+    char *fragmentSourcePath;
+    char *fragmentSource;
+
+    char *vertexSourcePath;
+    char *vertexSource;
+} Shader;
 
 typedef struct
 {

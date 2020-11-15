@@ -169,12 +169,6 @@ typedef union {
 	};
 } mat4_t;
 
-// User defined typedefs
-typedef vec2_t Vec2;
-typedef vec3_t Vec3;
-typedef vec4_t Vec4;
-typedef mat4_t Mat4;
-
 static inline mat4_t mat4(
 	float m00, float m10, float m20, float m30,
 	float m01, float m11, float m21, float m31,
