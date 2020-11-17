@@ -499,10 +499,10 @@ void
 PushQuad2(Mesh *mesh, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, Vec2 texSize)
 {
     ui32 nVertices = mesh->nVertices;
-    PushVertex2(mesh, p0, texOrig);
-    PushVertex2(mesh, p1, vec2(texOrig.x+texSize.x, texOrig.y));
-    PushVertex2(mesh, p2, vec2(texOrig.x+texSize.x, texOrig.y+texSize.y));
-    PushVertex2(mesh, p3, vec2(texOrig.x, texOrig.y+texSize.y));
+    PushVertex2(mesh, p0, vec2(texOrig.x, texOrig.y+texSize.y));
+    PushVertex2(mesh, p1, vec2(texOrig.x+texSize.x, texOrig.y+texSize.y));
+    PushVertex2(mesh, p2, vec2(texOrig.x+texSize.x, texOrig.y));
+    PushVertex2(mesh, p3, texOrig);
     PushIndex(mesh, nVertices);
     PushIndex(mesh, nVertices+1);
     PushIndex(mesh, nVertices+2);

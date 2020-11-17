@@ -70,6 +70,7 @@ ReadEntireFile(const char *path)
 // Own files
 #include "cool_memory.h"
 #include "app_state.h"
+#include "texture_atlas.h"
 #include "renderer.h"
 #include "spritebatch.h"
 #include "world.h"
@@ -78,6 +79,7 @@ ReadEntireFile(const char *path)
 
 #include "cool_memory.c"
 #include "app_state.c"
+#include "texture_atlas.c"
 #include "renderer.c"
 #include "spritebatch.c"
 #include "world.c"
@@ -127,6 +129,20 @@ main(int argc, char**argv)
     {
         DebugOut("Failed to initialize OpenGl Loader!\n");
     }
+
+    // stb image
+    unsigned char *ttf_buffer = malloc(1<<20);
+    unsigned char *tmp_bitmap = malloc(512*512);
+    stbtt_bakedchar cdata[96];
+    size_t size = fread(ttf_buffer, 1, 1<<20, fopen("DejaVuSansMono.ttf", "rb"));
+    DebugOut("size = %zu", size);
+    stbtt_BakeFontBitmap(ttf_buffer, 0, 32.0, tmp_bitmap, 512, 512, 32, 96, cdata);
+    ui32 fontTexture;
+    glGenTextures(1, &fontTexture);
+    glBindTexture(GL_TEXTURE_2D, fontTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 512, 512, 0, GL_RED, GL_UNSIGNED_BYTE, tmp_bitmap);
+    //free(ttf_buffer);
+    //free(tmp_bitmap);
 
     Vec2 v2 = vec2(1,0);
 
@@ -181,9 +197,7 @@ main(int argc, char**argv)
 
     // Array test
     int *array = NULL;
-    arrput(array, 2);
-    arrput(array, 3);
-    for(int i = 0; i < arrlen(array); i++)
+    arrput(array, 2); arrput(array, 3); for(int i = 0; i < arrlen(array); i++)
     {
         DebugOut("%d", array[i]);
     }
@@ -350,6 +364,9 @@ main(int argc, char**argv)
 
         // Render spritebatch
         glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBindTexture(GL_TEXTURE_2D, fontTexture);
         local_persist r32 xo = 0.0;
         local_persist r32 yo = 0.0;
         xo=sinf(time)*0.3;
@@ -359,7 +376,22 @@ main(int argc, char**argv)
         glUseProgram(spriteShader.program);
         glUniformMatrix3fv(spriteTransformLocation, 1, GL_FALSE, (GLfloat*)&t3);
 
-        PushRect2(spriteMesh, vec2(0,0), vec2(0.5,0.5), vec2(0,0), vec2(1,1));
+        //glBindTexture(GL_TEXTURE_2D, fontTexture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        stbtt_aligned_quad q;
+        r32 x, y;
+        local_persist int textIdx = 32;
+        if(textIdx++ > 90)
+        {
+            textIdx = 32;
+        }
+
+        stbtt_GetBakedQuad(cdata, 512, 512, textIdx, &x, &y, &q, 1);
+
+        PushRect2(spriteMesh, vec2(0,0), vec2(0.5,0.5), vec2(q.s0, q.t0), vec2(q.s1-q.s0, q.t1-q.t0));
 
         SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);
         RenderModel(spriteModel);
