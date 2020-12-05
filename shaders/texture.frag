@@ -10,18 +10,17 @@ uniform sampler2D texture0;
 void main()
 {
     float diffuse = 0.4;
-    vec4 texColorA = texture(texture0, textureCoords);
-    if(texColorA.a < 0.1)
+    vec4 texColor = texture(texture0, textureCoords);
+    if(texColor.a < 0.1)
     {
         discard;
     }
-    vec3 texColor = texColorA.rgb;
-    vec3 col = color.xyz*texColor; 
+    vec4 col = texColor*color;
     vec3 lightDir = vec3(-1, -1, -1);
     lightDir = normalize(lightDir);
     float dp = abs(-dot(normal, lightDir));
     float lightFactor = diffuse * (1.0-dp) + dp;
     //lightFactor = 1.0;
-    FragColor = vec4(lightFactor*col, 1.0);
+    FragColor = vec4(lightFactor*col.xyz, col.a);
 }
 

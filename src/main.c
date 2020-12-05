@@ -255,6 +255,7 @@ main(int argc, char**argv)
         guy->orientation = RandomFloat(-M_PI, M_PI);
     }
 
+    b32 paused = 0;
     while(!done)
     {
         SDL_Event event;
@@ -311,7 +312,7 @@ main(int argc, char**argv)
         Vec3 lightDir = v3_norm(vec3(-1,1,-1));
         
         // Update Camera
-        r32 camSpeed = 0.2;
+        r32 camSpeed = 0.6;
         r32 zoomSpeed = 0.99;
         if(IsKeyActionDown(appState, ACTION_Z)) { camera.spherical.z*=zoomSpeed; }
         if(IsKeyActionDown(appState, ACTION_X)) { camera.spherical.z/=zoomSpeed; }
@@ -328,6 +329,10 @@ main(int argc, char**argv)
         {
             camera.spherical.y+=0.1;
             if(camera.spherical.y > M_PI/2-0.1) camera.spherical.y = M_PI/2-0.1;
+        }
+        if(IsKeyActionJustDown(appState, ACTION_P))
+        {
+            paused = !paused;
         }
         if(IsKeyActionJustDown(appState, ACTION_R))
         {
@@ -352,7 +357,11 @@ main(int argc, char**argv)
         RenderModel(groundModel);
 
         // Update entire world physics step
-        DoPhysicsStep(world);
+        if(!paused)
+        {
+            DoPhysicsStep(world);
+            UpdateGuys(world);
+        }
 
         glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
         glEnable(GL_BLEND);
@@ -361,7 +370,6 @@ main(int argc, char**argv)
                 vec2(0,0), vec2(1,1));
 
         // Guys
-        UpdateGuys(world);
         DrawGuys(dynamicMesh, world, squareRegion->pos, squareRegion->size, circleRegion->pos,
                 circleRegion->size);
 

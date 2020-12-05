@@ -66,8 +66,9 @@ InitPerson(World *world, Body *body, Vec3 pos, r32 unit)
     AddParticle(world, body, v3_add(pos, vec3(unit,0,0)));                  // 9  right knee
     AddParticle(world, body, v3_add(pos, vec3(unit*2,0,0)));                // 10 right foot
 
-    Connect(world, body, 0, 1);
+    // Not visible
     Connect(world, body, 1, 2);
+    Connect(world, body, 0, 1);
 
     Connect(world, body, 1, 3);
     Connect(world, body, 3, 4);

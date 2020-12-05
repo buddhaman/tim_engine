@@ -10,6 +10,7 @@ typedef enum
     ACTION_Q,
     ACTION_E,
     ACTION_R,
+    ACTION_P, 
     NUM_KEY_ACTIONS
 } KeyAction;
 

@@ -20,6 +20,8 @@ Now:
 - In game text.
 - Automatic texture generation.
 - Combine font and other textures into one atlas
+- Second texture for drawing effect.
+- Structure rendering/input files and make reuseable as libraries.
 
 DONE:
 

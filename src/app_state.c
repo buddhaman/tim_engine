@@ -12,6 +12,7 @@ MapKeyCodeToAction(SDL_Keycode code)
         case SDLK_e: { return ACTION_E; } break;
         case SDLK_q: { return ACTION_Q; } break;
         case SDLK_r: { return ACTION_R; } break;
+        case SDLK_p: { return ACTION_P; } break;
         case SDLK_UP: { return ACTION_UP; } break;
         case SDLK_DOWN: { return ACTION_DOWN; } break;
         case SDLK_LEFT: { return ACTION_LEFT; } break;

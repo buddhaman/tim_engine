@@ -33,10 +33,10 @@ UpdateGuys(World *world)
         guy->pos.y+=s*speed;
 
         // put feet on ground and apply impulse to head. Pretend ground is at 0
-        Vec3 lFootPos = v3_add(guy->pos, vec3(-1,0,0));
-        Vec3 rFootPos = v3_add(guy->pos, vec3(1,0,0));
+        Vec3 lFootPos = v3_add(guy->pos, vec3(-s,c,0));
+        Vec3 rFootPos = v3_add(guy->pos, vec3(s,-c,0));
         guy->lFoot->pos = lFootPos;
         guy->rFoot->pos = rFootPos;
-        AddImpulse(guy->head, vec3(0,0,0.01));
+        AddImpulse(guy->head, vec3(0,0,0.1));
     }
 }
