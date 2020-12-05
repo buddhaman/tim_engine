@@ -1,6 +1,11 @@
 void
 InitWorld(MemoryArena *arena, World *world, int maxParticles, int maxConstraints, int maxBodies)
 {
+    world->time = 0;
+
+    world->width = 100.0;
+    world->height = 100.0;
+
     world->maxParticles = maxParticles;
     world->nParticles = 0;
     world->particles = PushArray(arena, Verlet, maxParticles);
@@ -99,6 +104,7 @@ CreateBodyAsPerson(World *world, Vec3 pos, r32 unit)
 void
 DoPhysicsStep(World *world)
 {
+    world->time+=1.0/60;
     for(int particleIdx = 0; 
             particleIdx < world->nParticles;
             particleIdx++)

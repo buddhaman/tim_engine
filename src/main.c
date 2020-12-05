@@ -222,7 +222,7 @@ main(int argc, char**argv)
     AtlasRegion *circleRegion = atlas->regions;
     AtlasRegion *squareRegion = atlas->regions+1;
 
-    ui32 vertexAttributes = ATTR_POS3 | ATTR_COL3 | ATTR_TEX | ATTR_NORM3;
+    ui32 vertexAttributes = ATTR_POS3 | ATTR_COL4 | ATTR_TEX | ATTR_NORM3;
     Model *groundModel = PushStruct(renderArena, Model);
     Mesh *groundMesh = CreateMesh(renderArena, vertexAttributes, 100000);
     InitModel(renderArena, groundModel, vertexAttributes, 100000);
@@ -231,7 +231,7 @@ main(int argc, char**argv)
     Model *dynamicModel = PushStruct(renderArena, Model);
     InitModel(renderArena, dynamicModel, vertexAttributes, 100000);
 
-    ui32 spriteAttributes = ATTR_POS2 | ATTR_TEX;
+    ui32 spriteAttributes = ATTR_POS2 | ATTR_COL4 | ATTR_TEX;
     int spriteBatchSize = 10000;
     Mesh *spriteMesh = CreateMesh(renderArena, spriteAttributes, spriteBatchSize);
     Model *spriteModel = PushStruct(renderArena, Model);
@@ -241,12 +241,19 @@ main(int argc, char**argv)
             renderArena->used, renderArena->size, (renderArena->used*100)/renderArena->size);
     ClearMesh(groundMesh);
 
-    PushHeightField(groundMesh, 0.31, 100, 100, squareRegion->pos, squareRegion->size);
-
     World *world = PushStruct(renderArena, World);
     InitWorld(renderArena, world, 1000, 1000, 100);
 
-    AddGuy(world, vec3(0,0,0));
+    groundMesh->colorState=vec4(0,1,0,1);
+    PushQuad(groundMesh, vec3(0,0,0), vec3(world->width, 0, 0),
+            vec3(world->width, world->height, 0), vec3(0, world->height, 0),
+                squareRegion->pos, squareRegion->size);
+
+    for(int i = 0; i < 20; i++)
+    {
+        Guy *guy = AddGuy(world, vec3(world->width/2,world->height/2,0));
+        guy->orientation = RandomFloat(-M_PI, M_PI);
+    }
 
     while(!done)
     {
@@ -295,7 +302,7 @@ main(int argc, char**argv)
         SetModelFromMesh(groundModel, groundMesh, GL_STREAM_DRAW);
 
         // Clear screen
-        Vec3 clearColor = ARGBToVec3(0xffe0fffe);
+        Vec4 clearColor = ARGBToVec4(0xffe0fffe);
         glClearColor(clearColor.x, clearColor.y, clearColor.z, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, appState->screenWidth, appState->screenHeight);
@@ -383,6 +390,7 @@ main(int argc, char**argv)
         if(RandomFloat(0, 1) < 0.1) counter++;
         if(counter >= l) counter = 0;
         str[counter] = 0;
+        spriteMesh->colorState = vec4(1.0, 0,0,.4);
         DrawString2D(spriteMesh, &fontRenderer, vec2(100, 100), str);
         //DrawString2D(spriteMesh, &fontRenderer, vec2(-xo, -yo), "What is this game?");
         SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);

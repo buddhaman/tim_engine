@@ -3,10 +3,9 @@ typedef enum
 {
     ATTR_POS2       = 1 << 0,
     ATTR_POS3       = 1 << 1,
-    ATTR_COL3       = 1 << 2,
-    ATTR_COL4       = 1 << 3,
-    ATTR_TEX        = 1 << 4,
-    ATTR_NORM3      = 1 << 5,
+    ATTR_COL4       = 1 << 2,
+    ATTR_TEX        = 1 << 3,
+    ATTR_NORM3      = 1 << 4,
 } VertexAttributeFlag;
 
 typedef struct
@@ -18,12 +17,12 @@ typedef struct
 typedef struct 
 {
     ui32 vertexAttributes;
-    Vec3 colorState;
+    Vec4 colorState;
     int nVertices;
     int maxVertices;
     Vec2 *vertices2;
     Vec3 *vertices;
-    Vec3 *colors;
+    Vec4 *colors;
     Vec3 *normals;
     Vec2 *texCoords;
     int nIndices;

@@ -142,7 +142,6 @@ GetAttributeSize(VertexAttributeFlag attr)
     {
     case ATTR_POS2: { return 2; } break;
     case ATTR_POS3: { return 3; } break;
-    case ATTR_COL3: { return 3; } break;
     case ATTR_COL4: { return 4; } break;
     case ATTR_TEX: { return 2; } break;
     case ATTR_NORM3: { return 3; } break;
@@ -163,10 +162,11 @@ GetStride(ui32 attributes)
     return stride;
 }
 
-internal inline Vec3
-ARGBToVec3(ui32 hex)
+internal inline Vec4
+ARGBToVec4(ui32 hex)
 {
-    return vec3( (hex >> 16 & 255)/255.0f,
+    return vec4( (hex >> 24 & 255)/255.0f,
+            (hex >> 16 & 255)/255.0f,
             (hex >> 8 & 255)/255.0f,
             (hex & 255)/255.0f);
 }
@@ -199,7 +199,7 @@ internal void
 InitMesh(MemoryArena *arena, Mesh *mesh, ui32 vertexAttributes, int maxVertices)
 {
     *mesh = (Mesh){};
-    mesh->colorState = vec3(1,1,1);
+    mesh->colorState = vec4(1,1,1,1);
     mesh->nVertices = 0;
     mesh->vertexAttributes = vertexAttributes;
 
@@ -207,7 +207,7 @@ InitMesh(MemoryArena *arena, Mesh *mesh, ui32 vertexAttributes, int maxVertices)
     mesh->maxVertices = maxVertices;
     mesh->vertices2 = PushArray(arena, Vec2, maxVertices);
     mesh->vertices = PushArray(arena, Vec3, maxVertices);
-    mesh->colors = PushArray(arena, Vec3, maxVertices);
+    mesh->colors = PushArray(arena, Vec4, maxVertices);
     mesh->normals = PushArray(arena, Vec3, maxVertices);
     mesh->texCoords = PushArray(arena, Vec2, maxVertices);
 
@@ -338,6 +338,25 @@ SetVertexBufferValuesFromVec3(size_t nVertices,
 }
 
 internal void
+SetVertexBufferValuesFromVec4(size_t nVertices, 
+        size_t offset, 
+        size_t stride,
+        r32 dest[nVertices*stride],
+        Vec4 src[nVertices])
+{
+    for(int idx = 0;
+            idx < nVertices;
+            idx++)
+    {
+        dest[idx*stride+offset] = src[idx].x;
+        dest[idx*stride+offset+1] = src[idx].y;
+        dest[idx*stride+offset+2] = src[idx].z;
+        dest[idx*stride+offset+3] = src[idx].w;
+    }
+}
+
+
+internal void
 SetModelFromMesh(Model *model, Mesh *mesh, GLenum drawMode)
 {
     model->vertexBufferSize = model->stride*mesh->nVertices;
@@ -384,9 +403,9 @@ SetModelFromMesh(Model *model, Mesh *mesh, GLenum drawMode)
                     mesh->texCoords);
         } break;
 
-        case ATTR_COL3:
+        case ATTR_COL4:
         {
-            SetVertexBufferValuesFromVec3(nVertices, 
+            SetVertexBufferValuesFromVec4(nVertices, 
                     offset, 
                     stride, 
                     model->vertexBuffer,
@@ -476,7 +495,7 @@ PushQuad(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3, Vec2 texCoord, Vec2 tex
     PushIndex(mesh, nVertices);
 }
 
-// Assumer normal and up are normalized
+// Assume normal and up are normalized
 internal void
 PushRect3(Mesh *mesh, Vec3 center, Vec2 size, Vec3 normal, Vec3 up, Vec2 texCoord, Vec2 texSize)
 {
@@ -494,6 +513,7 @@ PushVertex2(Mesh *mesh, Vec2 vert, Vec2 texCoord)
 {
     mesh->vertices2[mesh->nVertices] = vert;
     mesh->texCoords[mesh->nVertices] = texCoord;
+    mesh->colors[mesh->nVertices] = mesh->colorState;
     mesh->nVertices++;
     Assert(mesh->nVertices <= mesh->maxVertices);
 }
@@ -589,7 +609,7 @@ lerp(Vec3 from, Vec3 to, r32 lambda)
     return v3_add(v3_muls(from, 1.0-lambda), v3_muls(to, lambda));
 }
 
-internal void
+void
 PushHeightField(Mesh *mesh, r32 tileSize, int width, int height, Vec2 texCoord, Vec2 texSize)
 {
     local_persist r32 xOffset = 0;
@@ -599,7 +619,7 @@ PushHeightField(Mesh *mesh, r32 tileSize, int width, int height, Vec2 texCoord, 
     r32 xScale = 0.125;
     r32 yScale = 0.125;
     Vec3 positions[(width)*(height)];
-    mesh->colorState = ARGBToVec3(0xffffffff);
+    mesh->colorState = ARGBToVec4(0xffffffff);
     r32 depth = 3;
     for(int y = 0; y < height; y++)
     for(int x = 0; x < width; x++)
@@ -645,6 +665,21 @@ PushCube(Mesh *mesh, Vec3 origin, Vec3 dimensions, Vec2 texCoord, Vec2 texSize)
     PushQuad(mesh, p100, p110, p111, p101, texCoord, texSize);
     PushQuad(mesh, p000, p100, p101, p001, texCoord, texSize);
     PushQuad(mesh, p011, p111, p110, p010, texCoord, texSize);
+}
+
+internal void
+PushLineArrow(Mesh *mesh, Vec3 from, Vec3 to, Vec3 norm, Vec2 texCoord, Vec2 texSize, r32 lineWidth)
+{
+    Vec3 diff = v3_norm((v3_sub(to, from)));
+    Vec3 perp = v3_cross(diff, norm);           
+    r32 angle = -M_PI/2 + 0.5;
+    r32 c = cosf(angle);
+    r32 s = sinf(angle);
+    Vec3 head0 = v3_add(to, v3_add(v3_muls(perp, c), v3_muls(diff, s)));
+    Vec3 head1 = v3_add(to, v3_add(v3_muls(perp, -c), v3_muls(diff, s)));
+    PushLine(mesh, from, to, lineWidth, norm, texCoord, texSize);
+    PushLine(mesh, to, head0, lineWidth, norm, texCoord, texSize);
+    PushLine(mesh, to, head1, lineWidth, norm, texCoord, texSize);
 }
 
 internal void

@@ -2,7 +2,7 @@
 
 in vec2 textureCoords;
 in vec3 normal;
-in vec3 color;
+in vec4 color;
 
 out vec4 FragColor;
 uniform sampler2D texture0;
@@ -16,10 +16,10 @@ void main()
         discard;
     }
     vec3 texColor = texColorA.rgb;
-    vec3 col = color*texColor + vec3(diffuse, diffuse, diffuse);
+    vec3 col = color.xyz*texColor; 
     vec3 lightDir = vec3(-1, -1, -1);
     lightDir = normalize(lightDir);
-    float dp = max(-dot(normal, lightDir), 0);
+    float dp = abs(-dot(normal, lightDir));
     float lightFactor = diffuse * (1.0-dp) + dp;
     //lightFactor = 1.0;
     FragColor = vec4(lightFactor*col, 1.0);

@@ -4,7 +4,7 @@
 typedef struct
 {
     Vec3 pos;
-    r32 rotation;
+    r32 orientation;
     r32 unit;
     Body *body;
 

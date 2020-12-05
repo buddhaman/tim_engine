@@ -7,11 +7,12 @@ Cool.
 
 Now:
 
-- Draw guys with circular head.
 - Draw guy direction and collision circle.
-- Make 3d shader render (2D) textures by default.
-
 - Make walking guy.
+- Ai
+- Video
+- Make 2d alpha.
+
 - Give guy sword.
 - Offscreen rendering.
 - Mouse picking.
@@ -22,6 +23,8 @@ Now:
 
 DONE:
 
+- Make 3d shader render (2D) textures by default.
+- Draw guys with circular head.
 - Texturing
 -texture(texture0, textureCoords).xyz; Quick shader reloading
 - Write shader struct

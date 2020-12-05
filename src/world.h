@@ -25,6 +25,10 @@ typedef struct
 
 typedef struct
 {
+    r32 time;
+    r32 width;
+    r32 height;
+
     Verlet *particles;
     int maxParticles;
     int nParticles;

@@ -24,13 +24,19 @@ UpdateGuys(World *world)
             guyIdx++)
     {
         Guy *guy = world->guys + guyIdx;
+
+        guy->orientation += RandomFloat(-0.1, 0.1);
+        r32 c = cosf(guy->orientation);
+        r32 s = sinf(guy->orientation);
+        r32 speed = 0.08;
+        guy->pos.x+=c*speed;
+        guy->pos.y+=s*speed;
+
         // put feet on ground and apply impulse to head. Pretend ground is at 0
         Vec3 lFootPos = v3_add(guy->pos, vec3(-1,0,0));
         Vec3 rFootPos = v3_add(guy->pos, vec3(1,0,0));
         guy->lFoot->pos = lFootPos;
         guy->rFoot->pos = rFootPos;
-        AddImpulse(guy->head, vec3(0,0,0.2));
-        guy->pos.x+=0.05;
-        guy->pos.y+=0.05;
+        AddImpulse(guy->head, vec3(0,0,0.01));
     }
 }
