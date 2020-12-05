@@ -68,4 +68,12 @@ typedef struct
     Mat4 transform;
 } Camera;
 
+typedef struct
+{
+    stbtt_packedchar charData12[128];
+    stbtt_packedchar charData32[128];
+    ui32 font12Texture;
+    int textureWidth;
+    int textureHeight;
+} FontRenderer;
 

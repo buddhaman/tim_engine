@@ -1,7 +1,7 @@
 #include "external_headers.h"
 #include <time.h>
 
-#define DebugOut(args...) printf(args); printf("\t\t %s:%d\n", __FILE__, __LINE__)
+#define DebugOut(args...) printf("%20s%5d: ", __FILE__, __LINE__); printf(args); printf("\n");
 #define Assert(expr) if(!(expr)) {DebugOut("assert failed "#expr""); \
     *((int *)0)=0;}
 
@@ -130,19 +130,8 @@ main(int argc, char**argv)
         DebugOut("Failed to initialize OpenGl Loader!\n");
     }
 
-    // stb image
-    unsigned char *ttf_buffer = malloc(1<<20);
-    unsigned char *tmp_bitmap = malloc(512*512);
-    stbtt_bakedchar cdata[96];
-    size_t size = fread(ttf_buffer, 1, 1<<20, fopen("DejaVuSansMono.ttf", "rb"));
-    DebugOut("size = %zu", size);
-    stbtt_BakeFontBitmap(ttf_buffer, 0, 32.0, tmp_bitmap, 512, 512, 32, 96, cdata);
-    ui32 fontTexture;
-    glGenTextures(1, &fontTexture);
-    glBindTexture(GL_TEXTURE_2D, fontTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 512, 512, 0, GL_RED, GL_UNSIGNED_BYTE, tmp_bitmap);
-    //free(ttf_buffer);
-    //free(tmp_bitmap);
+    FontRenderer fontRenderer;
+    InitFontRenderer(&fontRenderer, "cool.ttf");
 
     Vec2 v2 = vec2(1,0);
 
@@ -159,8 +148,13 @@ main(int argc, char**argv)
 
     ui32 texture;
     glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Setup shaders
     Shader simpleShader;
@@ -178,9 +172,12 @@ main(int argc, char**argv)
     // Setup nuklear
     struct nk_context *ctx;
     ctx = nk_sdl_init(window);
+    // TODO: Check if this is necessary for nuklear
+#if 0
     struct nk_font_atlas *atlas;
     nk_sdl_font_stash_begin(&atlas);
     nk_sdl_font_stash_end();
+#endif
 
     // Creating appstate
     AppState *appState = (AppState *)malloc(sizeof(AppState));
@@ -197,7 +194,9 @@ main(int argc, char**argv)
 
     // Array test
     int *array = NULL;
-    arrput(array, 2); arrput(array, 3); for(int i = 0; i < arrlen(array); i++)
+    arrput(array, 2); 
+    arrput(array, 3); 
+    for(int i = 0; i < arrlen(array); i++)
     {
         DebugOut("%d", array[i]);
     }
@@ -219,7 +218,11 @@ main(int argc, char**argv)
 
     MemoryArena *renderArena = CreateMemoryArena(128*1000*1000);
 
-    ui32 vertexAttributes = ATTR_POS3 | ATTR_TEX | ATTR_NORM3;
+    TextureAtlas *atlas = MakeDefaultTexture(renderArena, 512);
+    AtlasRegion *circleRegion = atlas->regions;
+    AtlasRegion *squareRegion = atlas->regions+1;
+
+    ui32 vertexAttributes = ATTR_POS3 | ATTR_COL3 | ATTR_TEX | ATTR_NORM3;
     Model *groundModel = PushStruct(renderArena, Model);
     Mesh *groundMesh = CreateMesh(renderArena, vertexAttributes, 100000);
     InitModel(renderArena, groundModel, vertexAttributes, 100000);
@@ -238,7 +241,7 @@ main(int argc, char**argv)
             renderArena->used, renderArena->size, (renderArena->used*100)/renderArena->size);
     ClearMesh(groundMesh);
 
-    PushHeightField(groundMesh, 0.31, 100, 100);
+    PushHeightField(groundMesh, 0.31, 100, 100, squareRegion->pos, squareRegion->size);
 
     World *world = PushStruct(renderArena, World);
     InitWorld(renderArena, world, 1000, 1000, 100);
@@ -343,19 +346,17 @@ main(int argc, char**argv)
 
         // Update entire world physics step
         DoPhysicsStep(world);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        PushTexturedQuad(dynamicMesh, vec3(0,0,1), vec3(1,0,1), vec3(1,1,1), vec3(0,1,1),
+
+        glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        PushQuad(dynamicMesh, vec3(0,0,1), vec3(1,0,1), vec3(1,1,1), vec3(0,1,1),
                 vec2(0,0), vec2(1,1));
 
         // Guys
         UpdateGuys(world);
-        DrawGuys(dynamicMesh, world);
-
-        // Render dynamic model
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        DrawGuys(dynamicMesh, world, squareRegion->pos, squareRegion->size, circleRegion->pos,
+                circleRegion->size);
 
         SetModelFromMesh(dynamicModel, dynamicMesh, GL_DYNAMIC_DRAW);
         glDisable(GL_CULL_FACE);
@@ -366,36 +367,36 @@ main(int argc, char**argv)
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBindTexture(GL_TEXTURE_2D, fontTexture);
-        local_persist r32 xo = 0.0;
-        local_persist r32 yo = 0.0;
-        xo=sinf(time)*0.3;
-        yo=cosf(time)*0.3;
-        Mat3 t3 = m3_translation(vec2(xo , yo));
+
+        glBindTexture(GL_TEXTURE_2D, fontRenderer.font12Texture);
+        Mat3 t3 = m3_translation_and_scale(vec2(-appState->screenWidth/2, -appState->screenHeight/2),
+                2.0/appState->screenWidth, -2.0/appState->screenHeight);
 
         glUseProgram(spriteShader.program);
         glUniformMatrix3fv(spriteTransformLocation, 1, GL_FALSE, (GLfloat*)&t3);
 
-        //glBindTexture(GL_TEXTURE_2D, fontTexture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        stbtt_aligned_quad q;
-        r32 x, y;
-        local_persist int textIdx = 32;
-        if(textIdx++ > 90)
-        {
-            textIdx = 32;
-        }
-
-        stbtt_GetBakedQuad(cdata, 512, 512, textIdx, &x, &y, &q, 1);
-
-        PushRect2(spriteMesh, vec2(0,0), vec2(0.5,0.5), vec2(q.s0, q.t0), vec2(q.s1-q.s0, q.t1-q.t0));
-
+        ClearMesh(spriteMesh);
+        char str[256];
+        strcpy(str, "Welcome 2 tims engine R u Happy with d Resultt?!! :DDDDDD");
+        int l = strlen(str);
+        local_persist ui8 counter = 0;
+        if(RandomFloat(0, 1) < 0.1) counter++;
+        if(counter >= l) counter = 0;
+        str[counter] = 0;
+        DrawString2D(spriteMesh, &fontRenderer, vec2(100, 100), str);
+        //DrawString2D(spriteMesh, &fontRenderer, vec2(-xo, -yo), "What is this game?");
         SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);
         RenderModel(spriteModel);
+
+        // Draw rest of spritebatch
         ClearMesh(spriteMesh);
+        PushRect2(spriteMesh, vec2(200, 209), 
+                vec2(200+sinf(time)*100, 200+sinf(time)*100), vec2(0,0), vec2(1, 1));
+        PushRect2(spriteMesh, vec2(400, 209), 
+                vec2(200+sinf(time)*100, 200+sinf(time)*100), vec2(0,0), vec2(1, 1));
+        SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);
+        glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
+        RenderModel(spriteModel);
 
         nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
 

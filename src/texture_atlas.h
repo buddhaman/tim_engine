@@ -11,6 +11,7 @@ typedef struct
 
 typedef struct
 {
+    ui32 textureHandle;
     int maxRegions;
     int nRegions;
     AtlasRegion *regions;

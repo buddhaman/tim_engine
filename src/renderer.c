@@ -424,24 +424,14 @@ SetModelFromMesh(Model *model, Mesh *mesh, GLenum drawMode)
 }
 
 internal inline void
-PushVertex(Mesh *mesh, Vec3 pos, Vec3 normal)
+PushVertex(Mesh *mesh, Vec3 pos, Vec3 normal, Vec2 texCoord)
 {
     mesh->vertices[mesh->nVertices] = pos;
     mesh->colors[mesh->nVertices] = mesh->colorState;
     mesh->normals[mesh->nVertices] = normal;
+    mesh->texCoords[mesh->nVertices] = texCoord;
     mesh->nVertices++;
     Assert(mesh->nVertices < mesh->maxIndices);
-}
-
-internal inline void
-PushTexturedVertex(Mesh *mesh, Vec3 pos, Vec3 normal, Vec2 texCoords)
-{
-    mesh->vertices[mesh->nVertices] = pos;
-    mesh->normals[mesh->nVertices] = normal;
-    mesh->colors[mesh->nVertices] = vec3(texCoords.x, texCoords.y, 0);
-    mesh->texCoords[mesh->nVertices] = texCoords;
-    mesh->nVertices++;
-    Assert(mesh->nVertices < mesh->maxVertices);
 }
 
 internal inline void 
@@ -452,15 +442,15 @@ PushIndex(Mesh *mesh, ui32 index)
 }
 
 internal void
-PushTriangle(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2)
+PushTriangle(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec2 u0, Vec2 u1, Vec2 u2)
 {
     Vec3 diff0 = v3_sub(p1, p0);
     Vec3 diff1 = v3_sub(p2, p0);
     Vec3 normal = v3_norm(v3_cross(diff0, diff1));
     ui32 nVertices = mesh->nVertices;
-    PushVertex(mesh, p0, normal);
-    PushVertex(mesh, p1, normal);
-    PushVertex(mesh, p2, normal);
+    PushVertex(mesh, p0, normal, u0);
+    PushVertex(mesh, p1, normal, u1);
+    PushVertex(mesh, p2, normal, u2);
     PushIndex(mesh, nVertices);
     PushIndex(mesh, nVertices+1);
     PushIndex(mesh, nVertices+2);
@@ -468,22 +458,35 @@ PushTriangle(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2)
 
 // Assume in same plane
 internal void
-PushQuad(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3)
+PushQuad(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3, Vec2 texCoord, Vec2 texSize)
 {
     Vec3 diff0 = v3_sub(p1, p0);
     Vec3 diff1 = v3_sub(p2, p0);
     Vec3 normal = v3_norm(v3_cross(diff0, diff1));
     ui32 nVertices = mesh->nVertices;
-    PushVertex(mesh, p0, normal);
-    PushVertex(mesh, p1, normal);
-    PushVertex(mesh, p2, normal);
-    PushVertex(mesh, p3, normal);
+    PushVertex(mesh, p0, normal, texCoord);
+    PushVertex(mesh, p1, normal, vec2(texCoord.x+texSize.x, texCoord.y));
+    PushVertex(mesh, p2, normal, vec2(texCoord.x+texSize.x, texCoord.y+texSize.y));
+    PushVertex(mesh, p3, normal, vec2(texCoord.x, texCoord.y+texSize.y));
     PushIndex(mesh, nVertices);
     PushIndex(mesh, nVertices+1);
     PushIndex(mesh, nVertices+2);
     PushIndex(mesh, nVertices+2);
     PushIndex(mesh, nVertices+3);
     PushIndex(mesh, nVertices);
+}
+
+// Assumer normal and up are normalized
+internal void
+PushRect3(Mesh *mesh, Vec3 center, Vec2 size, Vec3 normal, Vec3 up, Vec2 texCoord, Vec2 texSize)
+{
+    Vec3 vX = v3_muls(v3_norm(v3_cross(normal, up)), size.x/2.0);
+    Vec3 vY = v3_muls(v3_norm(v3_cross(vX, normal)), size.y/2.0);
+    Vec3 p0 = v3_sub(v3_sub(center, vY), vX);
+    Vec3 p1 = v3_add(v3_sub(center, vY), vX);
+    Vec3 p2 = v3_add(v3_add(center, vY), vX);
+    Vec3 p3 = v3_sub(v3_add(center, vY), vX);
+    PushQuad(mesh, p0, p1, p2, p3, texCoord, texSize);
 }
 
 internal inline void
@@ -523,28 +526,15 @@ PushRect2(Mesh *mesh, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
             texSize);
 }
 
-// Assume in same plane
-internal void
-PushTexturedQuad(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3, Vec2 texCorner, Vec2 texSize)
-{
-    Vec3 diff0 = v3_sub(p1, p0);
-    Vec3 diff1 = v3_sub(p2, p0);
-    Vec3 normal = v3_norm(v3_cross(diff0, diff1));
-    ui32 nVertices = mesh->nVertices;
-    PushTexturedVertex(mesh, p0, normal, texCorner);
-    PushTexturedVertex(mesh, p1, normal, vec2(texCorner.x+texSize.x, texCorner.y));
-    PushTexturedVertex(mesh, p2, normal, vec2(texCorner.x+texSize.x, texCorner.y+texSize.y));
-    PushTexturedVertex(mesh, p3, normal, vec2(texCorner.x,texCorner.y+texSize.y));
-    PushIndex(mesh, nVertices);
-    PushIndex(mesh, nVertices+1);
-    PushIndex(mesh, nVertices+2);
-    PushIndex(mesh, nVertices+2);
-    PushIndex(mesh, nVertices+3);
-    PushIndex(mesh, nVertices);
-}
-
 internal inline void
-PushTrapezoid(Mesh *mesh, Vec3 from, Vec3 to, r32 fromWidth, r32 toWidth, Vec3 normal)
+PushTrapezoid(Mesh *mesh, 
+        Vec3 from, 
+        Vec3 to, 
+        r32 fromWidth, 
+        r32 toWidth, 
+        Vec3 normal, 
+        Vec2 texCoord, 
+        Vec2 texSize)
 {
     Vec3 diff = v3_sub(to, from);
     Vec3 perp = v3_cross(diff, normal);
@@ -552,10 +542,10 @@ PushTrapezoid(Mesh *mesh, Vec3 from, Vec3 to, r32 fromWidth, r32 toWidth, Vec3 n
     Vec3 perp0 = v3_muls(perp, fromWidth/2);
     Vec3 perp1 = v3_muls(perp, toWidth/2);
     ui32 nVertices = mesh->nVertices;
-    PushVertex(mesh, v3_add(from, v3_muls(perp0,-1)), normal);
-    PushVertex(mesh, v3_add(from, perp0), normal);
-    PushVertex(mesh, v3_add(to, perp1), normal);
-    PushVertex(mesh, v3_add(to, v3_muls(perp1, -1)), normal);
+    PushVertex(mesh, v3_add(from, v3_muls(perp0,-1)), normal, texCoord);
+    PushVertex(mesh, v3_add(from, perp0), normal, vec2(texCoord.x+texSize.x, texCoord.y));
+    PushVertex(mesh, v3_add(to, perp1), normal, vec2(texCoord.x+texSize.x, texCoord.y+texSize.y));
+    PushVertex(mesh, v3_add(to, v3_muls(perp1, -1)), normal, vec2(texCoord.x, texCoord.y+texSize.y));
     PushIndex(mesh, nVertices);
     PushIndex(mesh, nVertices+1);
     PushIndex(mesh, nVertices+2);
@@ -565,13 +555,13 @@ PushTrapezoid(Mesh *mesh, Vec3 from, Vec3 to, r32 fromWidth, r32 toWidth, Vec3 n
 }
 
 internal inline void 
-PushLine(Mesh *mesh, Vec3 from, Vec3 to,  r32 width, Vec3 normal)
+PushLine(Mesh *mesh, Vec3 from, Vec3 to,  r32 width, Vec3 normal, Vec2 texCoord, Vec2 texSize)
 {
-    PushTrapezoid(mesh, from, to, width, width, normal);
+    PushTrapezoid(mesh, from, to, width, width, normal, texCoord, texSize);
 }
 
 internal inline void
-PushLineCircle(Mesh *mesh, Vec3 center, r32 radius, int nPoints, r32 lineWidth)
+PushLineCircle(Mesh *mesh, Vec3 center, r32 radius, int nPoints, r32 lineWidth, Vec2 texCoord, Vec2 texSize)
 {
     Vec3 prev = vec3(center.x+radius, center.y, center.z);
     for(int point = 0;
@@ -582,7 +572,7 @@ PushLineCircle(Mesh *mesh, Vec3 center, r32 radius, int nPoints, r32 lineWidth)
         r32 c = cosf(angle);
         r32 s = sinf(angle);
         Vec3 p = v3_add(center, vec3(c*radius, s*radius, 0));
-        PushLine(mesh, prev, p, lineWidth, vec3(0,0,1));
+        PushLine(mesh, prev, p, lineWidth, vec3(0,0,1), texCoord, texSize);
         prev = p;
     }
 }
@@ -600,7 +590,7 @@ lerp(Vec3 from, Vec3 to, r32 lambda)
 }
 
 internal void
-PushHeightField(Mesh *mesh, r32 tileSize, int width, int height)
+PushHeightField(Mesh *mesh, r32 tileSize, int width, int height, Vec2 texCoord, Vec2 texSize)
 {
     local_persist r32 xOffset = 0;
     local_persist r32 yOffset = 0;
@@ -628,13 +618,15 @@ PushHeightField(Mesh *mesh, r32 tileSize, int width, int height)
         Vec3 p1 = positions[x+1+y*width];
         Vec3 p2 = positions[x+1+(y+1)*width];
         Vec3 p3 = positions[x+(y+1)*width];
-        PushTriangle(mesh, p0, p1, p2);
-        PushTriangle(mesh, p2, p3, p0);
+        PushTriangle(mesh, p0, p1, p2, texCoord, 
+                vec2(texCoord.x + texSize.x, texCoord.y), vec2(texCoord.x+texSize.x, texCoord.y+texSize.y));
+        PushTriangle(mesh, p2, p3, p0, vec2(texCoord.x+texSize.x, texCoord.y+texSize.y),
+                vec2(texCoord.x, texCoord.y+texSize.y), texCoord);
     }
 }
 
 internal inline void
-PushCube(Mesh *mesh, Vec3 origin, Vec3 dimensions)
+PushCube(Mesh *mesh, Vec3 origin, Vec3 dimensions, Vec2 texCoord, Vec2 texSize)
 {
     r32 x = dimensions.x;
     r32 y = dimensions.y;
@@ -647,37 +639,12 @@ PushCube(Mesh *mesh, Vec3 origin, Vec3 dimensions)
     Vec3 p101 = v3_add(origin, vec3(x, 0, z));
     Vec3 p110 = v3_add(origin, vec3(x, y, 0));
     Vec3 p111 = v3_add(origin, vec3(x, y, z));
-    PushQuad(mesh, p010, p110, p100, p000);
-    PushQuad(mesh, p001, p011, p010, p000);
-    PushQuad(mesh, p001, p101, p111, p011); 
-    PushQuad(mesh, p100, p110, p111, p101);
-    PushQuad(mesh, p000, p100, p101, p001);
-    PushQuad(mesh, p011, p111, p110, p010);
-}
-
-internal inline void
-PushCactus(Mesh *mesh, Vec3 pos, r32 scale)
-{
-    mesh->colorState = vec3(0,1,0);
-    Vec3 dims = vec3(scale, scale, scale*5);
-    r32 leftArmZ = RandomFloat(0.5, 0.8)*dims.z;
-    r32 rightArmZ = RandomFloat(0.5, 0.8)*dims.z;
-    r32 leftArmWidth = RandomFloat(scale*2, scale*3);
-    r32 rightArmWidth = RandomFloat(scale*2, scale*3);
-    r32 armDepthMin = scale*2;
-    r32 armDepthMax = scale*3;
-    r32 armScale = 2*scale/3;
-    PushCube(mesh, vec3(pos.x-leftArmWidth, pos.y-armScale/2, leftArmZ-armScale/2),
-            vec3(leftArmWidth, armScale, armScale));
-    PushCube(mesh, vec3(pos.x-leftArmWidth, pos.y-armScale/2, leftArmZ-armScale/2),
-            vec3(armScale, armScale,  RandomFloat(armDepthMin, armDepthMax)));
-
-    PushCube(mesh, vec3(pos.x, pos.y-armScale/2, rightArmZ-armScale/2),
-            vec3(rightArmWidth, armScale, armScale));
-    PushCube(mesh, vec3(pos.x+rightArmWidth, pos.y-armScale/2, rightArmZ-armScale/2),
-            vec3(armScale, armScale,  RandomFloat(armDepthMin, armDepthMax)));
-
-    PushCube(mesh, vec3(pos.x-dims.x/2, pos.y-dims.y/2, pos.z), dims);
+    PushQuad(mesh, p010, p110, p100, p000, texCoord, texSize);
+    PushQuad(mesh, p001, p011, p010, p000, texCoord, texSize);
+    PushQuad(mesh, p001, p101, p111, p011, texCoord, texSize);
+    PushQuad(mesh, p100, p110, p111, p101, texCoord, texSize);
+    PushQuad(mesh, p000, p100, p101, p001, texCoord, texSize);
+    PushQuad(mesh, p011, p111, p110, p010, texCoord, texSize);
 }
 
 internal void
@@ -685,5 +652,69 @@ RenderModel(Model *model)
 {
     glBindVertexArray(model->vao);
     glDrawElements(GL_TRIANGLES, model->indexBufferSize, GL_UNSIGNED_INT, 0);
+}
+
+void
+InitFontRenderer(FontRenderer *fontRenderer, const char *pathToFont)
+{
+    fontRenderer->textureWidth = 512;
+    fontRenderer->textureHeight = 512;
+    stbtt_pack_context packContext;
+    stbtt_pack_range range = {};
+    ui8 *ttfBuffer = malloc(1<<20);
+    ui8 *tmpBitmap = malloc(fontRenderer->textureWidth*fontRenderer->textureHeight);
+    ui8 *fontTextureImage = malloc(sizeof(ui32)*fontRenderer->textureWidth*fontRenderer->textureHeight);
+
+    fread(ttfBuffer, 1, 1<<20, fopen(pathToFont, "rb"));
+
+    range.font_size = 64.0;
+    range.first_unicode_codepoint_in_range = 32;
+    range.num_chars = 95;
+    range.chardata_for_range = fontRenderer->charData12;
+
+    stbtt_PackBegin(&packContext, tmpBitmap, fontRenderer->textureWidth, fontRenderer->textureHeight, 0, 1, NULL);
+    stbtt_PackSetOversampling(&packContext, 1, 1);
+    stbtt_PackFontRanges(&packContext, ttfBuffer, 0, &range, 1);
+    stbtt_PackEnd(&packContext);
+
+    // Turn bitmap into rgba image
+    ui32 imageSize = fontRenderer->textureWidth*fontRenderer->textureHeight;
+    for(int idx = 0; idx < imageSize; idx++)
+    {
+        fontTextureImage[idx*4+0] = 255;
+        fontTextureImage[idx*4+1] = 255;
+        fontTextureImage[idx*4+2] = 255;
+        fontTextureImage[idx*4+3] = tmpBitmap[idx];
+    }
+
+    glGenTextures(1, &fontRenderer->font12Texture);
+    glBindTexture(GL_TEXTURE_2D, fontRenderer->font12Texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 
+            fontRenderer->textureWidth, fontRenderer->textureHeight, 
+            0, GL_RGBA, GL_UNSIGNED_BYTE, fontTextureImage);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    free(ttfBuffer);
+    free(tmpBitmap);
+    free(fontTextureImage);
+}
+
+void
+DrawString2D(Mesh *mesh, FontRenderer *fontRenderer, Vec2 pos, char *sequence)
+{
+    stbtt_aligned_quad q;
+    r32 x = pos.x;
+    r32 y = pos.y;
+
+    while(*sequence)
+    {
+        stbtt_GetPackedQuad(fontRenderer->charData12, 512, 512, *sequence-32, &x, &y, &q, 0);
+        PushRect2(mesh, vec2(q.x0, q.y0), vec2(q.x1-q.x0, q.y1-q.y0), 
+                vec2(q.s0, q.t1), vec2(q.s1-q.s0, q.t0-q.t1));
+        sequence++;
+    }
 }
 
