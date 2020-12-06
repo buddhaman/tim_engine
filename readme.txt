@@ -7,21 +7,22 @@ Cool.
 
 Now:
 
-- Draw guy direction and collision circle.
 - Make walking guy.
 - Ai
 - Video
-- Make 2d alpha.
 
 - Give guy sword.
 - Offscreen rendering.
 - Mouse picking.
 - Shadow mapping.
 - In game text.
+- Paper rendering with pencil textures.
 - Automatic texture generation.
 - Combine font and other textures into one atlas
 - Second texture for drawing effect.
 - Structure rendering/input files and make reuseable as libraries.
+
+- In game ui with tweens. Including neural network rendering.
 
 DONE:
 
@@ -41,6 +42,10 @@ DONE:
 - 2d spritebatch.
 - Efficient circle drawing (using masks & textures).
 - Efficient textured line drawing from same texture.
+- Draw guy direction and collision circle.
+- Make 2d alpha.
+- Make 3d alpha.
+- Matrix library
 
 BRAINSTORM:
 
@@ -54,6 +59,7 @@ Paper rendering ? later.
 
 Fix surface normals on guy. Shadows ? 
 
-But first: look into masks and draw circle.
+For paper rendering: upload one huge texture with pencil scratches. Use parts of this for texturing.
+GL_REPEAT it and use x, y in clip space? 
 
 

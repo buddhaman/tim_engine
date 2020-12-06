@@ -2,4 +2,10 @@
 
 CXX=gcc
 
+#test linalg library. Comment out when you dont want to test.
+$CXX linalg_test.c -o linalg_test
+./linalg_test > linalg_test_results.txt
+
 $CXX src/main.c -lm -ldl -o exe -g -Iinclude -I/usr/local/include/SDL2 -Bstatic -lSDL2 -Wall -pthread external.o 2> errors.err
+
+

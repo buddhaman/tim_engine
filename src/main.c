@@ -5,20 +5,9 @@
 #define Assert(expr) if(!(expr)) {DebugOut("assert failed "#expr""); \
     *((int *)0)=0;}
 
-#define local_persist static
-#define internal static
-#define global_variable static
-
-typedef unsigned char ui8;
-typedef unsigned short ui16;
-typedef unsigned int ui32;
-typedef unsigned long ui64;
-typedef char i8;
-typedef short i16;
-typedef int i32;
-typedef long i64;
 
 // Special file
+#include "tim_types.h"
 #include "math_2d.h"
 
 // User defined typedefs
@@ -27,11 +16,6 @@ typedef vec3_t Vec3;
 typedef vec4_t Vec4;
 typedef mat4_t Mat4;
 typedef mat3_t Mat3;
-
-typedef float r32;
-typedef double r64;
-
-typedef i32 b32;
 
 #define MAX_VERTEX_MEMORY 512*1024
 #define MAX_ELEMENT_MEMORY 128*1024
@@ -66,8 +50,9 @@ ReadEntireFile(const char *path)
     }
 }
 
-
 // Own files
+#include "linalg.h"
+#include "neural_net.h"
 #include "cool_memory.h"
 #include "app_state.h"
 #include "texture_atlas.h"
@@ -77,6 +62,8 @@ ReadEntireFile(const char *path)
 #include "world_renderer.h"
 #include "guy.h"
 
+#include "linalg.c"
+#include "neural_net.c"
 #include "cool_memory.c"
 #include "app_state.c"
 #include "texture_atlas.c"
