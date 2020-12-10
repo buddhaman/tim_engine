@@ -177,6 +177,13 @@ InitCamera(Camera *camera)
     camera->spherical = vec3(3*M_PI/2.0, 1, 30);
 }
 
+internal inline Vec2
+GetScreenPos(Camera *camera, Vec3 worldPos, r32 width, r32 height)
+{
+    Vec3 pos = m4_mul_pos(camera->transform, worldPos);
+    return vec2((1+pos.x)*width/2.0, height-(1+pos.y)*height/2.0);
+}
+
 internal void
 UpdateCamera(Camera *camera, r32 width, r32 height)
 {
@@ -546,6 +553,28 @@ PushRect2(Mesh *mesh, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
             texSize);
 }
 
+void
+PushLine2(Mesh *mesh, Vec2 from, Vec2 to, r32 lineWidth, Vec2 texOrig, Vec2 texSize)
+{
+    Vec2 diff = v2_sub(to, from);
+    r32 invl = 1.0/v2_length(diff);
+    Vec2 perp = vec2(diff.y*invl*lineWidth/2.0, -diff.x*invl*lineWidth/2.0);
+
+    PushQuad2(mesh,
+            v2_add(from, perp), v2_add(to, perp),
+            v2_sub(to, perp), v2_sub(from, perp),
+            texOrig,
+            texSize);
+}
+
+
+
+void
+PushCircle2(Mesh *mesh, Vec2 center, r32 size, Vec2 texOrig, Vec2 texSize)
+{
+    PushRect2(mesh, vec2(center.x-size, center.y-size), vec2(size*2, size*2), texOrig, texSize);
+}
+
 internal inline void
 PushTrapezoid(Mesh *mesh, 
         Vec3 from, 
@@ -601,6 +630,12 @@ internal r32
 RandomFloat(r32 min, r32 max)
 {
     return min + (max-min)*(rand()%10000)/10000.0;
+}
+
+internal inline Vec2
+lerp2(Vec2 from, Vec2 to, r32 lambda)
+{
+    return v2_add(v2_muls(from, 1.0-lambda), v2_muls(to, lambda));
 }
 
 internal inline Vec3

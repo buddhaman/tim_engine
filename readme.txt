@@ -7,10 +7,14 @@ Cool.
 
 Now:
 
-- Make walking guy.
-- Ai
-- Video
+- Make feet for guy.
+- Ai.
+- Video.
+- Raycasting.
+- Select guy.
 
+- Put all 2d rendering in one file.
+- Disable unused arrays in mesh.
 - Give guy sword.
 - Offscreen rendering.
 - Mouse picking.
@@ -18,18 +22,18 @@ Now:
 - In game text.
 - Paper rendering with pencil textures.
 - Automatic texture generation.
-- Combine font and other textures into one atlas
+- Combine font and other textures into one atlas.
 - Second texture for drawing effect.
 - Structure rendering/input files and make reuseable as libraries.
 
-- In game ui with tweens. Including neural network rendering.
+- In game ui with tweens. 
 
 DONE:
 
 - Make 3d shader render (2D) textures by default.
 - Draw guys with circular head.
 - Texturing
--texture(texture0, textureCoords).xyz; Quick shader reloading
+- Quick shader reloading
 - Write shader struct
 - Fix memory leak with shader reloading
 - Make 2d spritebatch.
@@ -46,6 +50,7 @@ DONE:
 - Make 2d alpha.
 - Make 3d alpha.
 - Matrix library
+- Neural network rendering.
 
 BRAINSTORM:
 

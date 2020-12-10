@@ -1,24 +1,52 @@
 
 FFNN*
-CreateFFNN()
+CreateFFNN(MemoryArena *arena, 
+        int inputLayerSize,
+        int outputLayerSize,
+        int hiddenLayerSize,
+        int nHiddenLayers)
 {
-    FFNN *brain = malloc(sizeof(FFNN));
+    FFNN *brain = PushStruct(arena, FFNN);
 
-    brain->inputSize = 2;
-    brain->outputSize = 4;
-    brain->nLayers = 2;
-    brain->layers = malloc(sizeof(VecR32*)*brain->nLayers);
-    brain->layers[0]= CreateVecR32(brain->inputSize, malloc(SizeOfVecR32(brain->inputSize)));
-    brain->layers[1]= CreateVecR32(brain->outputSize, malloc(SizeOfVecR32(brain->inputSize)));
+    brain->inputSize = inputLayerSize;
+    brain->outputSize = outputLayerSize;
+    brain->nLayers = nHiddenLayers+2;
+    brain->layers = PushArray(arena, VecR32*, brain->nLayers);
+    brain->layers[0]= CreateVecR32(brain->inputSize, PushMemory_(arena, SizeOfVecR32(brain->inputSize)));
+    brain->layers[brain->nLayers-1]= CreateVecR32(brain->outputSize, PushMemory_(arena, SizeOfVecR32(brain->inputSize)));
+    for(int layerIdx = 1;
+            layerIdx < brain->nLayers-1;
+            layerIdx++)
+    {
+        brain->layers[layerIdx]= CreateVecR32(hiddenLayerSize, PushMemory_(arena, SizeOfVecR32(brain->inputSize)));
+    }
 
-    brain->nWeightMatrices = 1;
-    brain->weights = malloc(sizeof(MatR32*)*brain->nWeightMatrices);
-    brain->weights[0] = CreateMatR32(brain->inputSize, 
-            brain->outputSize, 
-            malloc(SizeOfMatR32(brain->inputSize, brain->outputSize)));
+    brain->nWeightMatrices = brain->nLayers-1;
+    brain->weights = PushArray(arena, MatR32*, brain->nWeightMatrices);
+    for(int weightIdx = 0; 
+            weightIdx < brain->nWeightMatrices; 
+            weightIdx++)
+    {
+        int w = brain->layers[weightIdx]->n;
+        int h = brain->layers[weightIdx+1]->n;
+        brain->weights[weightIdx] = CreateMatR32(w, h, PushMemory_(arena, SizeOfMatR32(w, h)));
+    }
     RandomMatR32(brain->weights[0], -3, 3);
 
     return brain;
+}
+
+int
+GetTotalNeuronCount(FFNN *brain)
+{
+    int sum = 0;
+    for(int layerIdx = 0;
+            layerIdx < brain->nLayers;
+            layerIdx++)
+    {
+        sum+=brain->layers[layerIdx]->n;
+    }
+    return sum;
 }
 
 void

@@ -20,6 +20,8 @@ typedef mat3_t Mat3;
 #define MAX_VERTEX_MEMORY 512*1024
 #define MAX_ELEMENT_MEMORY 128*1024
 
+#define Min(a, b) (a) < (b) ? (a) : (b)
+
 char *
 ReadEntireFile(const char *path)
 {
@@ -51,26 +53,28 @@ ReadEntireFile(const char *path)
 }
 
 // Own files
+#include "cool_memory.h"
 #include "linalg.h"
 #include "neural_net.h"
-#include "cool_memory.h"
 #include "app_state.h"
 #include "texture_atlas.h"
 #include "renderer.h"
 #include "spritebatch.h"
 #include "world.h"
 #include "world_renderer.h"
+#include "guy_brain.h"
 #include "guy.h"
 
+#include "cool_memory.c"
 #include "linalg.c"
 #include "neural_net.c"
-#include "cool_memory.c"
 #include "app_state.c"
 #include "texture_atlas.c"
 #include "renderer.c"
 #include "spritebatch.c"
 #include "world.c"
 #include "world_renderer.c"
+#include "guy_brain.c"
 #include "guy.c"
 
 // shaders
@@ -236,6 +240,8 @@ main(int argc, char**argv)
             vec3(world->width, world->height, 0), vec3(0, world->height, 0),
                 squareRegion->pos, squareRegion->size);
 
+    GuyBrain *brain = CreateGuyBrain(renderArena, 4, 4, 8, 2);
+
     for(int i = 0; i < 20; i++)
     {
         Guy *guy = AddGuy(world, vec3(world->width/2,world->height/2,0));
@@ -331,6 +337,9 @@ main(int argc, char**argv)
         glUseProgram(simpleShader.program);
         // Update loop pos
         UpdateCamera(&camera, appState->screenWidth, appState->screenHeight);
+        Vec3 worldPosGuy0 = world->guys[0].head->pos;
+        worldPosGuy0.z+=0.8;
+        Vec2 guy0pos = GetScreenPos(&camera, worldPosGuy0, appState->screenWidth, appState->screenHeight);
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
@@ -393,10 +402,20 @@ main(int argc, char**argv)
 
         // Draw rest of spritebatch
         ClearMesh(spriteMesh);
+
+#if 0
         PushRect2(spriteMesh, vec2(200, 209), 
                 vec2(200+sinf(time)*100, 200+sinf(time)*100), vec2(0,0), vec2(1, 1));
         PushRect2(spriteMesh, vec2(400, 209), 
                 vec2(200+sinf(time)*100, 200+sinf(time)*100), vec2(0,0), vec2(1, 1));
+#endif
+        Vec2 brainPos = vec2(300+20*sinf(time), 250+15*cosf(time*0.5+1));
+
+        DrawCloudLine(world, spriteMesh, guy0pos, vec2(brainPos.x+80, brainPos.y+100), 4, circleRegion->pos, circleRegion->size); 
+        DrawCloud(world, spriteMesh, vec2(brainPos.x, brainPos.y+100), 10, 200, 200, circleRegion->pos, circleRegion->size);
+
+        DrawBrain(world, brain, brainPos, spriteMesh, circleRegion->pos, circleRegion->size, squareRegion->pos, squareRegion->size);
+
         SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);
         glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
         RenderModel(spriteModel);

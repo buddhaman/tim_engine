@@ -40,7 +40,9 @@ static inline vec2_t  v2_subs(vec2_t a, float s)    { return (vec2_t){a.x-s, a.y
 static inline vec2_t  v2_muls(vec2_t a, float s)    { return (vec2_t){a.x*s, a.y*s}; }
 
 static inline float   v2_dot(vec2_t a, vec2_t b)    { return a.x*b.x + a.y*b.y; }
+static inline float   v2_length(vec2_t v)           { return sqrtf(v.x*v.x + v.y*v.y); }
 
+static inline vec2_t  v2_norm(vec2_t v)             { return v2_muls(v, 1.0/v2_length(v)); }
 mat3_t m3_translation(vec2_t translation)
 {
     return mat3(

@@ -4,6 +4,8 @@
 #include <time.h>
 
 #include "src/tim_types.h"
+#include "src/cool_memory.h"
+#include "src/cool_memory.c"
 #include "src/linalg.h"
 #include "src/linalg.c"
 #include "src/neural_net.h"
@@ -39,7 +41,6 @@ main()
     VecR32MulS(vec1, 2.5);
 
     VecR32TransposePrintF(vec1, 10, 3);
-#endif
 
     FFNN *brain = CreateFFNN();
 
@@ -54,5 +55,6 @@ main()
     VecR32PrintF(brain->layers[1], 8, 3);
 
     printf("Test done. I am proud. It works\n");
+#endif
 }
 
