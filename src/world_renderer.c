@@ -78,3 +78,31 @@ DrawGuys(Mesh *mesh, World *world, Vec2 texCoord, Vec2 texSize,
         }
     }
 }
+
+internal void
+DrawSwords(Mesh *mesh, World *world, Vec2 texCoord, Vec2 texSize,
+        Vec2 circleCoord, Vec2 circleTexSize)
+{
+    for(int swordIdx = 0;
+            swordIdx < world->nSwords;
+            swordIdx++)
+    {
+        Sword *sword = world->swords+swordIdx;
+        r32 lineWidth = 0.2;
+        Vec3 from = sword->handle->pos;
+        Vec3 to = sword->tip->pos;
+        Vec3 diff = v3_norm(v3_sub(to, from));
+        Vec3 perp = v3_norm(v3_cross(diff, vec3(0,0,1)));
+        Vec3 handlePos = lerp(from, to, 0.2);
+        Vec3 lEdge = v3_add(handlePos, v3_muls(perp, 0.4));
+        Vec3 rEdge = v3_add(handlePos, v3_muls(perp, -0.4));
+
+        mesh->colorState = vec4(0,0,0,1);
+        PushLine(mesh, from, to, lineWidth, vec3(0,0,1), texCoord, texSize);
+        PushLine(mesh, handlePos, lEdge, lineWidth, vec3(0,0,1), texCoord, texSize);
+        PushLine(mesh, handlePos, rEdge, lineWidth, vec3(0,0,1), texCoord, texSize);
+    }
+}
+
+
+

@@ -6,11 +6,11 @@
     *((int *)0)=0;}
 
 
-// Special file
+// Special file.
 #include "tim_types.h"
 #include "math_2d.h"
 
-// User defined typedefs
+// My own math typedefs.
 typedef vec2_t Vec2;
 typedef vec3_t Vec3;
 typedef vec4_t Vec4;
@@ -244,6 +244,19 @@ main(int argc, char**argv)
         Guy *guy = AddGuy(world, vec3(world->width/2,world->height/2,0));
         guy->orientation = RandomFloat(-M_PI, M_PI);
     }
+    for(int i = 0; i < 20; i++)
+    {
+        Sword *sword = AddSword(world, vec3(2, 2, 2));
+        r32 dev = 0.2;
+        r32 force = 1.0;
+        AddImpulse(sword->handle, vec3(force+RandomFloat(-dev,dev),
+                    force+RandomFloat(-dev, dev),
+                    force+RandomFloat(-dev, dev)));
+        AddImpulse(sword->tip, vec3(RandomFloat(-dev,dev),
+                    RandomFloat(-dev, dev),
+                    RandomFloat(-dev, dev)));
+    }
+    Guy *selectedGuy = NULL;
 
     b32 paused = 0;
     while(!done)
@@ -355,15 +368,15 @@ main(int argc, char**argv)
         
         // Update camera and screen ray.
         UpdateCamera(&camera, appState->screenWidth, appState->screenHeight);
-        Vec3 worldPosGuy0 = world->guys[0].head->pos;
-        worldPosGuy0.z+=0.8;
-        Vec2 guy0pos = GetScreenPos(&camera, worldPosGuy0, appState->screenWidth, appState->screenHeight);
         Mat4 inverseCam = m4_invert_affine(camera.transform);
         Vec3 near = m4_mul_pos(inverseCam, vec3(appState->normalizedMX, appState->normalizedMY, -1.0));
         appState->mouseRayDir = v3_norm(v3_sub(camera.pos, near));
         appState->mouseRayPos = camera.pos;
-        Guy *guy0 = world->guys;
-        guy0->pos = GetZIntersection(appState->mouseRayPos, appState->mouseRayDir, 0.0);
+        Vec3 groundIntersection = GetZIntersection(appState->mouseRayPos, appState->mouseRayDir, 0.0);
+        if(IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT))
+        {
+            selectedGuy = IntersectGuys(world, groundIntersection, 2.0);
+        }
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
@@ -381,6 +394,8 @@ main(int argc, char**argv)
         {
             DoPhysicsStep(world);
             UpdateGuys(world);
+            UpdateSwords(world);
+            CollideGuySword(world);
         }
 
         glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
@@ -391,6 +406,8 @@ main(int argc, char**argv)
 
         // Guys
         DrawGuys(dynamicMesh, world, squareRegion->pos, squareRegion->size, circleRegion->pos,
+                circleRegion->size);
+        DrawSwords(dynamicMesh, world, squareRegion->pos, squareRegion->size, circleRegion->pos,
                 circleRegion->size);
 
         SetModelFromMesh(dynamicModel, dynamicMesh, GL_DYNAMIC_DRAW);
@@ -427,19 +444,19 @@ main(int argc, char**argv)
         // Draw rest of spritebatch
         ClearMesh(spriteMesh);
 
-#if 0
-        PushRect2(spriteMesh, vec2(200, 209), 
-                vec2(200+sinf(time)*100, 200+sinf(time)*100), vec2(0,0), vec2(1, 1));
-        PushRect2(spriteMesh, vec2(400, 209), 
-                vec2(200+sinf(time)*100, 200+sinf(time)*100), vec2(0,0), vec2(1, 1));
-#endif
-        Vec2 brainPos = vec2(300+20*sinf(time), 250+15*cosf(time*0.5+1));
-        //Vec2 brainPos = vec2(appState->mx+20*sinf(time), appState->my+15*cosf(time*0.5+1));
+        if(selectedGuy)
+        {
+            Vec3 selectedGuyPos = selectedGuy->head->pos;
+            selectedGuyPos.z+=0.8;
+            Vec2 guy0pos = GetScreenPos(&camera, selectedGuyPos, appState->screenWidth, appState->screenHeight);
+            Vec2 brainPos = vec2(300+20*sinf(time), 250+15*cosf(time*0.5+1));
+            //Vec2 brainPos = vec2(appState->mx+20*sinf(time), appState->my+15*cosf(time*0.5+1));
 
-        DrawCloudLine(world, spriteMesh, guy0pos, vec2(brainPos.x+80, brainPos.y+100), 6, circleRegion->pos, circleRegion->size); 
-        DrawCloud(world, spriteMesh, vec2(brainPos.x, brainPos.y+100), 10, 200, 200, circleRegion->pos, circleRegion->size);
+            DrawCloudLine(world, spriteMesh, guy0pos, vec2(brainPos.x+80, brainPos.y+100), 6, circleRegion->pos, circleRegion->size); 
+            DrawCloud(world, spriteMesh, vec2(brainPos.x, brainPos.y+100), 10, 200, 200, circleRegion->pos, circleRegion->size);
 
-        DrawBrain(world, brain, brainPos, spriteMesh, circleRegion->pos, circleRegion->size, squareRegion->pos, squareRegion->size);
+            DrawBrain(world, brain, brainPos, spriteMesh, circleRegion->pos, circleRegion->size, squareRegion->pos, squareRegion->size);
+        }
 
         SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);
         glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);

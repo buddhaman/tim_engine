@@ -7,12 +7,42 @@ AddGuy(World *world, Vec3 pos)
     guy->unit = 1.0;
     guy->pos = pos;
     guy->body = CreateBodyAsPerson(world, pos, guy->unit);
-
     guy->head = guy->body->particles+2;
     guy->lFoot = guy->body->particles+8;
     guy->rFoot = guy->body->particles+10;
-
+    guy->lHand = guy->body->particles+4;
+    guy->rHand = guy->body->particles+6;
     return guy;
+}
+
+Sword *
+AddSword(World *world, Vec3 pos)
+{
+    Sword *sword = world->swords+world->nSwords++;
+    *sword = (Sword){};
+    sword->unit = 3.0;
+    sword->body = CreateBodyAsSword(world, pos, sword->unit);
+    sword->handle = sword->body->particles;
+    sword->tip = sword->body->particles+1;
+    return sword;
+}
+
+Guy *
+IntersectGuys(World *world, Vec3 selectAt, r32 radius)
+{
+    Guy *selected = NULL;
+    for(int guyIdx = 0;
+            guyIdx < world->nGuys; 
+            guyIdx++)
+    {
+        Guy *guy = world->guys + guyIdx;
+        Vec3 diff = v3_sub(guy->pos, selectAt);
+        if(v3_length(diff) < radius)
+        {
+            return guy;
+        }
+    }
+    return selected;
 }
 
 void
@@ -38,6 +68,65 @@ UpdateGuys(World *world)
         guy->lFoot->pos = lFootPos;
         guy->rFoot->pos = rFootPos;
         AddImpulse(guy->head, vec3(0,0,0.1));
+
+        if(guy->sword)
+        {
+            guy->sword->handle->pos = guy->lHand->pos;
+        }
+    }
+}
+
+void
+UpdateSwords(World *world)
+{
+    for(int swordIdx = 0;
+            swordIdx < world->nSwords;
+            swordIdx++)
+    {
+        Sword *sword = world->swords + swordIdx;
+        Body *body = sword->body;
+        BodyAddImpulse(body, world->gravity);
+        BodyCheckZCollision(body, 0.1, 0.05);
+    }
+}
+
+void
+CollideGuySword(World *world)
+{
+    r32 radius = 2;
+    for(int guyIdx = 0;
+            guyIdx < world->nGuys;
+            guyIdx++)
+    {
+        Guy *guy = world->guys+guyIdx;
+        if(guy->sword)
+        {
+            continue;
+        }
+        else
+        {
+            for(int swordIdx = 0;
+                    swordIdx < world->nSwords;
+                    swordIdx++)
+            {
+                Sword *sword = world->swords+swordIdx;
+                if(sword->guy)
+                {
+                    continue;
+                }
+                else
+                {
+                    Vec3 swordPos = sword->handle->pos;
+                    Vec3 guyPos = guy->lHand->pos;
+                    Vec3 diff = v3_sub(swordPos, guyPos);
+                    if(v3_length(diff) < radius)
+                    {
+                        guy->sword = sword;
+                        sword->guy = guy;
+                    }
+                }
+            }
+        }
     }
 }
 

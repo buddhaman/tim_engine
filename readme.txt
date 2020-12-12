@@ -7,12 +7,9 @@ Cool.
 
 Now:
 
-- Give guy sword.
-- Mouse picking.
-- Select guy.
+- Video.
 - Ai.
 - Make feet for guy.
-- Video.
 
 - Offscreen rendering.
 - Shadow mapping.
@@ -52,6 +49,9 @@ DONE:
 - Mouse input
 - Disable unused arrays in mesh.
 - Raycasting.
+- Mouse picking.
+- Select guy.
+- Give guy sword.
 
 BRAINSTORM:
 

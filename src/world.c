@@ -6,6 +6,8 @@ InitWorld(MemoryArena *arena, World *world, int maxParticles, int maxConstraints
     world->width = 100.0;
     world->height = 100.0;
 
+    world->gravity = vec3(0,0,-0.01);
+
     world->maxParticles = maxParticles;
     world->nParticles = 0;
     world->particles = PushArray(arena, Verlet, maxParticles);
@@ -21,6 +23,10 @@ InitWorld(MemoryArena *arena, World *world, int maxParticles, int maxConstraints
     world->nGuys = 0;
     world->maxGuys = maxBodies;
     world->guys = PushArray(arena, Guy, world->maxGuys);
+
+    world->nSwords = 0;
+    world->maxSwords = maxBodies;
+    world->swords = PushArray(arena, Sword, world->maxSwords);
 }
 
 Verlet *
@@ -33,10 +39,27 @@ AddParticle(World *world, Body *body, Vec3 pos)
     return particle;
 }
 
-void
+internal inline void
 AddImpulse(Verlet *particle, Vec3 impulse)
 {
     particle->oldPos = v3_sub(particle->oldPos, impulse);
+}
+
+internal inline void
+BodyCheckZCollision(Body *body, r32 z, r32 contactFriction)
+{
+    for(int particleIdx = 0;
+            particleIdx < body->nParticles;
+            particleIdx++)
+    {
+        Verlet *particle = body->particles+particleIdx;
+        if(particle->pos.z < z)
+        {
+            particle->pos.z = z;
+            particle->oldPos.x+=(particle->pos.x-particle->oldPos.x)*contactFriction;
+            particle->oldPos.y+=(particle->pos.y-particle->oldPos.y)*contactFriction;
+        }
+    }
 }
 
 internal inline Constraint *
@@ -55,7 +78,7 @@ void
 InitPerson(World *world, Body *body, Vec3 pos, r32 unit)
 {
     AddParticle(world, body, v3_add(pos, vec3(0,0,0)));                     // 0  butt 
-    Verlet *head = AddParticle(world, body, v3_add(pos, vec3(0,0,2*unit))); // 1  neck 
+    AddParticle(world, body, v3_add(pos, vec3(0,0,2*unit))); // 1  neck 
     AddParticle(world, body, v3_add(pos, vec3(0,0,2.5*unit)));              // 2  head 
     AddParticle(world, body, v3_add(pos, vec3(-unit,0,2*unit)));            // 3  left elbow 
     AddParticle(world, body, v3_add(pos, vec3(-unit*2,0,2*unit)));          // 4  left hand 
@@ -79,8 +102,14 @@ InitPerson(World *world, Body *body, Vec3 pos, r32 unit)
     Connect(world, body, 7, 8);
     Connect(world, body, 0, 9);
     Connect(world, body, 9, 10);
-    head->oldPos.x-=0.1;
-    head->oldPos.y-=0.1;
+}
+
+void
+InitSword(World *world, Body *body, Vec3 pos, r32 unit)
+{
+    AddParticle(world, body, v3_add(pos, vec3(0,0,0)));
+    AddParticle(world, body, v3_add(pos, vec3(unit,0,0)));
+    Connect(world, body, 0, 1);
 }
 
 // Don't call init of next body before creating entire body
@@ -94,12 +123,33 @@ InitBody(World *world, Body *body)
 }
 
 Body *
+CreateBodyAsSword(World *world, Vec3 pos, r32 unit)
+{
+    Body *body = world->bodies+world->nBodies++;
+    InitBody(world, body);
+    InitSword(world, body, pos, unit);
+    return body;
+}
+
+Body *
 CreateBodyAsPerson(World *world, Vec3 pos, r32 unit)
 {
     Body *body = world->bodies + world->nBodies++;
     InitBody(world, body);
     InitPerson(world, body, pos, unit);
     return body;
+}
+
+void
+BodyAddImpulse(Body *body, Vec3 impulse)
+{
+    for(int particleIdx = 0;
+            particleIdx < body->nParticles;
+            particleIdx++)
+    {
+        Verlet *particle = body->particles+particleIdx;
+        AddImpulse(particle, impulse);
+    }
 }
 
 void

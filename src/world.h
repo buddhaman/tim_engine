@@ -28,6 +28,7 @@ typedef struct
     r32 time;
     r32 width;
     r32 height;
+    Vec3 gravity;
 
     Verlet *particles;
     int maxParticles;
@@ -44,6 +45,10 @@ typedef struct
     Guy *guys;
     int nGuys;
     int maxGuys;
+
+    Sword *swords;
+    int nSwords;
+    int maxSwords;
 } World;
 
 
