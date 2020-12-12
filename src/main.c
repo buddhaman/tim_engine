@@ -54,6 +54,7 @@ ReadEntireFile(const char *path)
 
 // Own files
 #include "cool_memory.h"
+#include "tim_math.h"
 #include "linalg.h"
 #include "neural_net.h"
 #include "app_state.h"
@@ -66,11 +67,13 @@ ReadEntireFile(const char *path)
 #include "guy.h"
 
 #include "cool_memory.c"
+#include "tim_math.c"
 #include "linalg.c"
 #include "neural_net.c"
 #include "app_state.c"
 #include "texture_atlas.c"
 #include "renderer.c"
+#include "render2d.c"
 #include "spritebatch.c"
 #include "world.c"
 #include "world_renderer.c"
@@ -124,14 +127,6 @@ main(int argc, char**argv)
     FontRenderer fontRenderer;
     InitFontRenderer(&fontRenderer, "cool.ttf");
 
-    Vec2 v2 = vec2(1,0);
-
-    Mat3 mat = m3_translation(vec2(2,3));
-    Vec2 v3 = m3_mul_pos(mat, v2);
-
-    m3_fprintp(stdout, mat, 2, 2);
-    DebugOut("v3 = %f, %f", v3.x, v3.y);
-
     // Load bitmaps
     int width, height, n;
     unsigned char *image = stbi_load("l.png", &width, &height, &n, 4);
@@ -183,6 +178,7 @@ main(int argc, char**argv)
     b32 done = 0;
     ui32 frameCounter = 0;
 
+#if 0
     // Array test
     int *array = NULL;
     arrput(array, 2); 
@@ -201,6 +197,7 @@ main(int argc, char**argv)
     hmput(hash, 23.2, 'o');
 
     DebugOut("%c - ", hmget(hash, 11.5));
+#endif
 
     // Camera
     Camera camera;
@@ -260,6 +257,16 @@ main(int argc, char**argv)
             switch(event.type)
             {
 
+            case SDL_MOUSEBUTTONUP:
+            {
+                RegisterKeyAction(appState, ACTION_MOUSE_BUTTON_LEFT, 0);
+            } break;
+
+            case SDL_MOUSEBUTTONDOWN:
+            {
+                RegisterKeyAction(appState, ACTION_MOUSE_BUTTON_LEFT, 1);
+            } break;
+
             case SDL_KEYUP:
             {
                 RegisterKeyAction(appState, MapKeyCodeToAction(event.key.keysym.sym), 0);
@@ -291,6 +298,16 @@ main(int argc, char**argv)
         // Set Appstate
         SDL_GetWindowSize(window, &appState->screenWidth, &appState->screenHeight);
         appState->ratio = (r32)appState->screenHeight / ((r32)appState->screenWidth);
+        SDL_GetMouseState(&appState->mx, &appState->my);
+        appState->normalizedMX = 2*((r32)appState->mx)/appState->screenWidth - 1.0;
+        appState->normalizedMY = -2*((r32)appState->my)/appState->screenHeight + 1.0;
+
+        if(IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT))
+        {
+            DebugOut("mx %d, my %d, nmx %f, nmy %f", 
+                    appState->mx, appState->my,
+                    appState->normalizedMX, appState->normalizedMY);
+        }
 
         // Build nice environment
         SetModelFromMesh(groundModel, groundMesh, GL_STREAM_DRAW);
@@ -335,11 +352,18 @@ main(int argc, char**argv)
             LoadShader(&spriteShader);
         }
         glUseProgram(simpleShader.program);
-        // Update loop pos
+        
+        // Update camera and screen ray.
         UpdateCamera(&camera, appState->screenWidth, appState->screenHeight);
         Vec3 worldPosGuy0 = world->guys[0].head->pos;
         worldPosGuy0.z+=0.8;
         Vec2 guy0pos = GetScreenPos(&camera, worldPosGuy0, appState->screenWidth, appState->screenHeight);
+        Mat4 inverseCam = m4_invert_affine(camera.transform);
+        Vec3 near = m4_mul_pos(inverseCam, vec3(appState->normalizedMX, appState->normalizedMY, -1.0));
+        appState->mouseRayDir = v3_norm(v3_sub(camera.pos, near));
+        appState->mouseRayPos = camera.pos;
+        Guy *guy0 = world->guys;
+        guy0->pos = GetZIntersection(appState->mouseRayPos, appState->mouseRayDir, 0.0);
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
@@ -410,8 +434,9 @@ main(int argc, char**argv)
                 vec2(200+sinf(time)*100, 200+sinf(time)*100), vec2(0,0), vec2(1, 1));
 #endif
         Vec2 brainPos = vec2(300+20*sinf(time), 250+15*cosf(time*0.5+1));
+        //Vec2 brainPos = vec2(appState->mx+20*sinf(time), appState->my+15*cosf(time*0.5+1));
 
-        DrawCloudLine(world, spriteMesh, guy0pos, vec2(brainPos.x+80, brainPos.y+100), 4, circleRegion->pos, circleRegion->size); 
+        DrawCloudLine(world, spriteMesh, guy0pos, vec2(brainPos.x+80, brainPos.y+100), 6, circleRegion->pos, circleRegion->size); 
         DrawCloud(world, spriteMesh, vec2(brainPos.x, brainPos.y+100), 10, 200, 200, circleRegion->pos, circleRegion->size);
 
         DrawBrain(world, brain, brainPos, spriteMesh, circleRegion->pos, circleRegion->size, squareRegion->pos, squareRegion->size);

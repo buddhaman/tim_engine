@@ -74,7 +74,7 @@ DrawGuys(Mesh *mesh, World *world, Vec2 texCoord, Vec2 texSize,
             Constraint *c = body->constraints+cIdx;
             Vec3 from = c->a->pos;
             Vec3 to = c->b->pos;
-            PushLine(mesh, from, to, 0.2, vec3(0,1,0), texCoord, texSize);
+            PushLine(mesh, from, to, 0.3, dirVec, texCoord, texSize);
         }
     }
 }

@@ -40,3 +40,4 @@ UpdateGuys(World *world)
         AddImpulse(guy->head, vec3(0,0,0.1));
     }
 }
+

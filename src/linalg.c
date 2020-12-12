@@ -1,3 +1,4 @@
+
 size_t
 SizeOfMatR32(int w, int h)
 {
@@ -154,3 +155,4 @@ MatR32PrintF(MatR32 *m, int w, int p)
 {
     MatR32PrintP(stdout, m, w, p);
 }
+

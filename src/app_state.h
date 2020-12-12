@@ -1,6 +1,7 @@
 typedef enum 
 {
     ACTION_UNKNOWN,
+    ACTION_MOUSE_BUTTON_LEFT,
     ACTION_RIGHT,
     ACTION_UP,
     ACTION_LEFT,
@@ -22,6 +23,10 @@ struct AppState
     r32 ratio;
     i32 mx;
     i32 my;
+    r32 normalizedMX;
+    r32 normalizedMY;
+    Vec3 mouseRayPos;
+    Vec3 mouseRayDir;
 
     b32 isActionDown[NUM_KEY_ACTIONS];
     b32 wasActionDown[NUM_KEY_ACTIONS];

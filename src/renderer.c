@@ -210,13 +210,12 @@ InitMesh(MemoryArena *arena, Mesh *mesh, ui32 vertexAttributes, int maxVertices)
     mesh->nVertices = 0;
     mesh->vertexAttributes = vertexAttributes;
 
-    // TODO: always allocate everything or based on vertexattributes? 
     mesh->maxVertices = maxVertices;
-    mesh->vertices2 = PushArray(arena, Vec2, maxVertices);
-    mesh->vertices = PushArray(arena, Vec3, maxVertices);
-    mesh->colors = PushArray(arena, Vec4, maxVertices);
-    mesh->normals = PushArray(arena, Vec3, maxVertices);
-    mesh->texCoords = PushArray(arena, Vec2, maxVertices);
+    if(vertexAttributes & ATTR_POS2) mesh->vertices2 = PushArray(arena, Vec2, maxVertices);
+    if(vertexAttributes & ATTR_POS3) mesh->vertices = PushArray(arena, Vec3, maxVertices);
+    if(vertexAttributes & ATTR_COL4) mesh->colors = PushArray(arena, Vec4, maxVertices);
+    if(vertexAttributes & ATTR_NORM3) mesh->normals = PushArray(arena, Vec3, maxVertices);
+    if(vertexAttributes & ATTR_TEX) mesh->texCoords = PushArray(arena, Vec2, maxVertices);
 
     mesh->nIndices = 0;
     mesh->maxIndices = maxVertices;
@@ -516,66 +515,6 @@ PushRect3(Mesh *mesh, Vec3 center, Vec2 size, Vec3 normal, Vec3 up, Vec2 texCoor
 }
 
 internal inline void
-PushVertex2(Mesh *mesh, Vec2 vert, Vec2 texCoord)
-{
-    mesh->vertices2[mesh->nVertices] = vert;
-    mesh->texCoords[mesh->nVertices] = texCoord;
-    mesh->colors[mesh->nVertices] = mesh->colorState;
-    mesh->nVertices++;
-    Assert(mesh->nVertices <= mesh->maxVertices);
-}
-
-void
-PushQuad2(Mesh *mesh, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, Vec2 texSize)
-{
-    ui32 nVertices = mesh->nVertices;
-    PushVertex2(mesh, p0, vec2(texOrig.x, texOrig.y+texSize.y));
-    PushVertex2(mesh, p1, vec2(texOrig.x+texSize.x, texOrig.y+texSize.y));
-    PushVertex2(mesh, p2, vec2(texOrig.x+texSize.x, texOrig.y));
-    PushVertex2(mesh, p3, texOrig);
-    PushIndex(mesh, nVertices);
-    PushIndex(mesh, nVertices+1);
-    PushIndex(mesh, nVertices+2);
-    PushIndex(mesh, nVertices+2);
-    PushIndex(mesh, nVertices+3);
-    PushIndex(mesh, nVertices);
-}
-
-void
-PushRect2(Mesh *mesh, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
-{
-    PushQuad2(mesh, 
-            orig, 
-            vec2(orig.x+size.x, orig.y), 
-            vec2(orig.x+size.x, orig.y+size.y),
-            vec2(orig.x, orig.y+size.y),
-            texOrig, 
-            texSize);
-}
-
-void
-PushLine2(Mesh *mesh, Vec2 from, Vec2 to, r32 lineWidth, Vec2 texOrig, Vec2 texSize)
-{
-    Vec2 diff = v2_sub(to, from);
-    r32 invl = 1.0/v2_length(diff);
-    Vec2 perp = vec2(diff.y*invl*lineWidth/2.0, -diff.x*invl*lineWidth/2.0);
-
-    PushQuad2(mesh,
-            v2_add(from, perp), v2_add(to, perp),
-            v2_sub(to, perp), v2_sub(from, perp),
-            texOrig,
-            texSize);
-}
-
-
-
-void
-PushCircle2(Mesh *mesh, Vec2 center, r32 size, Vec2 texOrig, Vec2 texSize)
-{
-    PushRect2(mesh, vec2(center.x-size, center.y-size), vec2(size*2, size*2), texOrig, texSize);
-}
-
-internal inline void
 PushTrapezoid(Mesh *mesh, 
         Vec3 from, 
         Vec3 to, 
@@ -630,12 +569,6 @@ internal r32
 RandomFloat(r32 min, r32 max)
 {
     return min + (max-min)*(rand()%10000)/10000.0;
-}
-
-internal inline Vec2
-lerp2(Vec2 from, Vec2 to, r32 lambda)
-{
-    return v2_add(v2_muls(from, 1.0-lambda), v2_muls(to, lambda));
 }
 
 internal inline Vec3
@@ -770,21 +703,5 @@ InitFontRenderer(FontRenderer *fontRenderer, const char *pathToFont)
     free(ttfBuffer);
     free(tmpBitmap);
     free(fontTextureImage);
-}
-
-void
-DrawString2D(Mesh *mesh, FontRenderer *fontRenderer, Vec2 pos, char *sequence)
-{
-    stbtt_aligned_quad q;
-    r32 x = pos.x;
-    r32 y = pos.y;
-
-    while(*sequence)
-    {
-        stbtt_GetPackedQuad(fontRenderer->charData12, 512, 512, *sequence-32, &x, &y, &q, 0);
-        PushRect2(mesh, vec2(q.x0, q.y0), vec2(q.x1-q.x0, q.y1-q.y0), 
-                vec2(q.s0, q.t1), vec2(q.s1-q.s0, q.t0-q.t1));
-        sequence++;
-    }
 }
 

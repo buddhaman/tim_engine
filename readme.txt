@@ -7,17 +7,14 @@ Cool.
 
 Now:
 
-- Make feet for guy.
-- Ai.
-- Video.
-- Raycasting.
-- Select guy.
-
-- Put all 2d rendering in one file.
-- Disable unused arrays in mesh.
 - Give guy sword.
-- Offscreen rendering.
 - Mouse picking.
+- Select guy.
+- Ai.
+- Make feet for guy.
+- Video.
+
+- Offscreen rendering.
 - Shadow mapping.
 - In game text.
 - Paper rendering with pencil textures.
@@ -51,6 +48,10 @@ DONE:
 - Make 3d alpha.
 - Matrix library
 - Neural network rendering.
+- Put all 2d rendering in one file.
+- Mouse input
+- Disable unused arrays in mesh.
+- Raycasting.
 
 BRAINSTORM:
 
