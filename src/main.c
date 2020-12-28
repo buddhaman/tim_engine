@@ -84,6 +84,22 @@ ReadEntireFile(const char *path)
 #include "shaderVert.h"
 #include "shaderFrag.h"
 
+// test
+
+#define MEM_TEST 0
+
+#if MEM_TEST==1
+#include "mem_test.cpp"
+#endif
+
+void
+DoTests()
+{
+#if MEM_TEST==1
+    DoMemoryTests();
+#endif
+}
+
 #define FRAMES_PER_SECOND 60
 
 int 
@@ -91,10 +107,11 @@ main(int argc, char**argv)
 {
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER)!=0)
     {
-        DebugOut("Does not work\n");
+        DebugOut("SDL does not work\n");
     }
 
     srand(time(0));
+    DoTests();
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -158,6 +175,7 @@ main(int argc, char**argv)
     // Setup nuklear
     struct nk_context *ctx;
     ctx = nk_sdl_init(window);
+
     // TODO: Check if this is necessary for nuklear
 #if 0
     struct nk_font_atlas *atlas;
@@ -309,6 +327,7 @@ main(int argc, char**argv)
         }
         nk_input_end(ctx);
         // Set Appstate
+
         SDL_GetWindowSize(window, &appState->screenWidth, &appState->screenHeight);
         appState->ratio = (r32)appState->screenHeight / ((r32)appState->screenWidth);
         SDL_GetMouseState(&appState->mx, &appState->my);
@@ -411,12 +430,12 @@ main(int argc, char**argv)
                 circleRegion->size);
 
         SetModelFromMesh(dynamicModel, dynamicMesh, GL_DYNAMIC_DRAW);
-        glDisable(GL_CULL_FACE);
         RenderModel(dynamicModel);
         ClearMesh(dynamicMesh);
 
         // Render spritebatch
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -435,7 +454,7 @@ main(int argc, char**argv)
         if(RandomFloat(0, 1) < 0.1) counter++;
         if(counter >= l) counter = 0;
         str[counter] = 0;
-        spriteMesh->colorState = vec4(1.0, 0,0,.4);
+        spriteMesh->colorState = vec4(1.0, 0, 0,.4);
         DrawString2D(spriteMesh, &fontRenderer, vec2(100, 100), str);
         //DrawString2D(spriteMesh, &fontRenderer, vec2(-xo, -yo), "What is this game?");
         SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);

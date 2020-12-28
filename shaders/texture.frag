@@ -16,9 +16,9 @@ void main()
         discard;
     }
     vec4 col = texColor*color;
-    vec3 lightDir = vec3(-1, -1, -1);
+    vec3 lightDir = vec3(-1, 1, -1);
     lightDir = normalize(lightDir);
-    float dp = abs(-dot(normal, lightDir));
+    float dp = clamp(-dot(normal, lightDir), 0.0, 1.0);
     float lightFactor = diffuse * (1.0-dp) + dp;
     //lightFactor = 1.0;
     FragColor = vec4(lightFactor*col.xyz, col.a);

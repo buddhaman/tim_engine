@@ -7,11 +7,25 @@ Cool.
 
 Now:
 
-- Video.
-- Ai.
-- Make feet for guy.
+Today :
 
-- Offscreen rendering.
+--- Temporary ---
+
+- Implement behavior tree.
+- Controll guys buy giving commands.
+- Make guy walk to destination.
+- Visualize tree.
+
+Deadline for above: Tomorrow tuesday december 29.
+
+-------------------- -------------------- -------------------- --------------------
+
+- Highest prio is people knowing me. Today place 3 comments: Dave Ackley and 
+  some other ones. Make this a habit. Daily.
+- Highest prio that i don't feel like doing : texture atlasses. Need to make some kind of
+  texture packer and a parser which can read text files to turn them into an atlas.
+- Offscreen rendering using FBO's.
+
 - Shadow mapping.
 - In game text.
 - Paper rendering with pencil textures.
@@ -19,8 +33,28 @@ Now:
 - Combine font and other textures into one atlas.
 - Second texture for drawing effect.
 - Structure rendering/input files and make reuseable as libraries.
-
 - In game ui with tweens. 
+- Research: what to use to controll guys
+
+- Click guy and click ground. Show route. Show list of actions ? 
+- Make them attack eachother.
+- Implement all basic features before implementing a controll strategy.
+
+- Select and click somewhere.
+- In game text. 3D text mesh.
+- Actions: 
+    - Walk towards.
+    - Swing sword.
+    - Pickup sword.
+
+------Game Engine-------
+
+- Create memory structures,
+- Create sound.
+- Make new game from same base. Use what you learned to refactor the game engine layer.
+- Make 2D texture packer. Standalone + use ingame to generate texture atlasses.
+- 2D tower defense. With lots of assets. 
+- Compile to windows.
 
 DONE:
 
@@ -52,6 +86,8 @@ DONE:
 - Mouse picking.
 - Select guy.
 - Give guy sword.
+- Rewrite 2d dynamic rendering with correct normals. V
+- Dynamic memory allocations
 
 BRAINSTORM:
 
@@ -67,5 +103,9 @@ Fix surface normals on guy. Shadows ?
 
 For paper rendering: upload one huge texture with pencil scratches. Use parts of this for texturing.
 GL_REPEAT it and use x, y in clip space? 
+
+Possible pivot:
+
+create voxel world for guys and make them build. Use behavior trees for this.
 
 

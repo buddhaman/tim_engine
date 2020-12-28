@@ -107,6 +107,7 @@ CreateAndLinkShaderProgram(ui32 vertexShader, ui32 fragmentShader)
     return shaderProgram;
 }
 
+//TODO: store in own memory
 void
 InitShader(Shader *shader, const char *vertexPath, const char *fragmentPath)
 {
@@ -501,7 +502,44 @@ PushQuad(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3, Vec2 texCoord, Vec2 tex
     PushIndex(mesh, nVertices);
 }
 
-// Assume normal and up are normalized
+// Assume in same plane
+internal void
+PushDoubleSidedQuad(Mesh *mesh, Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3, Vec2 texCoord, Vec2 texSize)
+{
+    Vec3 diff0 = v3_sub(p1, p0);
+    Vec3 diff1 = v3_sub(p2, p0);
+    Vec3 normal = v3_norm(v3_cross(diff0, diff1));
+    ui32 nVertices = mesh->nVertices;
+    Vec3 mNormal = v3_muls(normal, -1);
+
+    PushVertex(mesh, p0, normal, texCoord);
+    PushVertex(mesh, p1, normal, vec2(texCoord.x+texSize.x, texCoord.y));
+    PushVertex(mesh, p2, normal, vec2(texCoord.x+texSize.x, texCoord.y+texSize.y));
+    PushVertex(mesh, p3, normal, vec2(texCoord.x, texCoord.y+texSize.y));
+
+    PushVertex(mesh, p3, mNormal, texCoord);
+    PushVertex(mesh, p2, mNormal, vec2(texCoord.x+texSize.x, texCoord.y));
+    PushVertex(mesh, p1, mNormal, vec2(texCoord.x+texSize.x, texCoord.y+texSize.y));
+    PushVertex(mesh, p0, mNormal, vec2(texCoord.x, texCoord.y+texSize.y));
+
+    PushIndex(mesh, nVertices);
+    PushIndex(mesh, nVertices+1);
+    PushIndex(mesh, nVertices+2);
+    PushIndex(mesh, nVertices+2);
+    PushIndex(mesh, nVertices+3);
+    PushIndex(mesh, nVertices);
+
+    nVertices+=4;
+    PushIndex(mesh, nVertices);
+    PushIndex(mesh, nVertices+1);
+    PushIndex(mesh, nVertices+2);
+    PushIndex(mesh, nVertices+2);
+    PushIndex(mesh, nVertices+3);
+    PushIndex(mesh, nVertices);
+}
+
+
+// Assume normal and up are normalized. Also double sided.
 internal void
 PushRect3(Mesh *mesh, Vec3 center, Vec2 size, Vec3 normal, Vec3 up, Vec2 texCoord, Vec2 texSize)
 {
@@ -511,9 +549,10 @@ PushRect3(Mesh *mesh, Vec3 center, Vec2 size, Vec3 normal, Vec3 up, Vec2 texCoor
     Vec3 p1 = v3_add(v3_sub(center, vY), vX);
     Vec3 p2 = v3_add(v3_add(center, vY), vX);
     Vec3 p3 = v3_sub(v3_add(center, vY), vX);
-    PushQuad(mesh, p0, p1, p2, p3, texCoord, texSize);
+    PushDoubleSidedQuad(mesh, p0, p1, p2, p3, texCoord, texSize);
 }
 
+// Double sided
 internal inline void
 PushTrapezoid(Mesh *mesh, 
         Vec3 from, 
@@ -530,10 +569,26 @@ PushTrapezoid(Mesh *mesh,
     Vec3 perp0 = v3_muls(perp, fromWidth/2);
     Vec3 perp1 = v3_muls(perp, toWidth/2);
     ui32 nVertices = mesh->nVertices;
+
     PushVertex(mesh, v3_add(from, v3_muls(perp0,-1)), normal, texCoord);
     PushVertex(mesh, v3_add(from, perp0), normal, vec2(texCoord.x+texSize.x, texCoord.y));
     PushVertex(mesh, v3_add(to, perp1), normal, vec2(texCoord.x+texSize.x, texCoord.y+texSize.y));
     PushVertex(mesh, v3_add(to, v3_muls(perp1, -1)), normal, vec2(texCoord.x, texCoord.y+texSize.y));
+
+    Vec3 mNormal = v3_muls(normal, -1);
+    PushVertex(mesh, v3_add(to, v3_muls(perp1, -1)), mNormal, vec2(texCoord.x, texCoord.y+texSize.y));
+    PushVertex(mesh, v3_add(to, perp1), mNormal, vec2(texCoord.x+texSize.x, texCoord.y+texSize.y));
+    PushVertex(mesh, v3_add(from, perp0), mNormal, vec2(texCoord.x+texSize.x, texCoord.y));
+    PushVertex(mesh, v3_add(from, v3_muls(perp0,-1)), mNormal, texCoord);
+
+    PushIndex(mesh, nVertices);
+    PushIndex(mesh, nVertices+1);
+    PushIndex(mesh, nVertices+2);
+    PushIndex(mesh, nVertices+2);
+    PushIndex(mesh, nVertices+3);
+    PushIndex(mesh, nVertices);
+
+    nVertices+=4;
     PushIndex(mesh, nVertices);
     PushIndex(mesh, nVertices+1);
     PushIndex(mesh, nVertices+2);
@@ -572,7 +627,7 @@ RandomFloat(r32 min, r32 max)
 }
 
 internal inline Vec3
-lerp(Vec3 from, Vec3 to, r32 lambda)
+Lerp3(Vec3 from, Vec3 to, r32 lambda)
 {
     return v3_add(v3_muls(from, 1.0-lambda), v3_muls(to, lambda));
 }

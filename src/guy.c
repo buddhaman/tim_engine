@@ -1,3 +1,24 @@
+// Behavior
+
+BTNODE_UPDATE_FUNCTION(updateLeafNodeStub)
+{
+    DebugOut("Update function stub");
+    return BT_SUCCESS;
+}
+
+BTNode *
+BTCreateNode()
+{
+    BTNode *node = malloc(sizeof(BTNode));
+
+    *node = (BTNode){};
+    node->update = updateLeafNodeStub;
+    node->type = BT_LEAF;
+
+    return node;
+}
+
+// Guy
 
 Guy *
 AddGuy(World *world, Vec3 pos)
@@ -12,6 +33,7 @@ AddGuy(World *world, Vec3 pos)
     guy->rFoot = guy->body->particles+10;
     guy->lHand = guy->body->particles+4;
     guy->rHand = guy->body->particles+6;
+    guy->behavior = BTCreateNode();
     return guy;
 }
 
@@ -73,6 +95,8 @@ UpdateGuys(World *world)
         {
             guy->sword->handle->pos = guy->lHand->pos;
         }
+
+        guy->behavior->update(NULL);
     }
 }
 

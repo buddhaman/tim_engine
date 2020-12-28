@@ -93,7 +93,7 @@ DrawSwords(Mesh *mesh, World *world, Vec2 texCoord, Vec2 texSize,
         Vec3 to = sword->tip->pos;
         Vec3 diff = v3_norm(v3_sub(to, from));
         Vec3 perp = v3_norm(v3_cross(diff, vec3(0,0,1)));
-        Vec3 handlePos = lerp(from, to, 0.2);
+        Vec3 handlePos = Lerp3(from, to, 0.2);
         Vec3 lEdge = v3_add(handlePos, v3_muls(perp, 0.4));
         Vec3 rEdge = v3_add(handlePos, v3_muls(perp, -0.4));
 

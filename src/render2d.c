@@ -37,7 +37,6 @@ PushRect2(Mesh *mesh, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
             texSize);
 }
 
-
 void
 PushLine2(Mesh *mesh, Vec2 from, Vec2 to, r32 lineWidth, Vec2 texOrig, Vec2 texSize)
 {
@@ -58,7 +57,7 @@ PushCircle2(Mesh *mesh, Vec2 center, r32 size, Vec2 texOrig, Vec2 texSize)
 }
 
 internal inline Vec2
-lerp2(Vec2 from, Vec2 to, r32 lambda)
+Lerp2(Vec2 from, Vec2 to, r32 lambda)
 {
     return v2_add(v2_muls(from, 1.0-lambda), v2_muls(to, lambda));
 }

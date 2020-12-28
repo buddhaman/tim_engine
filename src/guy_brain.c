@@ -64,11 +64,6 @@ DrawCloud(World *world,
         radius[particleIdx] = r;
         positions[particleIdx] = vec2(pos.x+cosf(time+particleIdx*2)*width/2, 
                 pos.y+sinf(time+particleIdx)*height/2);
-    }
-    for(int particleIdx = 0;
-            particleIdx < nParticles;
-            particleIdx++)
-    {
         spriteBatch->colorState = vec4(0,0,0,1);
         PushCircle2(spriteBatch, positions[particleIdx], radius[particleIdx]+2, texOrig, texSize);
     }
@@ -95,7 +90,7 @@ DrawCloudLine(World *world,
             atCloud++)
     {
         r32 factor = (atCloud)/((r32)cloudPoints-1.0);
-        Vec2 pos = lerp2(from, to, factor);
+        Vec2 pos = Lerp2(from, to, factor);
 #if 0
         pos.x+=atCloud*cosf(world->time*2);
         pos.y+=atCloud*sinf(world->time*5);
