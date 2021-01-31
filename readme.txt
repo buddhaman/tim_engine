@@ -7,21 +7,11 @@ Cool.
 
 Now:
 
-Today :
-
---- Temporary ---
-
-- Implement behavior tree.
-- Controll guys buy giving commands.
-- Make guy walk to destination.
-- Visualize tree.
-
-Deadline for above: Tomorrow tuesday december 29.
+- Click and move.
+- Ray picking.
 
 -------------------- -------------------- -------------------- --------------------
 
-- Highest prio is people knowing me. Today place 3 comments: Dave Ackley and 
-  some other ones. Make this a habit. Daily.
 - Highest prio that i don't feel like doing : texture atlasses. Need to make some kind of
   texture packer and a parser which can read text files to turn them into an atlas.
 - Offscreen rendering using FBO's.
@@ -107,5 +97,11 @@ GL_REPEAT it and use x, y in clip space?
 Possible pivot:
 
 create voxel world for guys and make them build. Use behavior trees for this.
+
+BRAINSTORM FOR PIVOT:
+
+Making guys with behavior trees is gonna be a lot of work. Pivot to simple neural network simulation? 
+
+Think about it.
 
 

@@ -2,20 +2,52 @@
 
 BTNODE_UPDATE_FUNCTION(updateLeafNodeStub)
 {
-    DebugOut("Update function stub");
+    DebugOut("Updating leaf node stub");
+
+    return BT_SUCCESS;
+}
+
+BTNODE_UPDATE_FUNCTION(updateWalkTo)
+{
+    r32 xDiff = guy->walkTo.x - guy->pos.x;
+    r32 yDiff = guy->walkTo.y - guy->pos.y;
+    r32 angDiff = guy->orientation - atan2f(yDiff, xDiff);
+    r32 rotationSpeed = 0.01;
+    if(angDiff < 0)
+    {
+        guy->orientation+=rotationSpeed;
+    }
+    else
+    {
+        guy->orientation-=rotationSpeed;
+    }
     return BT_SUCCESS;
 }
 
 BTNode *
-BTCreateNode()
+BTCreateNode(BTNodeType type)
 {
     BTNode *node = malloc(sizeof(BTNode));
 
     *node = (BTNode){};
     node->update = updateLeafNodeStub;
-    node->type = BT_LEAF;
+    node->type = type;
 
     return node;
+}
+
+BTNode *
+BTCreateLeaf(btnode_update *update)
+{
+    BTNode *leaf = BTCreateNode(BT_LEAF);
+    leaf->update = update;
+    return leaf;
+}
+
+void
+AddChildToNode(BTNode *parent, BTNode *child)
+{
+    parent->children[parent->nChildren++] = child;
 }
 
 // Guy
@@ -33,7 +65,8 @@ AddGuy(World *world, Vec3 pos)
     guy->rFoot = guy->body->particles+10;
     guy->lHand = guy->body->particles+4;
     guy->rHand = guy->body->particles+6;
-    guy->behavior = BTCreateNode();
+    guy->behavior = BTCreateLeaf(updateWalkTo);
+    guy->walkTo = vec3(20, 20, 0);
     return guy;
 }
 
@@ -67,6 +100,66 @@ IntersectGuys(World *world, Vec3 selectAt, r32 radius)
     return selected;
 }
 
+BTNodeResult
+BTUpdateNode(BTNode *node, World *world, Guy *guy)
+{
+    BTNodeResult result = BT_FAIL;
+    switch(guy->behavior->type)
+    {
+
+    case BT_SEQUENCE:
+    {
+        b32 hasFailed = 0;
+        for(int childIdx = 0;
+                childIdx < node->nChildren;
+                childIdx++)
+        {
+            BTNode *child = node->children[childIdx];
+            BTNodeResult childResult = BTUpdateNode(child, world, guy);
+            if(childResult!=BT_SUCCESS)
+            {
+                result = childResult;
+                hasFailed = 1;
+                break;
+            }
+        }
+        if(!hasFailed)
+        {
+            result = BT_SUCCESS;
+        }
+    } break;
+
+    case BT_SELECTOR:
+    {
+        b32 hasFailed = 1;
+        for(int childIdx = 0;
+                childIdx < node->nChildren;
+                childIdx++)
+        {
+            BTNode *child = node->children[childIdx];
+            BTNodeResult childResult = BTUpdateNode(child, world, guy);
+            if(childResult!=BT_FAIL)
+            {
+                result = childResult;
+                hasFailed = 0;
+                break;
+            }
+        }
+        if(hasFailed)
+        {
+            result = BT_FAIL;
+        }
+    } break;
+
+    case BT_LEAF:
+    {
+        result = node->update(node, world, guy);
+    } break;
+
+    }
+    return result;
+}
+
 void
 UpdateGuys(World *world)
 {
@@ -77,10 +170,9 @@ UpdateGuys(World *world)
     {
         Guy *guy = world->guys + guyIdx;
 
-        guy->orientation += RandomFloat(-0.1, 0.1);
         r32 c = cosf(guy->orientation);
         r32 s = sinf(guy->orientation);
-        r32 speed = 0.08;
+        r32 speed = 0.4;
         guy->pos.x+=c*speed;
         guy->pos.y+=s*speed;
 
@@ -96,7 +188,7 @@ UpdateGuys(World *world)
             guy->sword->handle->pos = guy->lHand->pos;
         }
 
-        guy->behavior->update(NULL);
+        BTUpdateNode(guy->behavior, world, guy);
     }
 }
 
@@ -153,4 +245,5 @@ CollideGuySword(World *world)
         }
     }
 }
+
 

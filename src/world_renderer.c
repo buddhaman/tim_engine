@@ -104,5 +104,3 @@ DrawSwords(Mesh *mesh, World *world, Vec2 texCoord, Vec2 texSize,
     }
 }
 
-
-

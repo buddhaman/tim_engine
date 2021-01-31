@@ -38,6 +38,15 @@ PushRect2(Mesh *mesh, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
 }
 
 void
+PushLineRect2(Mesh *mesh, Vec2 origin, Vec2 size, Vec2 texOrig, Vec2 texSize, r32 lineWidth)
+{
+    PushRect2(mesh, origin, vec2(size.x, lineWidth), texOrig, texSize);
+    PushRect2(mesh, origin, vec2(lineWidth, size.y), texOrig, texSize);
+    PushRect2(mesh, vec2(origin.x+size.x-lineWidth, origin.y), vec2(lineWidth, size.y), texOrig, texSize);
+    PushRect2(mesh, vec2(origin.x, origin.y+size.y-lineWidth), vec2(size.x, lineWidth), texOrig, texSize);
+}
+
+void
 PushLine2(Mesh *mesh, Vec2 from, Vec2 to, r32 lineWidth, Vec2 texOrig, Vec2 texSize)
 {
     Vec2 diff = v2_sub(to, from);
@@ -60,6 +69,25 @@ internal inline Vec2
 Lerp2(Vec2 from, Vec2 to, r32 lambda)
 {
     return v2_add(v2_muls(from, 1.0-lambda), v2_muls(to, lambda));
+}
+
+Vec2
+GetStringSize(FontRenderer *fontRenderer, char *sequence)
+{
+    stbtt_aligned_quad q;
+    r32 x = 0.0;
+    r32 y = 0.0;
+    r32 minY = 10000.0;
+    r32 maxY = -10000.0;
+
+    while(*sequence)
+    {
+        stbtt_GetPackedQuad(fontRenderer->charData12, 512, 512, *sequence-32, &x, &y, &q, 0);
+        minY = Min(minY, q.y0);
+        maxY = Max(maxY, q.y1);
+        sequence++;
+    }
+    return vec2(x, maxY-minY);
 }
 
 void

@@ -1,15 +1,15 @@
 #ifndef GUY_H
 #define GUY_H
 
-
 typedef struct Guy Guy;
+typedef struct BTNode BTNode;
 
 typedef enum
 {
     BT_SUCCESS,
     BT_FAIL,
     BT_PROCESSING
-}BTNodeResult;
+} BTNodeResult;
 
 typedef enum
 {
@@ -18,16 +18,18 @@ typedef enum
     BT_LEAF,
 } BTNodeType;
 
-#define BTNODE_UPDATE_FUNCTION(name) BTNodeResult name(void *args)
+#define BTNODE_UPDATE_FUNCTION(name) BTNodeResult name(BTNode *node, World *world, Guy *guy)
 typedef BTNODE_UPDATE_FUNCTION(btnode_update);
 
-typedef struct BTNode BTNode;
 struct BTNode
 {
     BTNodeType type;
-    btnode_update *update;
+    btnode_update *update;   
     int nChildren;
-    BTNode *children;
+
+    // TODO: Replace
+    BTNode *children[128];
+    char info[256];
 };
 
 typedef struct
@@ -46,6 +48,8 @@ struct Guy
     r32 unit;
     Body *body;
     BTNode *behavior;
+
+    Vec3 walkTo;
 
     Sword *sword;
 

@@ -21,6 +21,7 @@ typedef mat3_t Mat3;
 #define MAX_ELEMENT_MEMORY 128*1024
 
 #define Min(a, b) (a) < (b) ? (a) : (b)
+#define Max(a, b) (a) < (b) ? (b) : (a)
 
 char *
 ReadEntireFile(const char *path)
@@ -142,7 +143,7 @@ main(int argc, char**argv)
     }
 
     FontRenderer fontRenderer;
-    InitFontRenderer(&fontRenderer, "cool.ttf");
+    InitFontRenderer(&fontRenderer, "DejaVuSansMono.ttf");
 
     // Load bitmaps
     int width, height, n;
@@ -248,16 +249,16 @@ main(int argc, char**argv)
     ClearMesh(groundMesh);
 
     World *world = PushStruct(renderArena, World);
-    InitWorld(renderArena, world, 1000, 1000, 100);
+    InitWorld(renderArena, world, 5000, 5000, 1000);
 
     groundMesh->colorState=vec4(0,1,0,1);
     PushQuad(groundMesh, vec3(0,0,0), vec3(world->width, 0, 0),
             vec3(world->width, world->height, 0), vec3(0, world->height, 0),
                 squareRegion->pos, squareRegion->size);
 
-    GuyBrain *brain = CreateGuyBrain(renderArena, 4, 4, 8, 2);
+    //GuyBrain *brain = CreateGuyBrain(renderArena, 4, 4, 8, 2);
 
-    for(int i = 0; i < 20; i++)
+    for(int i = 0; i < 100; i++)
     {
         Guy *guy = AddGuy(world, vec3(world->width/2,world->height/2,0));
         guy->orientation = RandomFloat(-M_PI, M_PI);
@@ -267,10 +268,18 @@ main(int argc, char**argv)
         Sword *sword = AddSword(world, vec3(2, 2, 2));
         r32 dev = 0.2;
         r32 force = 1.0;
-        AddImpulse(sword->handle, vec3(force+RandomFloat(-dev,dev),
+        Verlet *applyTo = sword->handle;
+        Verlet *other = sword->tip;
+        if(RandomFloat(0,1) < 0.5)
+        {
+            Verlet *tmp = applyTo;
+            applyTo = other;
+            other = tmp;
+        }
+        AddImpulse(applyTo, vec3(force+RandomFloat(-dev,dev),
                     force+RandomFloat(-dev, dev),
                     force+RandomFloat(-dev, dev)));
-        AddImpulse(sword->tip, vec3(RandomFloat(-dev,dev),
+        AddImpulse(other, vec3(RandomFloat(-dev,dev),
                     RandomFloat(-dev, dev),
                     RandomFloat(-dev, dev)));
     }
@@ -451,11 +460,13 @@ main(int argc, char**argv)
         strcpy(str, "Welcome 2 tims engine R u Happy with d Resultt?!! :DDDDDD");
         int l = strlen(str);
         local_persist ui8 counter = 0;
-        if(RandomFloat(0, 1) < 0.1) counter++;
+        if(RandomFloat(0, 1) < 0.2) counter++;
         if(counter >= l) counter = 0;
         str[counter] = 0;
-        spriteMesh->colorState = vec4(1.0, 0, 0,.4);
-        DrawString2D(spriteMesh, &fontRenderer, vec2(100, 100), str);
+        spriteMesh->colorState = vec4(1.0, 0, 0,1.0);
+        Vec2 textSize = GetStringSize(&fontRenderer, str);
+        Vec2 textOrig = vec2(300-textSize.x/2.0, 100);
+        DrawString2D(spriteMesh, &fontRenderer, textOrig, str);
         //DrawString2D(spriteMesh, &fontRenderer, vec2(-xo, -yo), "What is this game?");
         SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);
         RenderModel(spriteModel);
@@ -465,17 +476,22 @@ main(int argc, char**argv)
 
         if(selectedGuy)
         {
+#if 0
             Vec3 selectedGuyPos = selectedGuy->head->pos;
             selectedGuyPos.z+=0.8;
             Vec2 guy0pos = GetScreenPos(&camera, selectedGuyPos, appState->screenWidth, appState->screenHeight);
             Vec2 brainPos = vec2(300+20*sinf(time), 250+15*cosf(time*0.5+1));
-            //Vec2 brainPos = vec2(appState->mx+20*sinf(time), appState->my+15*cosf(time*0.5+1));
+            Vec2 brainPos = vec2(appState->mx+20*sinf(time), appState->my+15*cosf(time*0.5+1));
 
             DrawCloudLine(world, spriteMesh, guy0pos, vec2(brainPos.x+80, brainPos.y+100), 6, circleRegion->pos, circleRegion->size); 
             DrawCloud(world, spriteMesh, vec2(brainPos.x, brainPos.y+100), 10, 200, 200, circleRegion->pos, circleRegion->size);
 
             DrawBrain(world, brain, brainPos, spriteMesh, circleRegion->pos, circleRegion->size, squareRegion->pos, squareRegion->size);
+#endif
+            PushRect2(spriteMesh, vec2(200, 200), vec2(200, 200), squareRegion->pos, squareRegion->size);
         }
+        PushLineRect2(spriteMesh, vec2(textOrig.x, textOrig.y-textSize.y), 
+                textSize, squareRegion->pos, squareRegion->size, 2);
 
         SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);
         glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);

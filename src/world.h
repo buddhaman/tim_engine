@@ -1,4 +1,6 @@
 
+typedef struct World World;
+
 typedef struct
 {
     Vec3 pos;
@@ -23,7 +25,7 @@ typedef struct
 
 #include "guy.h"
 
-typedef struct
+struct World
 {
     r32 time;
     r32 width;
@@ -50,6 +52,6 @@ typedef struct
     int nSwords;
     int maxSwords;
 
-} World;
+};
 
 

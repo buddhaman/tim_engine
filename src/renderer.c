@@ -725,7 +725,7 @@ InitFontRenderer(FontRenderer *fontRenderer, const char *pathToFont)
 
     fread(ttfBuffer, 1, 1<<20, fopen(pathToFont, "rb"));
 
-    range.font_size = 64.0;
+    range.font_size = 24.0;
     range.first_unicode_codepoint_in_range = 32;
     range.num_chars = 95;
     range.chardata_for_range = fontRenderer->charData12;

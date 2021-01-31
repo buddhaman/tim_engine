@@ -13,3 +13,5 @@ void main()
     //texColor.gb = vec2(texCoord.x, 0.5*sin(texCoord.y*80.0)+0.5);
     FragColor = color*texColor;
 }
+
+
