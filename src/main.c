@@ -23,6 +23,9 @@ typedef mat3_t Mat3;
 #define Min(a, b) (a) < (b) ? (a) : (b)
 #define Max(a, b) (a) < (b) ? (b) : (a)
 
+#define CheckOpenglError() { GLenum err = glGetError(); \
+    if(err) { DebugOut("err =%04x", err);Assert(0); }}
+
 char *
 ReadEntireFile(const char *path)
 {
@@ -57,35 +60,20 @@ ReadEntireFile(const char *path)
 #include "cool_memory.h"
 #include "tim_math.h"
 #include "linalg.h"
+#include "shader.h"
 #include "neural_net.h"
 #include "app_state.h"
+#include "render2d.h"
 #include "texture_atlas.h"
-#include "renderer.h"
-#include "spritebatch.h"
-#include "world.h"
-#include "world_renderer.h"
-#include "guy_brain.h"
-#include "guy.h"
 
 #include "cool_memory.c"
 #include "tim_math.c"
 #include "linalg.c"
+#include "shader.c"
 #include "neural_net.c"
 #include "app_state.c"
-#include "texture_atlas.c"
-#include "renderer.c"
 #include "render2d.c"
-#include "spritebatch.c"
-#include "world.c"
-#include "world_renderer.c"
-#include "guy_brain.c"
-#include "guy.c"
-
-// shaders
-#include "shaderVert.h"
-#include "shaderFrag.h"
-
-// test
+#include "texture_atlas.c"
 
 #define MEM_TEST 0
 
@@ -145,44 +133,20 @@ main(int argc, char**argv)
     FontRenderer fontRenderer;
     InitFontRenderer(&fontRenderer, "DejaVuSansMono.ttf");
 
+#if 0
     // Load bitmaps
     int width, height, n;
     unsigned char *image = stbi_load("l.png", &width, &height, &n, 4);
     DebugOut("Image loaded with %d components per pixel, (%dx%d)", n, width, height);
-
-    ui32 texture;
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Setup shaders
-    Shader simpleShader;
-    InitShader(&simpleShader, "shaders/texture.vert", "shaders/texture.frag");
-    LoadShader(&simpleShader);
-    
-    ui32 transformLocation = glGetUniformLocation(simpleShader.program, "transform");
-    ui32 lightDirLocation = glGetUniformLocation(simpleShader.program, "lightDir");
-
-    Shader spriteShader;
-    InitShader(&spriteShader, "shaders/sprite.vert", "shaders/sprite.frag");
-    LoadShader(&spriteShader);
-    ui32 spriteTransformLocation = glGetUniformLocation(spriteShader.program, "transform");
+#endif
 
     // Setup nuklear
     struct nk_context *ctx;
     ctx = nk_sdl_init(window);
 
-    // TODO: Check if this is necessary for nuklear
-#if 0
     struct nk_font_atlas *atlas;
     nk_sdl_font_stash_begin(&atlas);
     nk_sdl_font_stash_end();
-#endif
 
     // Creating appstate
     AppState *appState = (AppState *)malloc(sizeof(AppState));
@@ -218,72 +182,19 @@ main(int argc, char**argv)
     DebugOut("%c - ", hmget(hash, 11.5));
 #endif
 
-    // Camera
-    Camera camera;
-    InitCamera(&camera);
-    camera.lookAt = vec3(10,10,0);
+    MemoryArena *gameArena = CreateMemoryArena(128*1000*1000);
 
-    MemoryArena *renderArena = CreateMemoryArena(128*1000*1000);
+    DebugOut("game arena : %lu / %lu bytes used. %lu procent", 
+            gameArena->used, gameArena->size, (gameArena->used*100)/gameArena->size);
 
-    TextureAtlas *atlas = MakeDefaultTexture(renderArena, 512);
-    AtlasRegion *circleRegion = atlas->regions;
-    AtlasRegion *squareRegion = atlas->regions+1;
+    // Init spritebatch
+    SpriteBatch *batch = PushStruct(gameArena, SpriteBatch);
+    InitSpriteBatch(batch, 10000, gameArena);
 
-    ui32 vertexAttributes = ATTR_POS3 | ATTR_COL4 | ATTR_TEX | ATTR_NORM3;
-    Model *groundModel = PushStruct(renderArena, Model);
-    Mesh *groundMesh = CreateMesh(renderArena, vertexAttributes, 100000);
-    InitModel(renderArena, groundModel, vertexAttributes, 100000);
-
-    Mesh *dynamicMesh = CreateMesh(renderArena, vertexAttributes, 100000);
-    Model *dynamicModel = PushStruct(renderArena, Model);
-    InitModel(renderArena, dynamicModel, vertexAttributes, 100000);
-
-    ui32 spriteAttributes = ATTR_POS2 | ATTR_COL4 | ATTR_TEX;
-    int spriteBatchSize = 10000;
-    Mesh *spriteMesh = CreateMesh(renderArena, spriteAttributes, spriteBatchSize);
-    Model *spriteModel = PushStruct(renderArena, Model);
-    InitModel(renderArena, spriteModel, spriteAttributes, spriteBatchSize);
-
-    DebugOut("render arena : %lu / %lu bytes used. %lu procent", 
-            renderArena->used, renderArena->size, (renderArena->used*100)/renderArena->size);
-    ClearMesh(groundMesh);
-
-    World *world = PushStruct(renderArena, World);
-    InitWorld(renderArena, world, 5000, 5000, 1000);
-
-    groundMesh->colorState=vec4(0,1,0,1);
-    PushQuad(groundMesh, vec3(0,0,0), vec3(world->width, 0, 0),
-            vec3(world->width, world->height, 0), vec3(0, world->height, 0),
-                squareRegion->pos, squareRegion->size);
-
-    //GuyBrain *brain = CreateGuyBrain(renderArena, 4, 4, 8, 2);
-
-    for(int i = 0; i < 100; i++)
-    {
-        Guy *guy = AddGuy(world, vec3(world->width/2,world->height/2,0));
-        guy->orientation = RandomFloat(-M_PI, M_PI);
-    }
-    for(int i = 0; i < 20; i++)
-    {
-        Sword *sword = AddSword(world, vec3(2, 2, 2));
-        r32 dev = 0.2;
-        r32 force = 1.0;
-        Verlet *applyTo = sword->handle;
-        Verlet *other = sword->tip;
-        if(RandomFloat(0,1) < 0.5)
-        {
-            Verlet *tmp = applyTo;
-            applyTo = other;
-            other = tmp;
-        }
-        AddImpulse(applyTo, vec3(force+RandomFloat(-dev,dev),
-                    force+RandomFloat(-dev, dev),
-                    force+RandomFloat(-dev, dev)));
-        AddImpulse(other, vec3(RandomFloat(-dev,dev),
-                    RandomFloat(-dev, dev),
-                    RandomFloat(-dev, dev)));
-    }
-    Guy *selectedGuy = NULL;
+    // Make spritebatch shader
+    Shader *spriteShader = PushStruct(gameArena, Shader);
+    InitShader(spriteShader, "shaders/sprite.vert", "shaders/sprite.frag");
+    LoadShader(spriteShader);
 
     b32 paused = 0;
     while(!done)
@@ -350,19 +261,14 @@ main(int argc, char**argv)
                     appState->normalizedMX, appState->normalizedMY);
         }
 
-        // Build nice environment
-        SetModelFromMesh(groundModel, groundMesh, GL_STREAM_DRAW);
-
         // Clear screen
         Vec4 clearColor = ARGBToVec4(0xffe0fffe);
         glClearColor(clearColor.x, clearColor.y, clearColor.z, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, appState->screenWidth, appState->screenHeight);
 
-        // My rendering
-        Vec3 lightDir = v3_norm(vec3(-1,1,-1));
-        
         // Update Camera
+#if 0
         r32 camSpeed = 0.6;
         r32 zoomSpeed = 0.99;
         if(IsKeyActionDown(appState, ACTION_Z)) { camera.spherical.z*=zoomSpeed; }
@@ -381,10 +287,13 @@ main(int argc, char**argv)
             camera.spherical.y+=0.1;
             if(camera.spherical.y > M_PI/2-0.1) camera.spherical.y = M_PI/2-0.1;
         }
+#endif
         if(IsKeyActionJustDown(appState, ACTION_P))
         {
             paused = !paused;
+            DebugOut(paused ? "Paused" : "Resumed");
         }
+#if 0
         if(IsKeyActionJustDown(appState, ACTION_R))
         {
             UnloadShader(&simpleShader);
@@ -392,112 +301,33 @@ main(int argc, char**argv)
             UnloadShader(&spriteShader);
             LoadShader(&spriteShader);
         }
-        glUseProgram(simpleShader.program);
-        
-        // Update camera and screen ray.
-        UpdateCamera(&camera, appState->screenWidth, appState->screenHeight);
-        Mat4 inverseCam = m4_invert_affine(camera.transform);
-        Vec3 near = m4_mul_pos(inverseCam, vec3(appState->normalizedMX, appState->normalizedMY, -1.0));
-        appState->mouseRayDir = v3_norm(v3_sub(camera.pos, near));
-        appState->mouseRayPos = camera.pos;
-        Vec3 groundIntersection = GetZIntersection(appState->mouseRayPos, appState->mouseRayDir, 0.0);
-        if(IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT))
+#endif 
+
+        // Draw some 2D
+        Mat3 transform = m3_translation(vec2(0,0));
+        int matLocation = glGetUniformLocation(spriteShader->program, "transform");
+        glUseProgram(spriteShader->program);
+        glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&transform);
+        BeginSpritebatch(batch);
+        local_persist r32 coolTime = 0.0;
+        coolTime+=0.01;
+        PushRect2(batch, vec2(-0.1,-0.1), vec2(0.2, 0.2+coolTime), vec2(0,0), vec2(1,1));
+        EndSpritebatch(batch);
+
+        // UI
+        enum {EASY, HARD};
+        if(nk_begin(ctx, "Cool Window", nk_rect(50, 50, 220, 220),
+                NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE))
         {
-            selectedGuy = IntersectGuys(world, groundIntersection, 2.0);
+            nk_layout_row_static(ctx, 30, 80, 1);
+            local_persist int op = EASY;
+            if(nk_option_label(ctx, "easy", op==EASY)) op=EASY;
+            if(nk_option_label(ctx, "hard", op==HARD)) op=HARD;
         }
-
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-
-        // Set uniforms
-        glUniformMatrix4fv(transformLocation, 1, GL_FALSE, (GLfloat*)&camera.transform);
-        glUniform3fv(lightDirLocation, 1, (GLfloat*)&lightDir);
-
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
-        RenderModel(groundModel);
-
-        // Update entire world physics step
-        if(!paused)
-        {
-            DoPhysicsStep(world);
-            UpdateGuys(world);
-            UpdateSwords(world);
-            CollideGuySword(world);
-        }
-
-        glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        PushQuad(dynamicMesh, vec3(0,0,1), vec3(1,0,1), vec3(1,1,1), vec3(0,1,1),
-                vec2(0,0), vec2(1,1));
-
-        // Guys
-        DrawGuys(dynamicMesh, world, squareRegion->pos, squareRegion->size, circleRegion->pos,
-                circleRegion->size);
-        DrawSwords(dynamicMesh, world, squareRegion->pos, squareRegion->size, circleRegion->pos,
-                circleRegion->size);
-
-        SetModelFromMesh(dynamicModel, dynamicMesh, GL_DYNAMIC_DRAW);
-        RenderModel(dynamicModel);
-        ClearMesh(dynamicMesh);
-
-        // Render spritebatch
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        glBindTexture(GL_TEXTURE_2D, fontRenderer.font12Texture);
-        Mat3 t3 = m3_translation_and_scale(vec2(-appState->screenWidth/2, -appState->screenHeight/2),
-                2.0/appState->screenWidth, -2.0/appState->screenHeight);
-
-        glUseProgram(spriteShader.program);
-        glUniformMatrix3fv(spriteTransformLocation, 1, GL_FALSE, (GLfloat*)&t3);
-
-        ClearMesh(spriteMesh);
-        char str[256];
-        strcpy(str, "Welcome 2 tims engine R u Happy with d Resultt?!! :DDDDDD");
-        int l = strlen(str);
-        local_persist ui8 counter = 0;
-        if(RandomFloat(0, 1) < 0.2) counter++;
-        if(counter >= l) counter = 0;
-        str[counter] = 0;
-        spriteMesh->colorState = vec4(1.0, 0, 0,1.0);
-        Vec2 textSize = GetStringSize(&fontRenderer, str);
-        Vec2 textOrig = vec2(300-textSize.x/2.0, 100);
-        DrawString2D(spriteMesh, &fontRenderer, textOrig, str);
-        //DrawString2D(spriteMesh, &fontRenderer, vec2(-xo, -yo), "What is this game?");
-        SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);
-        RenderModel(spriteModel);
-
-        // Draw rest of spritebatch
-        ClearMesh(spriteMesh);
-
-        if(selectedGuy)
-        {
-#if 0
-            Vec3 selectedGuyPos = selectedGuy->head->pos;
-            selectedGuyPos.z+=0.8;
-            Vec2 guy0pos = GetScreenPos(&camera, selectedGuyPos, appState->screenWidth, appState->screenHeight);
-            Vec2 brainPos = vec2(300+20*sinf(time), 250+15*cosf(time*0.5+1));
-            Vec2 brainPos = vec2(appState->mx+20*sinf(time), appState->my+15*cosf(time*0.5+1));
-
-            DrawCloudLine(world, spriteMesh, guy0pos, vec2(brainPos.x+80, brainPos.y+100), 6, circleRegion->pos, circleRegion->size); 
-            DrawCloud(world, spriteMesh, vec2(brainPos.x, brainPos.y+100), 10, 200, 200, circleRegion->pos, circleRegion->size);
-
-            DrawBrain(world, brain, brainPos, spriteMesh, circleRegion->pos, circleRegion->size, squareRegion->pos, squareRegion->size);
-#endif
-            PushRect2(spriteMesh, vec2(200, 200), vec2(200, 200), squareRegion->pos, squareRegion->size);
-        }
-        PushLineRect2(spriteMesh, vec2(textOrig.x, textOrig.y-textSize.y), 
-                textSize, squareRegion->pos, squareRegion->size, 2);
-
-        SetModelFromMesh(spriteModel, spriteMesh, GL_DYNAMIC_DRAW);
-        glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
-        RenderModel(spriteModel);
+        nk_end(ctx);
 
         nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
+        // End of UI
 
         // frame timing
         ui32 frameEnd = SDL_GetTicks();

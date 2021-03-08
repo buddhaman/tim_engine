@@ -17,9 +17,6 @@
 #define MATH_3D_IMPLEMENTATION
 #include "math_3d.h"
 
-#define MINIAUDIO_IMPLEMENTATION
-#include "miniaudio.h"
-
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
 #define STB_IMAGE_IMPLEMENTATION

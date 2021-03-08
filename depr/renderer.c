@@ -283,7 +283,7 @@ InitModel(MemoryArena *arena, Model *model, ui32 vertexAttributes, int maxVertic
             int attributeSize = GetAttributeSize(attribute);
 
             DebugOut("Enable attribute %u with size %d", attribute, attributeSize);
-            glEnableVertexAttribArray(model->nVertexAttributes);       // Positions
+            glEnableVertexAttribArray(model->nVertexAttributes);       
             glVertexAttribPointer(model->nVertexAttributes, attributeSize, GL_FLOAT, GL_FALSE, 
                     model->stride*sizeof(r32), (void*)memOffset);
 
@@ -712,51 +712,4 @@ RenderModel(Model *model)
     glDrawElements(GL_TRIANGLES, model->indexBufferSize, GL_UNSIGNED_INT, 0);
 }
 
-void
-InitFontRenderer(FontRenderer *fontRenderer, const char *pathToFont)
-{
-    fontRenderer->textureWidth = 512;
-    fontRenderer->textureHeight = 512;
-    stbtt_pack_context packContext;
-    stbtt_pack_range range = {};
-    ui8 *ttfBuffer = malloc(1<<20);
-    ui8 *tmpBitmap = malloc(fontRenderer->textureWidth*fontRenderer->textureHeight);
-    ui8 *fontTextureImage = malloc(sizeof(ui32)*fontRenderer->textureWidth*fontRenderer->textureHeight);
-
-    fread(ttfBuffer, 1, 1<<20, fopen(pathToFont, "rb"));
-
-    range.font_size = 24.0;
-    range.first_unicode_codepoint_in_range = 32;
-    range.num_chars = 95;
-    range.chardata_for_range = fontRenderer->charData12;
-
-    stbtt_PackBegin(&packContext, tmpBitmap, fontRenderer->textureWidth, fontRenderer->textureHeight, 0, 1, NULL);
-    stbtt_PackSetOversampling(&packContext, 1, 1);
-    stbtt_PackFontRanges(&packContext, ttfBuffer, 0, &range, 1);
-    stbtt_PackEnd(&packContext);
-
-    // Turn bitmap into rgba image
-    ui32 imageSize = fontRenderer->textureWidth*fontRenderer->textureHeight;
-    for(int idx = 0; idx < imageSize; idx++)
-    {
-        fontTextureImage[idx*4+0] = 255;
-        fontTextureImage[idx*4+1] = 255;
-        fontTextureImage[idx*4+2] = 255;
-        fontTextureImage[idx*4+3] = tmpBitmap[idx];
-    }
-
-    glGenTextures(1, &fontRenderer->font12Texture);
-    glBindTexture(GL_TEXTURE_2D, fontRenderer->font12Texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 
-            fontRenderer->textureWidth, fontRenderer->textureHeight, 
-            0, GL_RGBA, GL_UNSIGNED_BYTE, fontTextureImage);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    free(ttfBuffer);
-    free(tmpBitmap);
-    free(fontTextureImage);
-}
 

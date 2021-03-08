@@ -12,6 +12,7 @@ uniform mat3 transform;
 void main()
 {
     texCoord = a_texCoord;
+
     color = a_color;
     gl_Position = vec4(transform * vec3(a_position, 1.0), 1.0);
 }

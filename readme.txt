@@ -1,50 +1,22 @@
 
 My engine + game.
 
-Evolutionary battlefield simulation.
-
-Cool.
-
 Now:
 
-- Click and move.
-- Ray picking.
+Pivot: Make alife creatures 2. Use physics engine and limbs with revolute joints.
+       At first: Design the creatures and train each behavior. Then release them into 
+       an ecosystem that you designed yourself. After this: design creatures that can hunt.
+       then release into ecosystem. Tune macro parameters. Design behavior. Guided alife.
 
--------------------- -------------------- -------------------- --------------------
-
-- Highest prio that i don't feel like doing : texture atlasses. Need to make some kind of
-  texture packer and a parser which can read text files to turn them into an atlas.
-- Offscreen rendering using FBO's.
-
-- Shadow mapping.
-- In game text.
-- Paper rendering with pencil textures.
-- Automatic texture generation.
-- Combine font and other textures into one atlas.
-- Second texture for drawing effect.
-- Structure rendering/input files and make reuseable as libraries.
-- In game ui with tweens. 
-- Research: what to use to controll guys
-
-- Click guy and click ground. Show route. Show list of actions ? 
-- Make them attack eachother.
-- Implement all basic features before implementing a controll strategy.
-
-- Select and click somewhere.
-- In game text. 3D text mesh.
-- Actions: 
-    - Walk towards.
-    - Swing sword.
-    - Pickup sword.
+Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Create memory structures,
-- Create sound.
-- Make new game from same base. Use what you learned to refactor the game engine layer.
-- Make 2D texture packer. Standalone + use ingame to generate texture atlasses.
-- 2D tower defense. With lots of assets. 
-- Compile to windows.
+- Fix nuklear.
+- 2D spritebatch. With indices.
+- Immediate mode GUI.
+- Import physics library. Velocity raptor.
+- 2D lighting.
 
 DONE:
 
@@ -76,7 +48,7 @@ DONE:
 - Mouse picking.
 - Select guy.
 - Give guy sword.
-- Rewrite 2d dynamic rendering with correct normals. V
+- Rewrite 2d dynamic rendering with correct normals. 
 - Dynamic memory allocations
 
 BRAINSTORM:
@@ -90,9 +62,6 @@ Do marching cubes ?
 Paper rendering ? later.
 
 Fix surface normals on guy. Shadows ? 
-
-For paper rendering: upload one huge texture with pencil scratches. Use parts of this for texturing.
-GL_REPEAT it and use x, y in clip space? 
 
 Possible pivot:
 

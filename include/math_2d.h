@@ -54,7 +54,6 @@ mat3_t m3_translation(vec2_t translation)
 
 mat3_t m3_translation_and_scale(vec2_t translation, float scaleX, float scaleY)
 {
-    // TODO: implement
     return mat3(
             scaleX, 0,translation.x*scaleX,
             0,scaleY, translation.y*scaleY,
