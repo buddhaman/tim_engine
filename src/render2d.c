@@ -188,6 +188,30 @@ PushLine2(SpriteBatch *batch, Vec2 from, Vec2 to, r32 lineWidth, Vec2 texOrig, V
 }
 
 void
+PushOrientedLineRectangle2(SpriteBatch *batch, 
+        Vec2 pos, 
+        r32 width, 
+        r32 height, 
+        r32 angle,
+        r32 lineWidth,
+        AtlasRegion *texture)
+{
+    r32 c = cosf(angle);
+    r32 s = sinf(angle);
+    Vec2 axis0 = vec2(c*width, s*width);
+    Vec2 axis1 = vec2(s*height, -c*height);
+    Vec2 p00 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, -1)));
+    Vec2 p10 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, -1)));
+    Vec2 p11 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, 1)));
+    Vec2 p01 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, 1)));
+
+    PushLine2(batch, p00, p10, lineWidth, texture->pos, texture->size);
+    PushLine2(batch, p10, p11, lineWidth, texture->pos, texture->size);
+    PushLine2(batch, p11, p01, lineWidth, texture->pos, texture->size);
+    PushLine2(batch, p01, p00, lineWidth, texture->pos, texture->size);
+}
+
+void
 PushCircle2(SpriteBatch *batch, Vec2 center, r32 size, Vec2 texOrig, Vec2 texSize)
 {
     PushRect2(batch, vec2(center.x-size, center.y-size), vec2(size*2, size*2), texOrig, texSize);
@@ -247,7 +271,7 @@ UpdateCamera2D(Camera2D *camera, AppState *appState)
     Vec2 size = vec2(camera->scale*appState->screenWidth, camera->scale*appState->screenHeight);
     camera->transform = m3_translation_and_scale(
             vec2(-camera->pos.x, -camera->pos.y),
-            2.0/size.x, -2.0/size.y);
+            2.0/size.x, (-1.0+2*camera->isYDown)*2.0/size.y);
     camera->size = size;
 }
 

@@ -12,13 +12,19 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Make 2d camera, 2 stages: 1) draw custom sprites 2) render text.
-- Import physics library. Velocity raptor.
-- Draw oriented rectangles. Draw velocity raptor geometry.
+- Get mouse position from camera.
+- Chipmunk: make rectangle bodies.
+- Chipmunk: connect bodies with rotary limit joint.
 - 2D lighting.
+- Find mouse position by taking inverse projection matrix.
 
 DONE:
 
+- Do Chipmunk tutorial.
+- Draw oriented rectangles. Draw geometry.
+- Invert y axis on command in camera.
+- Import physics library. Chipmunk 2D.
+- Make 2d camera, 2 stages: 1) draw custom sprites 2) render text.
 - Fix font rendering with spritebatch.
 - Fix textures with spritebatch.
 - Fix nuklear.

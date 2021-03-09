@@ -30,6 +30,7 @@ typedef struct
     Vec2 pos;
     Vec2 size;
     r32 scale;
+    b32 isYDown;
     Mat3 transform;
 } Camera2D;
 

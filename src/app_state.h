@@ -25,8 +25,6 @@ struct AppState
     i32 my;
     r32 normalizedMX;
     r32 normalizedMY;
-    Vec3 mouseRayPos;
-    Vec3 mouseRayDir;
 
     b32 isActionDown[NUM_KEY_ACTIONS];
     b32 wasActionDown[NUM_KEY_ACTIONS];

@@ -202,10 +202,38 @@ main(int argc, char**argv)
     // + Camera
     Camera2D *camera = PushStruct(gameArena, Camera2D);
     InitCamera2D(camera);
+    camera->isYDown = 1;
 
     // Font/Gui Camera
     Camera2D *screenCamera = PushStruct(gameArena, Camera2D);
     InitCamera2D(screenCamera);
+    screenCamera->isYDown = 0;
+
+    // Chipmunk hello world
+    cpVect gravity = cpv(0, -800);
+
+    cpSpace *space = cpSpaceNew();
+    cpSpaceSetGravity(space, gravity);
+
+    cpVect groundFrom = cpv(-100, 20);
+    cpVect groundTo = cpv(100, 0);
+
+    cpShape *ground = cpSegmentShapeNew(cpSpaceGetStaticBody(space), 
+            groundFrom,
+            groundTo,
+            0);
+    cpShapeSetFriction(ground, 1);
+    cpSpaceAddShape(space, ground);
+
+    cpFloat radius = 10;
+    cpFloat mass = 1;
+    cpFloat moment = cpMomentForCircle(mass, 0, radius, cpvzero);
+    
+    cpBody *ballBody = cpSpaceAddBody(space, cpBodyNew(mass, moment));
+    cpBodySetPosition(ballBody, cpv(0, 100));
+
+    cpShape *ballShape = cpSpaceAddShape(space, cpCircleShapeNew(ballBody, radius, cpvzero));
+    cpShapeSetFriction(ballShape, 0.7);
 
     b32 paused = 0;
     while(!done)
@@ -316,12 +344,18 @@ main(int argc, char**argv)
 
         glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
         AtlasRegion circleRegion = atlas->regions[0];
+        AtlasRegion squareRegion = atlas->regions[1];
         // Draw some 2D
 #if 0
         Mat3 transform = m3_translation_and_scale(
                 vec2(-appState->screenWidth/2.0, -appState->screenHeight/2.0), 
                 2.0/(appState->screenWidth), -2.0/(appState->screenHeight));
 #endif
+
+        // Do physics step
+        cpVect ballPos = cpBodyGetPosition(ballBody);
+        cpFloat ballAngle = cpBodyGetAngle(ballBody);
+        cpSpaceStep(space, 1.0/60.0);
 
         UpdateCamera2D(camera, appState);
         int matLocation = glGetUniformLocation(spriteShader->program, "transform");
@@ -333,11 +367,33 @@ main(int argc, char**argv)
         local_persist r32 coolTime = 0.0;
         coolTime+=0.01;
 
+
+        // Draw physics world.
         batch->colorState = vec4(0,0,0,1);
-        PushRect2(batch, vec2(-150, -150),
-                vec2(300, 300),
+        PushRect2(batch, vec2(ballPos.x-radius, ballPos.y-radius),
+                vec2(radius*2, radius*2),
                 circleRegion.pos, 
                 circleRegion.size);
+        batch->colorState = vec4(0,1,0,1);
+
+        PushLine2(batch, vec2(ballPos.x, ballPos.y), 
+                vec2(ballPos.x+cosf(ballAngle)*radius, ballPos.y+sinf(ballAngle)*radius),
+                2.0, squareRegion.pos, squareRegion.size);
+        
+        batch->colorState = vec4(1,0,0,1);
+        PushLine2(batch, vec2(groundFrom.x, groundFrom.y), vec2(groundTo.x, groundTo.y), 2.0, squareRegion.pos, squareRegion.size);
+
+        // Test
+        PushOrientedLineRectangle2(batch,
+                vec2(100*cosf(coolTime*3),300*sinf(coolTime*4)), 
+                200,
+                100,
+                coolTime,
+                3,
+                &squareRegion);
+
+        PushLine2(batch, vec2(0,0), vec2(appState->mx-appState->screenWidth/2, 
+                    appState->my-appState->screenHeight/2), 9.0, squareRegion.pos, squareRegion.size);
 
         EndSpritebatch(batch);
 
@@ -350,7 +406,6 @@ main(int argc, char**argv)
         DrawString2D(batch, &fontRenderer, vec2(20, 900), "heyy");
 
         EndSpritebatch(batch);
-
 
         // UI
         enum {EASY, HARD};

@@ -16,3 +16,6 @@
 #include "stb_image.h"
 #include "stb_truetype.h"
 
+#include "chipmunk/chipmunk_structs.h"
+#include "chipmunk/chipmunk.h"
+

@@ -4,5 +4,7 @@ CXX=gcc
 NO_WARNING=-Wno-misleading-indentation
 
 pushd src &> /dev/null
-$CXX external_libs.c -c -lm -ldl -o ../external.o -g -I../include -I/usr/local/include/SDL2 -lSDL2 -Wall -pthread $NO_WARNING
+$CXX external_libs.c -c -o ../external.o -g -I../include \
+    -I../include_chipmunk -I/usr/local/include/SDL2 -lSDL2 -Wall -pthread $NO_WARNING
 popd &> /dev/null
+
