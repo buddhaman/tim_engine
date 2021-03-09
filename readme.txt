@@ -12,14 +12,17 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Fix nuklear.
-- 2D spritebatch. With indices.
-- Immediate mode GUI.
+- Make 2d camera, 2 stages: 1) draw custom sprites 2) render text.
 - Import physics library. Velocity raptor.
+- Draw oriented rectangles. Draw velocity raptor geometry.
 - 2D lighting.
 
 DONE:
 
+- Fix font rendering with spritebatch.
+- Fix textures with spritebatch.
+- Fix nuklear.
+- 2D spritebatch. With indices.
 - Make 3d shader render (2D) textures by default.
 - Draw guys with circular head.
 - Texturing

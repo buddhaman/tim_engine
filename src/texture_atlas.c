@@ -35,6 +35,7 @@ NormalizePositions(TextureAtlas *atlas, int totalWidth, int totalHeight)
         AtlasRegion *region = atlas->regions+atlasIdx;
         region->pos = vec2(region->x/((r32)totalWidth), region->y/((r32)totalHeight));
         region->size = vec2(region->width/((r32)totalWidth), region->height/((r32)totalHeight));
+#if 0
         DebugOut("%d %d %d %d -> %f %f %f %f", 
                 region->x,
                 region->y,
@@ -44,6 +45,7 @@ NormalizePositions(TextureAtlas *atlas, int totalWidth, int totalHeight)
                 region->pos.y,
                 region->size.x,
                 region->size.y);
+#endif
     }
 }
 

@@ -144,8 +144,8 @@ main(int argc, char**argv)
     struct nk_context *ctx;
     ctx = nk_sdl_init(window);
 
-    struct nk_font_atlas *atlas;
-    nk_sdl_font_stash_begin(&atlas);
+    struct nk_font_atlas *nkFontAtlas;
+    nk_sdl_font_stash_begin(&nkFontAtlas);
     nk_sdl_font_stash_end();
 
     // Creating appstate
@@ -191,10 +191,21 @@ main(int argc, char**argv)
     SpriteBatch *batch = PushStruct(gameArena, SpriteBatch);
     InitSpriteBatch(batch, 10000, gameArena);
 
+    // Init simple textureatlas
+    TextureAtlas *atlas = MakeDefaultTexture(gameArena, 256);
+
     // Make spritebatch shader
     Shader *spriteShader = PushStruct(gameArena, Shader);
     InitShader(spriteShader, "shaders/sprite.vert", "shaders/sprite.frag");
     LoadShader(spriteShader);
+
+    // + Camera
+    Camera2D *camera = PushStruct(gameArena, Camera2D);
+    InitCamera2D(camera);
+
+    // Font/Gui Camera
+    Camera2D *screenCamera = PushStruct(gameArena, Camera2D);
+    InitCamera2D(screenCamera);
 
     b32 paused = 0;
     while(!done)
@@ -303,16 +314,43 @@ main(int argc, char**argv)
         }
 #endif 
 
+        glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
+        AtlasRegion circleRegion = atlas->regions[0];
         // Draw some 2D
-        Mat3 transform = m3_translation(vec2(0,0));
+#if 0
+        Mat3 transform = m3_translation_and_scale(
+                vec2(-appState->screenWidth/2.0, -appState->screenHeight/2.0), 
+                2.0/(appState->screenWidth), -2.0/(appState->screenHeight));
+#endif
+
+        UpdateCamera2D(camera, appState);
         int matLocation = glGetUniformLocation(spriteShader->program, "transform");
         glUseProgram(spriteShader->program);
-        glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&transform);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
         BeginSpritebatch(batch);
         local_persist r32 coolTime = 0.0;
         coolTime+=0.01;
-        PushRect2(batch, vec2(-0.1,-0.1), vec2(0.2, 0.2+coolTime), vec2(0,0), vec2(1,1));
+
+        batch->colorState = vec4(0,0,0,1);
+        PushRect2(batch, vec2(-150, -150),
+                vec2(300, 300),
+                circleRegion.pos, 
+                circleRegion.size);
+
         EndSpritebatch(batch);
+
+        glBindTexture(GL_TEXTURE_2D, fontRenderer.font12Texture);
+        FitCamera2DToScreen(screenCamera, appState);
+        UpdateCamera2D(screenCamera, appState);
+        BeginSpritebatch(batch);
+        glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&screenCamera->transform);
+
+        DrawString2D(batch, &fontRenderer, vec2(20, 900), "heyy");
+
+        EndSpritebatch(batch);
+
 
         // UI
         enum {EASY, HARD};

@@ -80,7 +80,6 @@ InitSpriteBatch(SpriteBatch *batch, ui32 maxVertices, MemoryArena *arena)
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, batch->stride*sizeof(r32), (void *)(memOffset));
     memOffset+=2*sizeof(r32);
     CheckOpenglError();
-
 }
 
 internal inline void
@@ -234,4 +233,29 @@ DrawString2D(SpriteBatch *batch, FontRenderer *fontRenderer, Vec2 pos, char *seq
         sequence++;
     }
 }
+
+void 
+InitCamera2D(Camera2D *camera)
+{
+    camera->pos = vec2(0,0);
+    camera->scale = 1.0;
+}
+
+void
+UpdateCamera2D(Camera2D *camera, AppState *appState)
+{
+    Vec2 size = vec2(camera->scale*appState->screenWidth, camera->scale*appState->screenHeight);
+    camera->transform = m3_translation_and_scale(
+            vec2(-camera->pos.x, -camera->pos.y),
+            2.0/size.x, -2.0/size.y);
+    camera->size = size;
+}
+
+void
+FitCamera2DToScreen(Camera2D *camera, AppState *appState)
+{
+    camera->scale = 1;
+    camera->pos = vec2(appState->screenWidth/2.0, appState->screenHeight/2.0);
+}
+
 

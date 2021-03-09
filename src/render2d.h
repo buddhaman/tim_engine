@@ -25,3 +25,11 @@ typedef struct
     Vec4 colorState;
 } SpriteBatch;
 
+typedef struct
+{
+    Vec2 pos;
+    Vec2 size;
+    r32 scale;
+    Mat3 transform;
+} Camera2D;
+

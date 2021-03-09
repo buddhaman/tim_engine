@@ -11,8 +11,7 @@ void main()
 {
     vec4 texColor = texture(texture0, texCoord);
     //texColor.gb = vec2(texCoord.x, 0.5*sin(texCoord.y*80.0)+0.5);
-    FragColor = color*texColor+vec4(0.0, 0.0, 0.0, 1.0);
-    FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    FragColor = color*texColor;
 }
 
 
