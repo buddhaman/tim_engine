@@ -96,15 +96,12 @@ EndSpritebatch(SpriteBatch *batch)
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo);
     glBufferData(GL_ARRAY_BUFFER, batch->nVertices*batch->stride*sizeof(r32), 
             batch->vertexBuffer, GL_DYNAMIC_DRAW);
-    CheckOpenglError();
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, batch->nVertices*batch->stride*sizeof(ui16), 
             batch->indexBuffer, GL_DYNAMIC_DRAW);
-    CheckOpenglError();
 
     glDrawElements(GL_TRIANGLES, batch->nIndices, GL_UNSIGNED_SHORT, 0);
-    CheckOpenglError();
 }
 
 internal inline void
@@ -198,8 +195,8 @@ PushOrientedLineRectangle2(SpriteBatch *batch,
 {
     r32 c = cosf(angle);
     r32 s = sinf(angle);
-    Vec2 axis0 = vec2(c*width, s*width);
-    Vec2 axis1 = vec2(s*height, -c*height);
+    Vec2 axis0 = vec2(c*width/2.0, s*width/2.0);
+    Vec2 axis1 = vec2(s*height/2.0, -c*height/2.0);
     Vec2 p00 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, -1)));
     Vec2 p10 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, -1)));
     Vec2 p11 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, 1)));

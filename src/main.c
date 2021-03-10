@@ -65,6 +65,7 @@ ReadEntireFile(const char *path)
 #include "app_state.h"
 #include "render2d.h"
 #include "texture_atlas.h"
+#include "world.h"
 
 #include "cool_memory.c"
 #include "tim_math.c"
@@ -74,6 +75,7 @@ ReadEntireFile(const char *path)
 #include "app_state.c"
 #include "render2d.c"
 #include "texture_atlas.c"
+#include "world.c"
 
 #define MEM_TEST 0
 
@@ -209,31 +211,17 @@ main(int argc, char**argv)
     InitCamera2D(screenCamera);
     screenCamera->isYDown = 0;
 
-    // Chipmunk hello world
-    cpVect gravity = cpv(0, -800);
+    // Init World
+    World *world = PushStruct(gameArena, World);
+    InitWorld(world, gameArena);
 
-    cpSpace *space = cpSpaceNew();
-    cpSpaceSetGravity(space, gravity);
-
-    cpVect groundFrom = cpv(-100, 20);
-    cpVect groundTo = cpv(100, 0);
-
-    cpShape *ground = cpSegmentShapeNew(cpSpaceGetStaticBody(space), 
-            groundFrom,
-            groundTo,
-            0);
-    cpShapeSetFriction(ground, 1);
-    cpSpaceAddShape(space, ground);
-
-    cpFloat radius = 10;
-    cpFloat mass = 1;
-    cpFloat moment = cpMomentForCircle(mass, 0, radius, cpvzero);
-    
-    cpBody *ballBody = cpSpaceAddBody(space, cpBodyNew(mass, moment));
-    cpBodySetPosition(ballBody, cpv(0, 100));
-
-    cpShape *ballShape = cpSpaceAddShape(space, cpCircleShapeNew(ballBody, radius, cpvzero));
-    cpShapeSetFriction(ballShape, 0.7);
+    for(int i = 0; i < 100; i++)
+    {
+        AddDynamicRectangle(world, vec2(0,i*20), 20, 20, 0.5);
+    }
+    AddStaticRectangle(world, vec2(0, -120), 200, 10, 0.0);
+    AddStaticRectangle(world, vec2(-100, -80), 220, 10, -0.6);
+    AddStaticRectangle(world, vec2(100, -80), 220, 10, 0.6);
 
     b32 paused = 0;
     while(!done)
@@ -352,46 +340,19 @@ main(int argc, char**argv)
                 2.0/(appState->screenWidth), -2.0/(appState->screenHeight));
 #endif
 
-        // Do physics step
-        cpVect ballPos = cpBodyGetPosition(ballBody);
-        cpFloat ballAngle = cpBodyGetAngle(ballBody);
-        cpSpaceStep(space, 1.0/60.0);
-
+        UpdateWorld(world);
         UpdateCamera2D(camera, appState);
+
         int matLocation = glGetUniformLocation(spriteShader->program, "transform");
         glUseProgram(spriteShader->program);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
         BeginSpritebatch(batch);
-        local_persist r32 coolTime = 0.0;
-        coolTime+=0.01;
-
-
-        // Draw physics world.
-        batch->colorState = vec4(0,0,0,1);
-        PushRect2(batch, vec2(ballPos.x-radius, ballPos.y-radius),
-                vec2(radius*2, radius*2),
-                circleRegion.pos, 
-                circleRegion.size);
-        batch->colorState = vec4(0,1,0,1);
-
-        PushLine2(batch, vec2(ballPos.x, ballPos.y), 
-                vec2(ballPos.x+cosf(ballAngle)*radius, ballPos.y+sinf(ballAngle)*radius),
-                2.0, squareRegion.pos, squareRegion.size);
-        
-        batch->colorState = vec4(1,0,0,1);
-        PushLine2(batch, vec2(groundFrom.x, groundFrom.y), vec2(groundTo.x, groundTo.y), 2.0, squareRegion.pos, squareRegion.size);
+        DrawWorld(world, batch, camera, &squareRegion);
 
         // Test
-        PushOrientedLineRectangle2(batch,
-                vec2(100*cosf(coolTime*3),300*sinf(coolTime*4)), 
-                200,
-                100,
-                coolTime,
-                3,
-                &squareRegion);
-
+        batch->colorState = vec4(0,0,0,1);
         PushLine2(batch, vec2(0,0), vec2(appState->mx-appState->screenWidth/2, 
                     appState->my-appState->screenHeight/2), 9.0, squareRegion.pos, squareRegion.size);
 
@@ -407,7 +368,7 @@ main(int argc, char**argv)
 
         EndSpritebatch(batch);
 
-        // UI
+        // Begin UI
         enum {EASY, HARD};
         if(nk_begin(ctx, "Cool Window", nk_rect(50, 50, 220, 220),
                 NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE))
@@ -420,7 +381,7 @@ main(int argc, char**argv)
         nk_end(ctx);
 
         nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
-        // End of UI
+        // End UI
 
         // frame timing
         ui32 frameEnd = SDL_GetTicks();

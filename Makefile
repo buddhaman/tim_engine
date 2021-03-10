@@ -4,7 +4,7 @@ SRC = $(wildcard src_chipmunk/*.c)
 
 DEBUG0 = -g
 DEBUG1 = -fsanitize=address -g
-
+CFLAGS = -DNDEBUG
 ODIR = obj
 _OBJ = $(SRC:.c=.o)
 OBJ = $(patsubst %,$(ODIR)/%,$(notdir $(_OBJ)))

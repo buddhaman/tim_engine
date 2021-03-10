@@ -1,0 +1,4 @@
+src/main.c: In function ‘main’:
+src/main.c:334:21: warning: unused variable ‘circleRegion’ [-Wunused-variable]
+  334 |         AtlasRegion circleRegion = atlas->regions[0];
+      |                     ^~~~~~~~~~~~

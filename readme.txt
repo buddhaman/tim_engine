@@ -12,14 +12,17 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Get mouse position from camera.
-- Chipmunk: make rectangle bodies.
-- Chipmunk: connect bodies with rotary limit joint.
+- Controll camera.
+- Chipmunk: connect bodies with rotary limit joint + pivot joint?
 - 2D lighting.
 - Find mouse position by taking inverse projection matrix.
+- Get mouse position from camera.
 
 DONE:
 
+- Encapsulate physics in world.
+- Create scene.
+- Chipmunk: make rectangle bodies.
 - Do Chipmunk tutorial.
 - Draw oriented rectangles. Draw geometry.
 - Invert y axis on command in camera.
