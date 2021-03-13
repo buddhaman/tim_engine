@@ -12,14 +12,22 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Controll camera.
-- Chipmunk: connect bodies with rotary limit joint + pivot joint?
+- Create creature muscles + random movements.
+- Make GRU using linalg library.
+- Visualize GRU.
+- Do physics engine memory management.
 - 2D lighting.
-- Find mouse position by taking inverse projection matrix.
-- Get mouse position from camera.
 
 DONE:
 
+- Create creature in world.
+- Create creature struct.
+- Determine scale.
+- Solid oriented rectangle rendering.
+- Get mouse position from camera.
+- Controll camera.
+- Easy rotary limit joint creation.
+- Chipmunk: connect bodies with rotary limit joint + pivot joint?
 - Encapsulate physics in world.
 - Create scene.
 - Chipmunk: make rectangle bodies.
@@ -65,24 +73,25 @@ DONE:
 
 BRAINSTORM:
 
-No more asset related code for now. Clean it up and use in game.
+- Train creatures for individual task. Manage high level behavior with behavior tree. 
+  
+Low level behavior:
+    Move forward
+    Turn left 
+    Turn right
+    Move grabber to relative position. (independent of attachment)
+    Attack to relative position.
+    Grab and put down (building nests)
 
-Fix the terrain. Make it flat. Make a walking guy. Maybe look into one more technique.
+BIG QUESTIONS: 
+- How to orient creature. Determine a body that contains the brain/heart?
 
-Do marching cubes ? 
+COOL THINGS:
+    Infinite generated zoom. Generate cells, dna, atoms.
+    Fancy textures + normals and lighting.
+    Generate textures, based on dna.
 
-Paper rendering ? later.
-
-Fix surface normals on guy. Shadows ? 
-
-Possible pivot:
-
-create voxel world for guys and make them build. Use behavior trees for this.
-
-BRAINSTORM FOR PIVOT:
-
-Making guys with behavior trees is gonna be a lot of work. Pivot to simple neural network simulation? 
-
-Think about it.
-
-
+Some lay eggs, some dont.
+complicated long term behavior. 
+Carnivore herbivore ofcourse.
+ 

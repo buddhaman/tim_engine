@@ -185,6 +185,26 @@ PushLine2(SpriteBatch *batch, Vec2 from, Vec2 to, r32 lineWidth, Vec2 texOrig, V
 }
 
 void
+PushOrientedRectangle2(SpriteBatch *batch, 
+        Vec2 pos, 
+        r32 width, 
+        r32 height, 
+        r32 angle,
+        AtlasRegion *texture)
+{
+    r32 c = cosf(angle);
+    r32 s = sinf(angle);
+    Vec2 axis0 = vec2(c*width/2.0, s*width/2.0);
+    Vec2 axis1 = vec2(s*height/2.0, -c*height/2.0);
+    Vec2 p00 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, -1)));
+    Vec2 p10 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, -1)));
+    Vec2 p11 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, 1)));
+    Vec2 p01 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, 1)));
+
+    PushQuad2(batch, p00, p10, p11, p01, texture->pos, texture->size);
+}
+
+void
 PushOrientedLineRectangle2(SpriteBatch *batch, 
         Vec2 pos, 
         r32 width, 
@@ -270,6 +290,12 @@ UpdateCamera2D(Camera2D *camera, AppState *appState)
             vec2(-camera->pos.x, -camera->pos.y),
             2.0/size.x, (-1.0+2*camera->isYDown)*2.0/size.y);
     camera->size = size;
+
+    r32 ny = ((r32)appState->my)/((r32)appState->screenHeight) - 0.5;// In [-0.5, 0.5]
+    // Mouse location.
+    camera->mousePos = vec2(
+            appState->mx*camera->scale+camera->pos.x-camera->size.x/2.0, 
+            (1.0-2.0*camera->isYDown)*camera->size.y*ny + camera->pos.y);
 }
 
 void

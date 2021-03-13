@@ -1,0 +1,23 @@
+
+typedef struct
+{
+    RigidBody *body;
+} BodyPart;
+
+typedef struct
+{
+    RigidBody *bodyA;
+    RigidBody *bodyB;
+    cpSimpleMotor *motor;
+} RotaryMuscle;
+
+typedef struct
+{
+    // Eventually hashmap and store in world.
+    int nBodyParts;
+    int maxBodyParts;
+    RigidBody **bodyParts;
+
+    Vec4 color;
+} Creature;
+

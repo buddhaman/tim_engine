@@ -1,4 +1,11 @@
 
+// TODO: Better random.
+r32
+RandomR32(r32 min, r32 max)
+{
+    return min + (max - min)*(random()%10000)/10000.0;
+}
+
 Vec3 
 GetZIntersection(Vec3 rayPos, Vec3 rayDir, r32 z)
 {

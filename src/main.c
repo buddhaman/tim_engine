@@ -76,6 +76,7 @@ ReadEntireFile(const char *path)
 #include "render2d.c"
 #include "texture_atlas.c"
 #include "world.c"
+#include "creature.c"
 
 #define MEM_TEST 0
 
@@ -191,7 +192,7 @@ main(int argc, char**argv)
 
     // Init spritebatch
     SpriteBatch *batch = PushStruct(gameArena, SpriteBatch);
-    InitSpriteBatch(batch, 10000, gameArena);
+    InitSpriteBatch(batch, 100000, gameArena);
 
     // Init simple textureatlas
     TextureAtlas *atlas = MakeDefaultTexture(gameArena, 256);
@@ -205,6 +206,7 @@ main(int argc, char**argv)
     Camera2D *camera = PushStruct(gameArena, Camera2D);
     InitCamera2D(camera);
     camera->isYDown = 1;
+    camera->scale = 1.0;
 
     // Font/Gui Camera
     Camera2D *screenCamera = PushStruct(gameArena, Camera2D);
@@ -215,13 +217,13 @@ main(int argc, char**argv)
     World *world = PushStruct(gameArena, World);
     InitWorld(world, gameArena);
 
-    for(int i = 0; i < 100; i++)
+    // Add ground
+    AddStaticRectangle(world, vec2(0,0), 1600.0, 40, 0.0);
+
+    for(int i = 0; i < 1; i++)
     {
-        AddDynamicRectangle(world, vec2(0,i*20), 20, 20, 0.5);
+        AddCreature(world, vec2(-300+i*200, 200));
     }
-    AddStaticRectangle(world, vec2(0, -120), 200, 10, 0.0);
-    AddStaticRectangle(world, vec2(-100, -80), 220, 10, -0.6);
-    AddStaticRectangle(world, vec2(100, -80), 220, 10, 0.6);
 
     b32 paused = 0;
     while(!done)
@@ -295,24 +297,20 @@ main(int argc, char**argv)
         glViewport(0, 0, appState->screenWidth, appState->screenHeight);
 
         // Update Camera
-#if 0
-        r32 camSpeed = 0.6;
-        r32 zoomSpeed = 0.99;
-        if(IsKeyActionDown(appState, ACTION_Z)) { camera.spherical.z*=zoomSpeed; }
-        if(IsKeyActionDown(appState, ACTION_X)) { camera.spherical.z/=zoomSpeed; }
-        if(IsKeyActionDown(appState, ACTION_UP)) { camera.lookAt.y+=camSpeed; }
-        if(IsKeyActionDown(appState, ACTION_DOWN)) { camera.lookAt.y-=camSpeed; }
-        if(IsKeyActionDown(appState, ACTION_LEFT)) { camera.lookAt.x-=camSpeed; }
-        if(IsKeyActionDown(appState, ACTION_RIGHT)) { camera.lookAt.x+=camSpeed; }
+#if 1
+        r32 zoomSpeed = 0.98;
+        r32 camSpeed = 8.0 * camera->scale;
+        if(IsKeyActionDown(appState, ACTION_Z)) { camera->scale*=zoomSpeed; }
+        if(IsKeyActionDown(appState, ACTION_X)) { camera->scale/=zoomSpeed; }
+        if(IsKeyActionDown(appState, ACTION_UP)) { camera->pos.y+=camSpeed; }
+        if(IsKeyActionDown(appState, ACTION_DOWN)) { camera->pos.y-=camSpeed; }
+        if(IsKeyActionDown(appState, ACTION_LEFT)) { camera->pos.x-=camSpeed; }
+        if(IsKeyActionDown(appState, ACTION_RIGHT)) { camera->pos.x+=camSpeed; }
         if(IsKeyActionDown(appState, ACTION_Q))
         {
-            camera.spherical.y-=0.1;
-            if(camera.spherical.y < 0.1) camera.spherical.y = 0.1;
         }
         if(IsKeyActionDown(appState, ACTION_E))
         {
-            camera.spherical.y+=0.1;
-            if(camera.spherical.y > M_PI/2-0.1) camera.spherical.y = M_PI/2-0.1;
         }
 #endif
         if(IsKeyActionJustDown(appState, ACTION_P))
@@ -332,6 +330,7 @@ main(int argc, char**argv)
 
         glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
         AtlasRegion circleRegion = atlas->regions[0];
+        (void)circleRegion;
         AtlasRegion squareRegion = atlas->regions[1];
         // Draw some 2D
 #if 0
@@ -353,8 +352,7 @@ main(int argc, char**argv)
 
         // Test
         batch->colorState = vec4(0,0,0,1);
-        PushLine2(batch, vec2(0,0), vec2(appState->mx-appState->screenWidth/2, 
-                    appState->my-appState->screenHeight/2), 9.0, squareRegion.pos, squareRegion.size);
+        PushLine2(batch, vec2(0,0), camera->mousePos,  9.0, squareRegion.pos, squareRegion.size);
 
         EndSpritebatch(batch);
 
@@ -364,7 +362,9 @@ main(int argc, char**argv)
         BeginSpritebatch(batch);
         glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&screenCamera->transform);
 
-        DrawString2D(batch, &fontRenderer, vec2(20, 900), "heyy");
+        local_persist r32 cooltime = 0.0;
+        cooltime+=1;
+        DrawString2D(batch, &fontRenderer, vec2(20+cooltime, 900), "heyy");
 
         EndSpritebatch(batch);
 

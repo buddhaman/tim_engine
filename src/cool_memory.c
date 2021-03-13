@@ -26,8 +26,12 @@ PushMemory_(MemoryArena *arena, size_t size)
     Assert(arena->used < arena->size);
     return arena->base + arena->used - size;
 }
-#define PushStruct(arena, type) (type *)PushMemory_(arena, sizeof(type))
-#define PushArray(arena, type, nElements) (type *)PushMemory_(arena, sizeof(type)*nElements)
+#define PushStruct(arena, type) \
+    (type *)PushMemory_(arena, sizeof(type)); \
+    DebugOut(""#type" : %p", (void*)(arena->base+arena->used))
+#define PushArray(arena, type, nElements) \
+    (type *)PushMemory_(arena, sizeof(type)*nElements); \
+    DebugOut(""#type" : %p", (void*)(arena->base+arena->used))
 
 MemoryPool *
 CreateMemoryPool(MemoryArena *arena, size_t elementSize, size_t maxBlocks)
@@ -80,6 +84,7 @@ AllocateElement(MemoryPool *pool)
             break;
         }
     }
+    DebugOut("allocate on block %u bit %u", blockIdx, bitIdx);
     return pool->base + (pool->elementSize*32)*blockIdx + pool->elementSize*bitIdx;
 }
 

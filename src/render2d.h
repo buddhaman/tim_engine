@@ -32,5 +32,7 @@ typedef struct
     r32 scale;
     b32 isYDown;
     Mat3 transform;
+
+    Vec2 mousePos;  // World coordinates.
 } Camera2D;
 
