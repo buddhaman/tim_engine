@@ -43,6 +43,7 @@ AddDynamicRectangle(World *world, Vec2 pos, r32 width, r32 height, r32 angle, ui
     body->pos = pos;
     body->width = width;
     body->height = height;
+    body->drag = 0.0;
 
     // Create cpBody
     cpFloat mass = 1;
@@ -104,6 +105,19 @@ UpdateWorld(World *world)
         UpdateCreature(world, creature);
     }
     cpSpaceStep(world->space, 1.0/60.0);
+    for(ui32 rigidBodyIdx = 0;
+            rigidBodyIdx < world->nRigidBodies;
+            rigidBodyIdx++)
+    {
+        RigidBody *body = world->rigidBodies+rigidBodyIdx;
+        if(!cpBodyIsSleeping(body->body))
+        {
+            // Apply friction
+            cpVect vel = cpBodyGetVelocity(body->body);
+            vel = cpvmult(vel, 1.0-body->drag);
+            cpBodySetVelocity(body->body, vel);
+        }
+    }
 }
 
 Vec2
@@ -156,7 +170,8 @@ DrawWorld(World *world, SpriteBatch *batch, Camera2D *camera, AtlasRegion *textu
             Vec2 pos = GetBodyPos(body);
             r32 angle = GetBodyAngle(body);
 
-            batch->colorState = part->color;
+            r32 shade = 1.0-part->body->drag;
+            batch->colorState = vec4(shade, shade, shade, 1.0);
             PushOrientedRectangle2(batch, 
                     pos,
                     body->width,

@@ -5,9 +5,12 @@ typedef struct World World;
 struct RigidBody
 {
     cpBody *body;
+
     r32 width;
     r32 height;
     Vec2 pos;
+
+    r32 drag;
 };
 
 #include "creature.h"

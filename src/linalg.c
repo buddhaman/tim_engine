@@ -74,6 +74,32 @@ VecR32MulS(VecR32 *vec, r32 s)
     }
 }
 
+void 
+VecR32Hadamard(VecR32 *result, VecR32 *a, VecR32 *b)
+{
+    for(int i = 0; i < a->n; i++)
+    {
+        result->v[i] = a->v[i]*b->v[i];
+    }
+}
+
+#define VEC_TRANSFORM_FUNCTION(name) r32 name(r32 x)
+typedef VEC_TRANSFORM_FUNCTION(vec_transform_function);
+
+VEC_TRANSFORM_FUNCTION(sigmoid)
+{
+    return 1.0/(1.0+expf(-x));
+}
+
+void
+VecR32Apply(VecR32 *result, VecR32 *vec, vec_transform_function *f)
+{
+    for(int i = 0; i < vec->n; i++)
+    {
+        result->v[i] = f(vec->v[i]);
+    }
+}
+
 void
 RandomMatR32(MatR32 *mat, r32 min, r32 max)
 {

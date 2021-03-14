@@ -17,6 +17,7 @@ typedef struct
 
 typedef struct
 {
+    r32 internalClock;
     ui32 physicsGroup;
     // Eventually hashmap and store in world.
     int nBodyParts;

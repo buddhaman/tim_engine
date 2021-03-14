@@ -12,7 +12,6 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Create creature muscles + random movements.
 - Make GRU using linalg library.
 - Visualize GRU.
 - Do physics engine memory management.
@@ -20,6 +19,8 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 DONE:
 
+- Top down ground friction for all dynamic bodies.
+- Create creature muscles + random movements.
 - Create creature in world.
 - Create creature struct.
 - Determine scale.

@@ -58,9 +58,10 @@ AddCreature(World *world, Vec2 pos)
 
     r32 limbWidth = 10;
     r32 limbHeight = 40;
+    r32 angle = 1.0;
 
     // Build body
-    ui32 chains = 32;
+    ui32 chains = 12;
     BodyPart *last = NULL;
     for(int i = 0; i < chains; i++)
     {
@@ -68,7 +69,7 @@ AddCreature(World *world, Vec2 pos)
         if(last)
         {
             Vec2 pivotPoint = vec2(pos.x, pos.y+limbHeight/2.0+(i-1)*limbHeight);
-            CreatureAddRotaryMuscle(world, creature, last, part, pivotPoint, -1, 1);
+            CreatureAddRotaryMuscle(world, creature, last, part, pivotPoint, -angle, angle);
         }
         last = part;
     }
@@ -88,14 +89,31 @@ SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
 void
 UpdateCreature(World *world, Creature *creature)
 {
-    local_persist r32 time = 0;
-    time+=1.0/60.0;
+    creature->internalClock+=1.0/60.0;
+    r32 drag = 0.1;
+
+    int nRotaryMuscles = creature->nRotaryMuscles;
+    int nHalfPhases = 4;
+    r32 secondsPerStrokeCycle = 2;
+    r32 secondsPerDragCycle = 2;
+    r32 offsetPerMuscle = nHalfPhases*M_PI/nRotaryMuscles;
+    r32 offsetPerBodyPart = nHalfPhases*M_PI/(nRotaryMuscles+1);
+
     for(ui32 muscleIdx = 0;
             muscleIdx < creature->nRotaryMuscles;
             muscleIdx++)
     {
         RotaryMuscle *muscle = creature->rotaryMuscles+muscleIdx;
-        SetMuscleActivation(muscle, sinf(time*6+0.4*muscleIdx));
+        r32 activation = sinf(creature->internalClock/secondsPerStrokeCycle*M_PI*2+offsetPerMuscle*muscleIdx);
+        SetMuscleActivation(muscle, activation);
+    }
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < creature->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPart *part = creature->bodyParts+bodyPartIdx;
+        r32 activation = sinf(creature->internalClock/secondsPerDragCycle*M_PI*2+offsetPerBodyPart*bodyPartIdx);
+        part->body->drag = 0.05+activation*drag + drag;
     }
 }
 

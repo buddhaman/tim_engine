@@ -220,9 +220,9 @@ main(int argc, char**argv)
     // Add ground
     AddStaticRectangle(world, vec2(0,0), 1600.0, 40, 0.0);
 
-    for(int i = 0; i < 1; i++)
+    for(int i = 0; i < 10; i++)
     {
-        AddCreature(world, vec2(-300+i*200, 200));
+        AddCreature(world, vec2(-300+i*40, 200));
     }
 
     b32 paused = 0;
@@ -339,7 +339,10 @@ main(int argc, char**argv)
                 2.0/(appState->screenWidth), -2.0/(appState->screenHeight));
 #endif
 
-        UpdateWorld(world);
+        for(int i = 0; i < 1; i++)
+        {
+            UpdateWorld(world);
+        }
         UpdateCamera2D(camera, appState);
 
         int matLocation = glGetUniformLocation(spriteShader->program, "transform");
