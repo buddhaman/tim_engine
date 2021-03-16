@@ -12,13 +12,17 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Make GRU using linalg library.
 - Visualize GRU.
+- implement evolution strategies.
+- Mouse input to move camera.
+- Mouse input to select creatures.
 - Do physics engine memory management.
 - 2D lighting.
 
 DONE:
 
+- Move muscles using GRU.
+- Make GRU using linalg library.
 - Top down ground friction for all dynamic bodies.
 - Create creature muscles + random movements.
 - Create creature in world.
@@ -95,4 +99,14 @@ COOL THINGS:
 Some lay eggs, some dont.
 complicated long term behavior. 
 Carnivore herbivore ofcourse.
+
+FUN:
+    Visualize everything!!!!
+    especially training: show each epsilon at the same time . 
+    Show combining and averaging and going to next generation. Show forming of brains.
+    This helps with debugging and its fun to look at. 
+    Show graph, numbers, everything.
+
+    Make brain location, show connections. 
+    Make googly eyes, mouth, claws.
  

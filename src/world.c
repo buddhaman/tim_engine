@@ -4,7 +4,7 @@ InitWorld(World *world, MemoryArena *arena)
 {
     world->arena = arena;
     world->space = cpSpaceNew();
-    //cpSpaceSetGravity(world->space, cpv(0, -500));
+    //cpSpaceSetGravity(world->space, cpv(0, -5000));
     cpSpaceSetGravity(world->space, cpv(0, 0));
 
     world->physicsGroupCounter = 1U;

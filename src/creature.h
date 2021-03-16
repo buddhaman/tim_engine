@@ -28,6 +28,8 @@ typedef struct
     int maxRotaryMuscles;
     RotaryMuscle *rotaryMuscles;
 
+    // Cant be deleted yet 
+    MinimalGatedUnit *brain;
 } Creature;
 
 void

@@ -79,9 +79,13 @@ ReadEntireFile(const char *path)
 #include "creature.c"
 
 #define MEM_TEST 0
+#define NEURALNET_TEST 1
 
 #if MEM_TEST==1
 #include "mem_test.cpp"
+#endif
+#if NEURALNET_TEST==1
+#include "neuralnet_test.c"
 #endif
 
 void
@@ -89,6 +93,9 @@ DoTests()
 {
 #if MEM_TEST==1
     DoMemoryTests();
+#endif
+#if NEURALNET_TEST==1
+    DoNeuralNetTests();
 #endif
 }
 
@@ -220,7 +227,7 @@ main(int argc, char**argv)
     // Add ground
     AddStaticRectangle(world, vec2(0,0), 1600.0, 40, 0.0);
 
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < 1; i++)
     {
         AddCreature(world, vec2(-300+i*40, 200));
     }

@@ -19,13 +19,22 @@ ClearArena(MemoryArena *arena)
     arena->used = 0;
 }
 
-void *
+internal inline void *
 PushMemory_(MemoryArena *arena, size_t size)
 {
     arena->used+=size;
     Assert(arena->used < arena->size);
     return arena->base + arena->used - size;
 }
+
+internal inline void *
+PushAndZeroMemory_(MemoryArena *arena, size_t size)
+{
+    void *memory = PushMemory_(arena, size);
+    memset(memory, 0, size);
+    return memory;
+}
+
 #define PushStruct(arena, type) \
     (type *)PushMemory_(arena, sizeof(type)); \
     DebugOut(""#type" : %p", (void*)(arena->base+arena->used))
@@ -84,7 +93,6 @@ AllocateElement(MemoryPool *pool)
             break;
         }
     }
-    DebugOut("allocate on block %u bit %u", blockIdx, bitIdx);
     return pool->base + (pool->elementSize*32)*blockIdx + pool->elementSize*bitIdx;
 }
 

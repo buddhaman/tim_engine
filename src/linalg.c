@@ -52,7 +52,7 @@ MatR32SetToIdentity(MatR32 *mat)
 
 // As column vector
 void
-MultiplyMatVecR32(MatR32 *mat, VecR32 *vec, VecR32 *result)
+MultiplyMatVecR32(VecR32 *result, MatR32 *mat, VecR32 *vec)
 {
     for(int y = 0; y < mat->h; y++)
     {
@@ -66,6 +66,26 @@ MultiplyMatVecR32(MatR32 *mat, VecR32 *vec, VecR32 *result)
 }
 
 void
+VecR32Add(VecR32 *result, VecR32 *a, VecR32 *b)
+{
+    for(int i = 0; i < a->n; i++)
+    {
+        result->v[i] = a->v[i]+b->v[i];
+    }
+}
+
+void
+VecR32Set(VecR32 *result, VecR32 *vec)
+{
+    Assert(result->n == vec->n);
+    for(int i = 0; i < vec->n; i++)
+    {
+        result->v[i] = vec->v[i];
+    }
+}
+
+
+void
 VecR32MulS(VecR32 *vec, r32 s)
 {
     for(int i = 0; i < vec->n; i++)
@@ -74,9 +94,19 @@ VecR32MulS(VecR32 *vec, r32 s)
     }
 }
 
+void
+VecR32AddS(VecR32 *vec, r32 s)
+{
+    for(int i = 0; i < vec->n; i++)
+    {
+        vec->v[i] = s+vec->v[i];
+    }
+}
+
 void 
 VecR32Hadamard(VecR32 *result, VecR32 *a, VecR32 *b)
 {
+    Assert(a->n == b->n);
     for(int i = 0; i < a->n; i++)
     {
         result->v[i] = a->v[i]*b->v[i];
@@ -86,9 +116,14 @@ VecR32Hadamard(VecR32 *result, VecR32 *a, VecR32 *b)
 #define VEC_TRANSFORM_FUNCTION(name) r32 name(r32 x)
 typedef VEC_TRANSFORM_FUNCTION(vec_transform_function);
 
-VEC_TRANSFORM_FUNCTION(sigmoid)
+VEC_TRANSFORM_FUNCTION(Sigmoid)
 {
     return 1.0/(1.0+expf(-x));
+}
+
+VEC_TRANSFORM_FUNCTION(HyperbolicTangent)
+{
+    return tanhf(x);
 }
 
 void
@@ -97,6 +132,16 @@ VecR32Apply(VecR32 *result, VecR32 *vec, vec_transform_function *f)
     for(int i = 0; i < vec->n; i++)
     {
         result->v[i] = f(vec->v[i]);
+    }
+}
+
+void
+RandomVecR32(VecR32 *vec, r32 min, r32 max)
+{
+    for(int i = 0; i < vec->n; i++)
+    {
+        r32 r = ((random() % 10000) / 10000.0)*(max-min)+min;
+        vec->v[i] = r;
     }
 }
 

@@ -58,7 +58,7 @@ AddCreature(World *world, Vec2 pos)
 
     r32 limbWidth = 10;
     r32 limbHeight = 40;
-    r32 angle = 1.0;
+    r32 angle = 1;
 
     // Build body
     ui32 chains = 12;
@@ -73,6 +73,10 @@ AddCreature(World *world, Vec2 pos)
         }
         last = part;
     }
+
+    // Build brain
+    ui32 outputSize = creature->nRotaryMuscles + creature->nBodyParts;
+    creature->brain = CreateMinimalGatedUnit(world->arena, 1, outputSize,1);
 
     return creature;
 }
@@ -89,13 +93,35 @@ SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
 void
 UpdateCreature(World *world, Creature *creature)
 {
+    MinimalGatedUnit *brain = creature->brain;
     creature->internalClock+=1.0/60.0;
-    r32 drag = 0.1;
+    r32 drag = 0.2;
+    r32 input = sinf(creature->internalClock);
+    brain->x->v[0] = input;
+    UpdateMinimalGatedUnit(brain);
 
+    for(ui32 muscleIdx = 0;
+            muscleIdx < creature->nRotaryMuscles;
+            muscleIdx++)
+    {
+        RotaryMuscle *muscle = creature->rotaryMuscles+muscleIdx;
+        r32 activation = brain->h->v[brain->stateSize-brain->outputSize+muscleIdx];
+        SetMuscleActivation(muscle, activation);
+    }
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < creature->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPart *part = creature->bodyParts+bodyPartIdx;
+        r32 activation = brain->h->v[brain->stateSize-brain->outputSize+creature->nRotaryMuscles+bodyPartIdx];
+        part->body->drag = activation*drag + drag;
+    }
+
+#if 0
     int nRotaryMuscles = creature->nRotaryMuscles;
-    int nHalfPhases = 4;
-    r32 secondsPerStrokeCycle = 2;
-    r32 secondsPerDragCycle = 2;
+    int nHalfPhases = 2;
+    r32 secondsPerStrokeCycle = 4;
+    r32 secondsPerDragCycle = 4;
     r32 offsetPerMuscle = nHalfPhases*M_PI/nRotaryMuscles;
     r32 offsetPerBodyPart = nHalfPhases*M_PI/(nRotaryMuscles+1);
 
@@ -115,5 +141,6 @@ UpdateCreature(World *world, Creature *creature)
         r32 activation = sinf(creature->internalClock/secondsPerDragCycle*M_PI*2+offsetPerBodyPart*bodyPartIdx);
         part->body->drag = 0.05+activation*drag + drag;
     }
+#endif
 }
 
