@@ -99,6 +99,24 @@ VecR32Add(VecR32 *result, VecR32 *a, VecR32 *b)
 }
 
 void
+VecR32AddScaled(VecR32 *result, VecR32 *a, VecR32 *b, r32 factor)
+{
+    for(int i = 0; i < a->n; i++)
+    {
+        result->v[i] = a->v[i]+b->v[i]*factor;
+    }
+}
+
+void
+VecR32SetS(VecR32 *result,  r32 value)
+{
+    for(int i = 0; i < result->n; i++)
+    {
+        result->v[i] = value;
+    }
+}
+
+void
 VecR32Set(VecR32 *result, VecR32 *vec)
 {
     Assert(result->n == vec->n);
@@ -108,22 +126,23 @@ VecR32Set(VecR32 *result, VecR32 *vec)
     }
 }
 
-
+// doesnt follow the normal convention of having a result vector for some reason.
+// but whatever.
 void
-VecR32MulS(VecR32 *vec, r32 s)
+VecR32MulS(VecR32 *result, VecR32 *vec, r32 s)
 {
     for(int i = 0; i < vec->n; i++)
     {
-        vec->v[i] = s*vec->v[i];
+        result->v[i] = s*vec->v[i];
     }
 }
 
 void
-VecR32AddS(VecR32 *vec, r32 s)
+VecR32AddS(VecR32 *result, VecR32 *vec, r32 s)
 {
     for(int i = 0; i < vec->n; i++)
     {
-        vec->v[i] = s+vec->v[i];
+        result->v[i] = s+vec->v[i];
     }
 }
 
@@ -156,8 +175,8 @@ VecR32SetNormal(VecR32 *vec, r32 dev)
     }
 }
 
-r32
-VecR32GetSum(VecR32 *vec)
+internal inline r32
+VecR32Sum(VecR32 *vec)
 {
     r32 sum = 0;
     for(ui32 idx = 0;
@@ -165,6 +184,55 @@ VecR32GetSum(VecR32 *vec)
             idx++)
     {
         sum+=vec->v[idx];
+    }
+    return sum;
+}
+
+r32
+VecR32Average(VecR32 *vec)
+{
+    r32 sum = VecR32Sum(vec);
+    return sum/vec->n;
+}
+
+r32
+VecR32Variance(VecR32 *vec)
+{
+    r32 avg = VecR32Average(vec);
+    r32 sum = 0;
+    for(int i = 0; i < vec->n; i++)
+    {
+        r32 diff = vec->v[i]-avg;
+        sum+=(diff*diff);
+    }
+    sum/=vec->n;
+    return sum;
+}
+
+r32
+VecR32Length2(VecR32 *vec)
+{
+    r32 sum = 0;
+    for(ui32 idx = 0;
+            idx < vec->n;
+            idx++)
+    {
+        sum+=vec->v[idx]*vec->v[idx];
+    }
+    return sum;
+}
+
+r32
+VecR32Distance2(VecR32 *a, VecR32 *b)
+{
+    Assert(a->n == b->n);
+    r32 sum = 0;
+    for(ui32 idx = 0;
+            idx < a->n;
+            idx++)
+    {
+        r32 diff = b->v[idx] - a->v[idx];
+        sum+=(diff*diff);
     }
     return sum;
 }

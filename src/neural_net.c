@@ -193,9 +193,8 @@ UpdateMinimalGatedUnit(MinimalGatedUnit *brain)
     VecR32Apply(hc, hc, HyperbolicTangent);
 
     // New state
-    VecR32Set(tempv0, f);
-    VecR32MulS(tempv0, -1.0);
-    VecR32AddS(tempv0, 1.0);
+    VecR32MulS(tempv0, f, -1.0);
+    VecR32AddS(tempv0, tempv0, 1.0);
     VecR32Hadamard(tempv1, tempv0, h);
     VecR32Hadamard(tempv2, f, hc);
     VecR32Add(h, tempv1, tempv2);

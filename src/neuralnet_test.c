@@ -8,8 +8,18 @@ DoNeuralNetTests()
     ui32 outputSize = 1;
     ui32 hiddenSize = 1;
     ui32 geneSize = GetMinimalGatedUnitGeneSize(inputSize, outputSize, hiddenSize);
-    ui32 nGenes = 10;
+    ui32 nGenes = 12;
+    r32 learningRate = 1;
+    r32 dev = 0.2;
     size_t evolutionArenaSize = SizeOfEvolutionStrategies(geneSize, nGenes);
+
+    // For testing evolution strategies.
+#define QuickVec(size) CreateVecR32(size, PushAndZeroMemory_(arena, SizeOfVecR32(geneSize)))
+    VecR32 *target = QuickVec(geneSize);
+    for(int i = 0; i < geneSize; i++)
+    {
+        target->v[i] = 10+2*i;
+    }
 
     DebugOut("Initializing evolution strategies with");
     DebugOut("input size = %d", inputSize);
@@ -20,11 +30,35 @@ DoNeuralNetTests()
 
     MemoryArena *evolutionSubArena = CreateSubArena(arena, evolutionArenaSize);
 
-    EvolutionStrategies *strategies = ESCreate(evolutionSubArena, geneSize, nGenes, 1, 1);
+    EvolutionStrategies *strategies = ESCreate(evolutionSubArena, geneSize, nGenes, dev, learningRate);
     (void)strategies;
 
-    ESGenerateGenes(strategies);
+    for(int i = 0; i < strategies->geneSize; i++)
+    {
+        strategies->solution->v[i] = 0;
+    }
+    for(int generation = 0;
+            generation < 200;
+            generation++)
+    {
+        ESGenerateGenes(strategies);
+        // calculate fitness
+        for(int i = 0; i < strategies->nGenes; i++)
+        {
+            strategies->fitness->v[i] = -VecR32Distance2(strategies->genes+i, target);
+        }
+
+        ESNextSolution(strategies);
+
+        VecR32PrintF(strategies->solution, 7, 3);
+    }
+
+#if 0
     VecR32PrintF(strategies->genes, 7, 3);
+    VecR32PrintF(strategies->genes+1, 7, 3);
+    VecR32PrintF(strategies->genes+2, 7, 3);
+#endif
+    
 
 #if 0
     DebugOut("Hello");
@@ -69,5 +103,7 @@ DoNeuralNetTests()
         VecR32PrintF(brain->h, 5, 2);
     }
 #endif
+
+#undef QuickVec
 
 }

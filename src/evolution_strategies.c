@@ -12,10 +12,11 @@ ESCreate(MemoryArena *arena, ui32 geneSize, ui32 nGenes, r32 dev, r32 learningRa
     size_t fitnessArraySize = sizeof(r32)*nGenes;
     EvolutionStrategies *strategies = PushStruct(arena, EvolutionStrategies);
     
+    strategies->geneSize = geneSize;
+    strategies->nGenes = nGenes;
     strategies->dev = dev;
     strategies->learningRate = learningRate;
 
-    strategies->nGenes = nGenes;
     strategies->genes = PushArray(arena, VecR32, nGenes);
     strategies->epsilons = PushArray(arena, VecR32, nGenes);
     for(ui32 geneIdx = 0; 
@@ -45,5 +46,34 @@ ESGenerateGenes(EvolutionStrategies *strategies)
         VecR32SetNormal(strategies->epsilons+geneIdx, strategies->dev);
         VecR32Add(strategies->genes+geneIdx, strategies->solution, strategies->epsilons+geneIdx);
     }
+}
+
+void
+ESNextSolution(EvolutionStrategies *strategies)
+{
+    size_t tempGeneSize = SizeOfVecR32(strategies->geneSize);
+    ui8 tempGeneMem0[tempGeneSize];
+    VecR32 *tempGene = CreateVecR32(strategies->geneSize, tempGeneMem0);
+
+    size_t tempFitnessSize = SizeOfVecR32(strategies->nGenes);
+    ui8 tempFitnessMem0[tempFitnessSize];
+    VecR32 *tempFitness = CreateVecR32(strategies->nGenes, tempFitnessMem0);
+    (void)tempFitness;
+
+    VecR32SetS(tempGene, 0);
+
+    r32 fitnessMean = VecR32Average(strategies->fitness);
+    r32 fitnessDev = sqrtf(VecR32Variance(strategies->fitness));
+    VecR32AddS(tempFitness, strategies->fitness, -fitnessMean);
+    VecR32MulS(tempFitness, tempFitness, 1.0/fitnessDev);
+    // Sum all epsilons scaled by fitness. Same as outer product.
+    for(int geneIdx = 0; 
+            geneIdx < strategies->nGenes;
+            geneIdx++)
+    {
+        VecR32AddScaled(tempGene, tempGene, strategies->epsilons+geneIdx, tempFitness->v[geneIdx]);
+    }
+    r32 factor = strategies->learningRate/(strategies->nGenes*strategies->dev);
+    VecR32AddScaled(strategies->solution, strategies->solution, tempGene, factor);
 }
 
