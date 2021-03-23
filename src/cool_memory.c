@@ -23,7 +23,7 @@ internal inline void *
 PushMemory_(MemoryArena *arena, size_t size)
 {
     arena->used+=size;
-    Assert(arena->used < arena->size);
+    Assert(arena->used <= arena->size);
     return arena->base + arena->used - size;
 }
 
@@ -41,6 +41,17 @@ PushAndZeroMemory_(MemoryArena *arena, size_t size)
 #define PushArray(arena, type, nElements) \
     (type *)PushMemory_(arena, sizeof(type)*nElements); \
     DebugOut(""#type" : %p", (void*)(arena->base+arena->used))
+
+MemoryArena *
+CreateSubArena(MemoryArena *parent, size_t sizeInBytes)
+{
+    MemoryArena *arena = PushStruct(parent, MemoryArena);
+    arena->base = PushMemory_(parent, sizeInBytes);
+    arena->used = 0;
+    arena->size = sizeInBytes;
+    arena->memory = NULL;
+    return arena;
+}
 
 MemoryPool *
 CreateMemoryPool(MemoryArena *arena, size_t elementSize, size_t maxBlocks)

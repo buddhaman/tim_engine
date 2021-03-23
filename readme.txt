@@ -12,8 +12,10 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
+- Make evolution system. Requires fixed amount of memory. Thats good. 
+- Oh fuck.. memory management for minimal gated unit.
+- Implement evolution strategies.
 - Visualize GRU.
-- implement evolution strategies.
 - Mouse input to move camera.
 - Mouse input to select creatures.
 - Do physics engine memory management.
@@ -21,6 +23,10 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 DONE:
 
+- Uniform random generation.
+- Generate random normal numbers.
+- Create brain from single vector of parameters.
+- Count parameters.
 - Move muscles using GRU.
 - Make GRU using linalg library.
 - Top down ground friction for all dynamic bodies.
@@ -77,6 +83,11 @@ DONE:
 - Dynamic memory allocations
 
 BRAINSTORM:
+
+Brain needs to be broken up into persistent and transient part. Dynamic part is required in creature.
+But while training multiple persistent parts are required. 
+
+Gene -> persistent brain.
 
 - Train creatures for individual task. Manage high level behavior with behavior tree. 
   

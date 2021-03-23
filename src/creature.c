@@ -52,20 +52,23 @@ AddCreature(World *world, Vec2 pos)
 
     creature->maxRotaryMuscles = world->maxRotaryMusclesPerCreature;
     creature->nRotaryMuscles = 0;
-    creature->rotaryMuscles = AllocateElement(world->bodyPartPool);
+    creature->rotaryMuscles = AllocateElement(world->rotaryMusclePool);
 
     creature->physicsGroup = world->physicsGroupCounter++;
 
     r32 limbWidth = 10;
     r32 limbHeight = 40;
-    r32 angle = 1;
+    r32 angle = 1.0;
 
     // Build body
-    ui32 chains = 12;
+    ui32 chains = 6;
     BodyPart *last = NULL;
     for(int i = 0; i < chains; i++)
     {
-        BodyPart *part = CreatureAddBodyPart(world, creature, vec2(pos.x, pos.y+i*limbHeight), vec2(limbWidth, limbHeight));
+        BodyPart *part = CreatureAddBodyPart(world, 
+                creature, 
+                vec2(pos.x, pos.y+i*limbHeight), 
+                vec2(limbWidth, limbHeight));
         if(last)
         {
             Vec2 pivotPoint = vec2(pos.x, pos.y+limbHeight/2.0+(i-1)*limbHeight);
@@ -76,7 +79,8 @@ AddCreature(World *world, Vec2 pos)
 
     // Build brain
     ui32 outputSize = creature->nRotaryMuscles + creature->nBodyParts;
-    creature->brain = CreateMinimalGatedUnit(world->arena, 1, outputSize,1);
+    VecR32 *gene = CreateMinimalGatedUnitGene(world->arena, 1, outputSize, 1);
+    creature->brain = CreateMinimalGatedUnit(world->arena, 1, outputSize,1, gene);
 
     return creature;
 }
@@ -97,7 +101,7 @@ UpdateCreature(World *world, Creature *creature)
     creature->internalClock+=1.0/60.0;
     r32 drag = 0.2;
     r32 input = sinf(creature->internalClock);
-    brain->x->v[0] = input;
+    brain->x.v[0] = input;
     UpdateMinimalGatedUnit(brain);
 
     for(ui32 muscleIdx = 0;
@@ -105,7 +109,7 @@ UpdateCreature(World *world, Creature *creature)
             muscleIdx++)
     {
         RotaryMuscle *muscle = creature->rotaryMuscles+muscleIdx;
-        r32 activation = brain->h->v[brain->stateSize-brain->outputSize+muscleIdx];
+        r32 activation = brain->h.v[brain->stateSize-brain->outputSize+muscleIdx];
         SetMuscleActivation(muscle, activation);
     }
     for(ui32 bodyPartIdx = 0;
@@ -113,8 +117,8 @@ UpdateCreature(World *world, Creature *creature)
             bodyPartIdx++)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
-        r32 activation = brain->h->v[brain->stateSize-brain->outputSize+creature->nRotaryMuscles+bodyPartIdx];
-        part->body->drag = activation*drag + drag;
+        r32 activation = brain->h.v[brain->stateSize-brain->outputSize+creature->nRotaryMuscles+bodyPartIdx];
+        part->body->drag = 0.05+activation*drag + drag;
     }
 
 #if 0

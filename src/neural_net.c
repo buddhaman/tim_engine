@@ -68,23 +68,60 @@ UpdateFFNN(FFNN *brain)
     }
 }
 
-VecR32 * 
-CreateBrainVector(MemoryArena *arena, int vecSize)
+// In floats. Not in bytes.
+ui32
+GetMinimalGatedUnitGeneSize(int inputLayerSize,
+        int outputLayerSize,
+        int hiddenLayerSize)
 {
-    return CreateVecR32(vecSize, PushAndZeroMemory_(arena, SizeOfVecR32(vecSize)));
+    ui32 stateSize = outputLayerSize+hiddenLayerSize;
+    ui32 inputMatrixSize = inputLayerSize*stateSize;
+    ui32 stateMatrixSize = stateSize*stateSize;
+    ui32 biasSize = stateSize;
+    return inputMatrixSize*2 + stateMatrixSize*2 + biasSize*2;
 }
 
-MatR32 * 
-CreateBrainMatrix(MemoryArena *arena, int w, int h)
+ui32
+GetMinimalGatedUnitStateSize(int inputLayerSize,
+        int outputLayerSize,
+        int hiddenLayerSize)
 {
-    return CreateMatR32(w, h, PushAndZeroMemory_(arena, SizeOfMatR32(w, h)));
+    ui32 stateSize = outputLayerSize+hiddenLayerSize;
+    return stateSize *4 + inputLayerSize;
 }
 
-MinimalGatedUnit*
-CreateMinimalGatedUnit(MemoryArena *arena, 
+size_t
+SizeOfMinimalGatedUnit(int inputLayerSize,
+        int outputLayerSize,
+        int hiddenLayerSize)
+{
+    return sizeof(MinimalGatedUnit) + GetMinimalGatedUnitStateSize(inputLayerSize, 
+            outputLayerSize, 
+            hiddenLayerSize)*sizeof(r32);
+}
+
+internal inline VecR32 *
+CreateMinimalGatedUnitGene(MemoryArena *arena, 
         int inputLayerSize,
         int outputLayerSize,
         int hiddenLayerSize)
+{
+    ui32 size = GetMinimalGatedUnitGeneSize(inputLayerSize, outputLayerSize, hiddenLayerSize);
+    void *memory = PushAndZeroMemory_(arena, SizeOfVecR32(size));
+    VecR32 *vec = CreateVecR32(size, memory);
+    for(int i = 0; i < size; i++)
+    {
+        vec->v[i] = RandomR32(-4, 4);
+    }
+    return vec;
+}
+
+MinimalGatedUnit*
+CreateMinimalGatedUnit(MemoryArena *arena,
+        int inputLayerSize,
+        int outputLayerSize,
+        int hiddenLayerSize,
+        VecR32 *gene)
 {
     MinimalGatedUnit *brain = PushStruct(arena, MinimalGatedUnit);
 
@@ -92,26 +129,28 @@ CreateMinimalGatedUnit(MemoryArena *arena,
     brain->outputSize = outputLayerSize;
     brain->hiddenSize = hiddenLayerSize;
     brain->stateSize = brain->outputSize+brain->hiddenSize;
+    brain->gene = gene;
 
-    brain->x = CreateBrainVector(arena, brain->inputSize);
-    brain->f  = CreateBrainVector(arena, brain->stateSize);
-    brain->h  = CreateBrainVector(arena, brain->stateSize);
-    brain->hc = CreateBrainVector(arena, brain->stateSize);
-    brain->bf = CreateBrainVector(arena, brain->stateSize);
-    brain->bh = CreateBrainVector(arena, brain->stateSize);
-    brain->Wf = CreateBrainMatrix(arena, brain->inputSize, brain->stateSize);
-    brain->Uf = CreateBrainMatrix(arena, brain->stateSize, brain->stateSize);
-    brain->Wh = CreateBrainMatrix(arena, brain->inputSize, brain->stateSize);
-    brain->Uh = CreateBrainMatrix(arena, brain->stateSize, brain->stateSize);
+    // Parameters from gene.
+    r32 *atMemory = gene->v;
+    InitVecR32FromGene(&brain->bf, brain->stateSize, gene, &atMemory);
+    InitVecR32FromGene(&brain->bh, brain->stateSize, gene, &atMemory);
+    InitMatR32FromGene(&brain->Wf, brain->inputSize, brain->stateSize, gene, &atMemory);
+    InitMatR32FromGene(&brain->Wh, brain->inputSize, brain->stateSize, gene, &atMemory);
+    InitMatR32FromGene(&brain->Uf, brain->stateSize, brain->stateSize, gene, &atMemory);
+    InitMatR32FromGene(&brain->Uh, brain->stateSize, brain->stateSize, gene, &atMemory);
 
-    // Populate with random values
-    r32 dev = 2.0;
-    RandomVecR32(brain->bf, -dev, dev);
-    RandomVecR32(brain->bh, -dev, dev);
-    RandomMatR32(brain->Wf, -dev, dev);
-    RandomMatR32(brain->Uf, -dev, dev);
-    RandomMatR32(brain->Wh, -dev, dev);
-    RandomMatR32(brain->Uh, -dev, dev);
+    r32 *atTransientMemory = PushArray(arena, r32, 
+            GetMinimalGatedUnitStateSize(inputLayerSize, outputLayerSize, hiddenLayerSize));
+
+    InitVecR32(&brain->x, brain->inputSize, atTransientMemory);
+    atTransientMemory+=brain->inputSize;
+    InitVecR32(&brain->f, brain->stateSize, atTransientMemory);
+    atTransientMemory+=brain->stateSize;
+    InitVecR32(&brain->h, brain->stateSize, atTransientMemory);
+    atTransientMemory+=brain->stateSize;
+    InitVecR32(&brain->hc, brain->stateSize, atTransientMemory);
+    atTransientMemory+=brain->stateSize;
 
     return brain;
 }
@@ -127,27 +166,48 @@ UpdateMinimalGatedUnit(MinimalGatedUnit *brain)
     ui8 tempMem2[SizeOfVecR32(brain->stateSize)];
     VecR32 *tempv2 = CreateVecR32(brain->stateSize, (void*)tempMem2);
 
+    VecR32 *x  = &brain->x; 
+    VecR32 *f  = &brain->f;
+    VecR32 *h  = &brain->h;
+    VecR32 *hc = &brain->hc;
+    VecR32 *bf = &brain->bf;
+    VecR32 *bh = &brain->bh;
+    MatR32 *Wf = &brain->Wf;
+    MatR32 *Uf = &brain->Uf;
+    MatR32 *Wh = &brain->Wh;
+    MatR32 *Uh = &brain->Uh;
+
     // Forget
-    MultiplyMatVecR32(tempv0, brain->Wf, brain->x);
-    MultiplyMatVecR32(tempv1, brain->Uf, brain->h);
-    VecR32Add(brain->f, tempv0, tempv1);
-    VecR32Add(brain->f, brain->f, brain->bf);
-    VecR32Apply(brain->f, brain->f, Sigmoid);
+    MultiplyMatVecR32(tempv0, Wf, x);
+    MultiplyMatVecR32(tempv1, Uf, h);
+    VecR32Add(f, tempv0, tempv1);
+    VecR32Add(f, f, bf);
+    VecR32Apply(f, f, Sigmoid);
 
     // Candidate state
-    MultiplyMatVecR32(tempv0, brain->Wh, brain->x);
-    VecR32Hadamard(tempv2, brain->f, brain->h);
-    MultiplyMatVecR32(tempv1, brain->Uh, brain->h);
-    VecR32Add(brain->hc, tempv0, tempv1);
-    VecR32Add(brain->hc, brain->hc, brain->bh);
-    VecR32Apply(brain->hc, brain->hc, HyperbolicTangent);
+    MultiplyMatVecR32(tempv0, Wh, x);
+    VecR32Hadamard(tempv2, f, h);
+    MultiplyMatVecR32(tempv1, Uh, h);
+    VecR32Add(hc, tempv0, tempv1);
+    VecR32Add(hc, hc, bh);
+    VecR32Apply(hc, hc, HyperbolicTangent);
 
     // New state
-    VecR32Set(tempv0, brain->f);
+    VecR32Set(tempv0, f);
     VecR32MulS(tempv0, -1.0);
     VecR32AddS(tempv0, 1.0);
-    VecR32Hadamard(tempv1, tempv0, brain->h);
-    VecR32Hadamard(tempv2, brain->f, brain->hc);
-    VecR32Add(brain->h, tempv1, tempv2);
+    VecR32Hadamard(tempv1, tempv0, h);
+    VecR32Hadamard(tempv2, f, hc);
+    VecR32Add(h, tempv1, tempv2);
 }
+
+void
+MinimalGatedUnitPrintP(FILE *stream, MinimalGatedUnit *brain)
+{
+    fprintf(stream, "inputSize: %d\n", brain->inputSize);
+    fprintf(stream, "outputSize: %d\n", brain->outputSize);
+    fprintf(stream, "hiddenSize: %d\n", brain->hiddenSize);
+    fprintf(stream, "parameters: %d\n", brain->gene->n);
+}
+
 

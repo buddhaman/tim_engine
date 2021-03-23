@@ -13,7 +13,23 @@ CreateMatR32(int w, int h, void *memory)
     mat->w = w;
     mat->h = h;
     return mat;
-};
+}
+
+internal inline void
+InitMatR32FromGene(MatR32 *mat, int w, int h, VecR32 *gene, r32 **atMemory)
+{
+    mat->w = w;
+    mat->h = h;
+    mat->m = *atMemory;
+    *atMemory += (w*h);
+}
+
+void
+InitVecR32(VecR32 *vec, int n, void *memory)
+{
+    vec->n = n;
+    vec->v = memory;
+}
 
 size_t
 SizeOfVecR32(int n)
@@ -29,6 +45,14 @@ CreateVecR32(int n, void *memory)
     vec->n = n;
     return vec;
 };
+
+internal inline void
+InitVecR32FromGene(VecR32 *vec, int n, VecR32 *gene, r32 **atMemory)
+{
+    vec->n = n;
+    vec->v = *atMemory;
+    *atMemory += n;
+}
 
 #define MAT_VAL(mat, x, y) mat->m[x+y*mat->w]
 
@@ -111,6 +135,38 @@ VecR32Hadamard(VecR32 *result, VecR32 *a, VecR32 *b)
     {
         result->v[i] = a->v[i]*b->v[i];
     }
+}
+
+void
+VecR32SetNormal(VecR32 *vec, r32 dev)
+{
+    ui32 pairs = (vec->n)/2;
+
+    for(ui32 atPair = 0;
+            atPair < pairs;
+            atPair++)
+    {
+        Vec2 v = RandomNormalPair();
+        vec->v[atPair*2] = v.x*dev;
+        vec->v[atPair*2+1] = v.y*dev;
+    }
+    if(vec->n%2==1)
+    {
+        vec->v[vec->n-1] = RandomNormalPair().x*dev;
+    }
+}
+
+r32
+VecR32GetSum(VecR32 *vec)
+{
+    r32 sum = 0;
+    for(ui32 idx = 0;
+            idx < vec->n;
+            idx++)
+    {
+        sum+=vec->v[idx];
+    }
+    return sum;
 }
 
 #define VEC_TRANSFORM_FUNCTION(name) r32 name(r32 x)

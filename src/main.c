@@ -1,11 +1,6 @@
 #include "external_headers.h"
 #include <time.h>
 
-#define DebugOut(args...) printf("%20s%5d: ", __FILE__, __LINE__); printf(args); printf("\n");
-#define Assert(expr) if(!(expr)) {DebugOut("assert failed "#expr""); \
-    *((int *)0)=0;}
-
-
 // Special file.
 #include "tim_types.h"
 #include "math_2d.h"
@@ -64,6 +59,7 @@ ReadEntireFile(const char *path)
 #include "neural_net.h"
 #include "app_state.h"
 #include "render2d.h"
+#include "evolution_strategies.h"
 #include "texture_atlas.h"
 #include "world.h"
 
@@ -75,6 +71,7 @@ ReadEntireFile(const char *path)
 #include "app_state.c"
 #include "render2d.c"
 #include "texture_atlas.c"
+#include "evolution_strategies.c"
 #include "world.c"
 #include "creature.c"
 
@@ -227,7 +224,7 @@ main(int argc, char**argv)
     // Add ground
     AddStaticRectangle(world, vec2(0,0), 1600.0, 40, 0.0);
 
-    for(int i = 0; i < 1; i++)
+    for(int i = 0; i < 10; i++)
     {
         AddCreature(world, vec2(-300+i*40, 200));
     }

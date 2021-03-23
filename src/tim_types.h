@@ -1,8 +1,15 @@
 #ifndef TIM_TYPES
 #define TIM_TYPES
 
-#define DebugOut(args...) printf("%20s%5d: ", __FILE__, __LINE__); printf(args); printf("\n");
-#define Assert(expr) if(!(expr)) {DebugOut("assert failed "#expr""); \
+#define DEBUG_OUT_SHOW_LINE 1
+
+#if DEBUG_OUT_SHOW_LINE==0
+#define DebugOut(args...) printf("%20s%5d: ", __FILE__, __LINE__); printf(args); printf("\n")
+#else
+#define DebugOut(args...) printf(args); printf("\n")
+#endif
+
+#define Assert(expr) if(!(expr)) {DebugOut("assert failed : %s", ""#expr""); \
     *((int *)0)=0;}
 
 #define local_persist static

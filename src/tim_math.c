@@ -3,7 +3,21 @@
 r32
 RandomR32(r32 min, r32 max)
 {
-    return min + (max - min)*(random()%10000)/10000.0;
+    return min + (max - min)*(random()%RAND_MAX)/RAND_MAX;
+}
+
+Vec2
+RandomNormalPair()
+{
+    r32 x, y, s;
+    do
+    {
+        x = RandomR32(-1, 1);
+        y = RandomR32(-1, 1);
+        s = x*x + y*y;
+    } while(s > 1.0);
+    r32 factor = sqrtf(-2*logf(s)/s);
+    return vec2(factor*x, factor*y);
 }
 
 Vec3 

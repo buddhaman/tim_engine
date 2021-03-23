@@ -25,7 +25,7 @@ InitWorld(World *world, MemoryArena *arena)
             sizeof(BodyPart)*world->maxBodypartsPerCreature, 3);
 
     world->maxRotaryMusclesPerCreature = 32;
-    world->bodyPartPool = CreateMemoryPool(arena, 
+    world->rotaryMusclePool = CreateMemoryPool(arena, 
             sizeof(RotaryMuscle)*world->maxRotaryMusclesPerCreature, 3);
 
 }
