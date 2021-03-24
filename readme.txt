@@ -12,9 +12,6 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Make evolution system. Requires fixed amount of memory. Thats good. 
-- Oh fuck.. memory management for minimal gated unit.
-- Implement evolution strategies.
 - Visualize GRU.
 - Mouse input to move camera.
 - Mouse input to select creatures.
@@ -23,6 +20,10 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 DONE:
 
+- Oh fuck.. memory management for minimal gated unit.
+- Minimal gated unit creation in evolution system.
+- Implement evolution strategies.
+- Make evolution system. Requires fixed amount of memory. Thats good. 
 - Uniform random generation.
 - Generate random normal numbers.
 - Create brain from single vector of parameters.

@@ -87,7 +87,7 @@ GetMinimalGatedUnitStateSize(int inputLayerSize,
         int hiddenLayerSize)
 {
     ui32 stateSize = outputLayerSize+hiddenLayerSize;
-    return stateSize *4 + inputLayerSize;
+    return stateSize *3 + inputLayerSize;
 }
 
 size_t
@@ -117,14 +117,13 @@ CreateMinimalGatedUnitGene(MemoryArena *arena,
 }
 
 MinimalGatedUnit*
-CreateMinimalGatedUnit(MemoryArena *arena,
+InitMinimalGatedUnit(MinimalGatedUnit *brain,  
         int inputLayerSize,
         int outputLayerSize,
         int hiddenLayerSize,
-        VecR32 *gene)
+        VecR32 *gene,
+        r32 *stateStorage)
 {
-    MinimalGatedUnit *brain = PushStruct(arena, MinimalGatedUnit);
-
     brain->inputSize = inputLayerSize;
     brain->outputSize = outputLayerSize;
     brain->hiddenSize = hiddenLayerSize;
@@ -140,8 +139,7 @@ CreateMinimalGatedUnit(MemoryArena *arena,
     InitMatR32FromGene(&brain->Uf, brain->stateSize, brain->stateSize, gene, &atMemory);
     InitMatR32FromGene(&brain->Uh, brain->stateSize, brain->stateSize, gene, &atMemory);
 
-    r32 *atTransientMemory = PushArray(arena, r32, 
-            GetMinimalGatedUnitStateSize(inputLayerSize, outputLayerSize, hiddenLayerSize));
+    r32 *atTransientMemory = stateStorage;
 
     InitVecR32(&brain->x, brain->inputSize, atTransientMemory);
     atTransientMemory+=brain->inputSize;

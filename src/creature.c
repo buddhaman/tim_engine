@@ -80,7 +80,9 @@ AddCreature(World *world, Vec2 pos)
     // Build brain
     ui32 outputSize = creature->nRotaryMuscles + creature->nBodyParts;
     VecR32 *gene = CreateMinimalGatedUnitGene(world->arena, 1, outputSize, 1);
-    creature->brain = CreateMinimalGatedUnit(world->arena, 1, outputSize,1, gene);
+    r32 *state = PushArray(world->arena, r32, GetMinimalGatedUnitStateSize(1, outputSize, 1));
+    creature->brain = PushStruct(world->arena, MinimalGatedUnit);
+    InitMinimalGatedUnit(creature->brain, 1, outputSize,1, gene, state);
 
     return creature;
 }
