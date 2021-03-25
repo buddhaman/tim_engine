@@ -1,6 +1,7 @@
 
 typedef struct RigidBody RigidBody;
-typedef struct World World;
+typedef struct FakeWorld FakeWorld;
+typedef struct FakeWorldParams FakeWorldParams;
 
 struct RigidBody
 {
@@ -15,12 +16,18 @@ struct RigidBody
 
 #include "creature.h"
 
-struct World
+// For now most of the arrays are fixed size. World is destroyed after each generation.
+struct FakeWorld
 {
     MemoryArena *arena;
     cpSpace *space;
 
+    ui32 nGenes;
+    ui32 geneSize;
+    EvolutionStrategies *strategies;
+
     ui32 physicsGroupCounter;
+
     int nRigidBodies;
     int maxRigidBodies;
     RigidBody *rigidBodies;
@@ -29,12 +36,12 @@ struct World
     int maxCreatures;
     Creature *creatures;
 
-    ui32 pointerArraySize;
-    MemoryPool *pointerArrayPool;
+    int nBodyParts;
+    int maxBodyParts;
+    BodyPart *bodyParts;
 
-    ui32 maxBodypartsPerCreature;
-    MemoryPool *bodyPartPool;
-
-    ui32 maxRotaryMusclesPerCreature;
-    MemoryPool *rotaryMusclePool;
+    int nRotaryMuscles;
+    int maxRotaryMuscles;
+    RotaryMuscle *rotaryMuscles;
 };
+

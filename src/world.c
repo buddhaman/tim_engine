@@ -1,33 +1,8 @@
 
 void
-InitWorld(World *world, MemoryArena *arena)
+DestroyFakeWorld(FakeWorld *world)
 {
-    world->arena = arena;
-    world->space = cpSpaceNew();
-    //cpSpaceSetGravity(world->space, cpv(0, -5000));
-    cpSpaceSetGravity(world->space, cpv(0, 0));
-
-    world->physicsGroupCounter = 1U;
-    world->nRigidBodies = 0;
-    world->maxRigidBodies = 512;
-    world->rigidBodies = PushArray(arena, RigidBody, world->maxRigidBodies);
-
-    world->nCreatures = 0;
-    world->maxCreatures = 128;
-    world->creatures = PushArray(arena, Creature, world->maxCreatures);
-
-    world->pointerArraySize = 32;
-    world->pointerArrayPool = CreateMemoryPool(arena, 
-            sizeof(void*)*world->pointerArraySize, 3);
-
-    world->maxBodypartsPerCreature = 32;
-    world->bodyPartPool = CreateMemoryPool(arena, 
-            sizeof(BodyPart)*world->maxBodypartsPerCreature, 3);
-
-    world->maxRotaryMusclesPerCreature = 32;
-    world->rotaryMusclePool = CreateMemoryPool(arena, 
-            sizeof(RotaryMuscle)*world->maxRotaryMusclesPerCreature, 3);
-
+    cpSpaceFree(world->space);
 }
 
 enum {
@@ -36,7 +11,7 @@ enum {
 };
 
 RigidBody *
-AddDynamicRectangle(World *world, Vec2 pos, r32 width, r32 height, r32 angle, ui32 group)
+AddDynamicRectangle(FakeWorld *world, Vec2 pos, r32 width, r32 height, r32 angle, ui32 group)
 {
     RigidBody *body = world->rigidBodies+world->nRigidBodies++;
     cpSpace *space = world->space;
@@ -61,8 +36,8 @@ AddDynamicRectangle(World *world, Vec2 pos, r32 width, r32 height, r32 angle, ui
     return body;
 }
 
-RigidBody *
-AddStaticRectangle(World *world, Vec2 pos, r32 width, r32 height, r32 angle)
+internal inline RigidBody *
+AddStaticRectangle(FakeWorld *world, Vec2 pos, r32 width, r32 height, r32 angle)
 {
     RigidBody *body = world->rigidBodies+world->nRigidBodies++;
     cpSpace *space = world->space;
@@ -84,8 +59,8 @@ AddStaticRectangle(World *world, Vec2 pos, r32 width, r32 height, r32 angle)
     return body;
 }
 
-void
-RotaryLimitJoint(World *world, RigidBody *bodyA, RigidBody *bodyB, Vec2 pivotPoint, r32 minAngle, r32 maxAngle)
+internal inline void
+RotaryLimitJoint(FakeWorld *world, RigidBody *bodyA, RigidBody *bodyB, Vec2 pivotPoint, r32 minAngle, r32 maxAngle)
 {
     cpConstraint *pivotConstraint = cpPivotJointNew(bodyA->body, bodyB->body, cpv(pivotPoint.x, pivotPoint.y));
     cpSpaceAddConstraint(world->space, pivotConstraint);
@@ -94,8 +69,8 @@ RotaryLimitJoint(World *world, RigidBody *bodyA, RigidBody *bodyB, Vec2 pivotPoi
     cpSpaceAddConstraint(world->space, rotaryLimitConstraint);
 }
 
-void
-UpdateWorld(World *world)
+internal inline void
+UpdateFakeWorld(FakeWorld *world)
 {
     for(ui32 creatureIdx = 0;
             creatureIdx < world->nCreatures;
@@ -135,7 +110,7 @@ GetBodyAngle(RigidBody *body)
 
 // For now assumes batch has already begun.
 void
-DrawWorld(World *world, SpriteBatch *batch, Camera2D *camera, AtlasRegion *texture)
+DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, AtlasRegion *texture)
 {
     r32 lineWidth = 2;
     for(ui32 bodyPartIdx = 0;
@@ -180,5 +155,82 @@ DrawWorld(World *world, SpriteBatch *batch, Camera2D *camera, AtlasRegion *textu
                     texture);
         }
     }
+}
+
+void
+InitFakeWorld(FakeWorld *world, MemoryArena *arena)
+{
+    world->arena = arena;
+    world->space = cpSpaceNew();
+    //cpSpaceSetGravity(world->space, cpv(0, -5000));
+    cpSpaceSetGravity(world->space, cpv(0, 0));
+
+    world->physicsGroupCounter = 1U;
+
+#define DefineFixedWorldArray(type, counterName, maxName, maxValue, arrayName) \
+    world->counterName = 0;\
+    world->maxName = maxValue;\
+    world->arrayName = PushArray(arena, type, maxValue)
+
+    DefineFixedWorldArray(RigidBody, nRigidBodies, maxRigidBodies, 512, rigidBodies);
+    DefineFixedWorldArray(Creature, nCreatures, maxCreatures, 128, creatures);
+    DefineFixedWorldArray(BodyPart, nBodyParts, maxBodyParts, 512, bodyParts);
+    DefineFixedWorldArray(RotaryMuscle, nRotaryMuscles, maxRotaryMuscles, 512, rotaryMuscles);
+#undef DefineFixedWorldArray
+
+    // Create creature definition
+    CreatureDefinition def = {};
+    r32 partWidth = 10;
+    r32 partHeight = 40;
+    ui32 bodyParts = 6;
+    for(int bodyPartIdx = 0; 
+            bodyPartIdx < bodyParts;
+            bodyPartIdx++)
+    {
+        BodyPartDefinition *body = def.bodyParts+def.nBodyParts++;
+        body->pos = vec2(0, bodyPartIdx*partHeight);
+        body->width = partWidth;
+        body->height = partHeight;
+        body->angle = 0;
+    }
+    for(int bodyPartIdx = 0; 
+            bodyPartIdx < bodyParts-1;
+            bodyPartIdx++)
+    {
+        RotaryMuscleDefinition *muscle = def.rotaryMuscles + def.nRotaryMuscles++;
+        BodyPartDefinition *a = def.bodyParts+bodyPartIdx;
+        BodyPartDefinition *b = def.bodyParts+bodyPartIdx+1;
+        Vec2 pivotPoint = v2_muls(v2_add(a->pos, b->pos), 0.5);
+
+        muscle->bodyPartIdx0 = bodyPartIdx;
+        muscle->bodyPartIdx1 = bodyPartIdx+1;
+        muscle->pivotPoint = pivotPoint;
+        muscle->minAngle = -1;
+        muscle->maxAngle = 1;
+    }
+
+    ui32 inputSize = 1;
+    ui32 outputSize = def.nBodyParts+def.nRotaryMuscles;
+    ui32 hiddenSize = 1;
+    ui32 transientStateSize = GetMinimalGatedUnitStateSize(inputSize, outputSize, hiddenSize);
+    world->geneSize = GetMinimalGatedUnitStateSize(inputSize, outputSize, hiddenSize);
+    world->nGenes = 10;
+
+    // Create es from definition
+    world->strategies = ESCreate(arena, world->geneSize, world->nGenes, 0.01, 0.004);
+    ESGenerateGenes(world->strategies);
+
+    for(int creatureIdx = 0; 
+            creatureIdx < world->nGenes;
+            creatureIdx++)
+    {
+        MinimalGatedUnit *brain = PushStruct(world->arena, MinimalGatedUnit);
+
+        VecR32 *gene = world->strategies->genes+creatureIdx;
+        r32 *state = PushArray(world->arena, r32, transientStateSize);
+        InitMinimalGatedUnit(brain, inputSize, outputSize, hiddenSize, gene, state);
+        AddCreature(world, vec2(-300+creatureIdx*40, 200), &def, brain);
+    }
+    AddStaticRectangle(world, vec2(0,0), 1600.0, 40, 0.0);
 }
 

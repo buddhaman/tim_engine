@@ -17,21 +17,46 @@ typedef struct
 
 typedef struct
 {
+    Vec2 pivotPoint;
+    ui32 bodyPartIdx0;
+    ui32 bodyPartIdx1;
+    r32 minAngle;
+    r32 maxAngle;
+} RotaryMuscleDefinition;
+
+typedef struct
+{
+    Vec2 pos;
+    r32 width;
+    r32 height;
+    r32 angle;
+} BodyPartDefinition;
+
+typedef struct
+{
+    ui32 nBodyParts;
+    BodyPartDefinition bodyParts[32];
+    ui32 nRotaryMuscles;
+    RotaryMuscleDefinition rotaryMuscles[32];
+} CreatureDefinition;
+
+typedef struct
+{
     r32 internalClock;
     ui32 physicsGroup;
-    // Eventually hashmap and store in world.
+
     int nBodyParts;
-    int maxBodyParts;
     BodyPart *bodyParts;
 
     int nRotaryMuscles;
-    int maxRotaryMuscles;
     RotaryMuscle *rotaryMuscles;
 
-    // Cant be deleted yet 
     MinimalGatedUnit *brain;
 } Creature;
 
+Creature *
+AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUnit *brain);
+
 void
-UpdateCreature(World *world, Creature *creature);
+UpdateCreature(FakeWorld *world, Creature *creature);
 

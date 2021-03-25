@@ -1,11 +1,12 @@
 
 BodyPart *
-CreatureAddBodyPart(World *world, 
+CreatureAddBodyPart(FakeWorld *world, 
         Creature *creature, 
         Vec2 pos, 
         Vec2 size)
 {
-    BodyPart *part = creature->bodyParts + creature->nBodyParts++;
+    BodyPart *part = world->bodyParts + world->nBodyParts++;
+    creature->nBodyParts++;
     RigidBody *body = AddDynamicRectangle(world, pos, size.x, size.y, 0, creature->physicsGroup);
 
     part->body = body;
@@ -15,7 +16,7 @@ CreatureAddBodyPart(World *world,
 }
 
 RotaryMuscle *
-CreatureAddRotaryMuscle(World *world, 
+CreatureAddRotaryMuscle(FakeWorld *world, 
         Creature *creature, 
         BodyPart *bodyA, 
         BodyPart *bodyB, 
@@ -23,10 +24,10 @@ CreatureAddRotaryMuscle(World *world,
         r32 minAngle, 
         r32 maxAngle)
 {
-    RotaryMuscle *muscle = creature->rotaryMuscles+creature->nRotaryMuscles++;
+    RotaryMuscle *muscle = world->rotaryMuscles+world->nRotaryMuscles++;
+    creature->nRotaryMuscles++;
     *muscle = (RotaryMuscle){};
 
-    //RotaryLimitJoint(world, bodyA->body, bodyB->body, pivotPoint, minAngle, maxAngle);
     RotaryLimitJoint(world, bodyA->body, bodyB->body, pivotPoint, minAngle, maxAngle);
 
     muscle->bodyA = bodyA;
@@ -41,48 +42,43 @@ CreatureAddRotaryMuscle(World *world,
 }
 
 Creature *
-AddCreature(World *world, Vec2 pos)
+AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUnit *brain)
 {
     Creature *creature = world->creatures+world->nCreatures++;
     *creature = (Creature){};
 
-    creature->maxBodyParts = world->maxBodypartsPerCreature;
-    creature->nBodyParts = 0;
-    creature->bodyParts = AllocateElement(world->bodyPartPool);
+    creature->brain = brain;
 
-    creature->maxRotaryMuscles = world->maxRotaryMusclesPerCreature;
+    creature->nBodyParts = 0;
+    creature->bodyParts = world->bodyParts+world->nBodyParts;
+
     creature->nRotaryMuscles = 0;
-    creature->rotaryMuscles = AllocateElement(world->rotaryMusclePool);
+    creature->rotaryMuscles = world->rotaryMuscles+world->nRotaryMuscles;
 
     creature->physicsGroup = world->physicsGroupCounter++;
 
-    r32 limbWidth = 10;
-    r32 limbHeight = 40;
-    r32 angle = 1.0;
-
     // Build body
-    ui32 chains = 6;
-    BodyPart *last = NULL;
-    for(int i = 0; i < chains; i++)
+    for(int bodyPartIdx = 0; 
+            bodyPartIdx < def->nBodyParts; 
+            bodyPartIdx++)
     {
-        BodyPart *part = CreatureAddBodyPart(world, 
+        BodyPartDefinition *partDef = def->bodyParts+bodyPartIdx;
+        CreatureAddBodyPart(world, 
                 creature, 
-                vec2(pos.x, pos.y+i*limbHeight), 
-                vec2(limbWidth, limbHeight));
-        if(last)
-        {
-            Vec2 pivotPoint = vec2(pos.x, pos.y+limbHeight/2.0+(i-1)*limbHeight);
-            CreatureAddRotaryMuscle(world, creature, last, part, pivotPoint, -angle, angle);
-        }
-        last = part;
+                v2_add(pos, partDef->pos),
+                vec2(partDef->width, partDef->height));
     }
 
-    // Build brain
-    ui32 outputSize = creature->nRotaryMuscles + creature->nBodyParts;
-    VecR32 *gene = CreateMinimalGatedUnitGene(world->arena, 1, outputSize, 1);
-    r32 *state = PushArray(world->arena, r32, GetMinimalGatedUnitStateSize(1, outputSize, 1));
-    creature->brain = PushStruct(world->arena, MinimalGatedUnit);
-    InitMinimalGatedUnit(creature->brain, 1, outputSize,1, gene, state);
+    for(int muscleIdx = 0;
+            muscleIdx < def->nRotaryMuscles;
+            muscleIdx++)
+    {
+        RotaryMuscleDefinition *muscleDef = def->rotaryMuscles+muscleIdx;
+        BodyPart *a = creature->bodyParts+muscleDef->bodyPartIdx0;
+        BodyPart *b = creature->bodyParts+muscleDef->bodyPartIdx1;
+        CreatureAddRotaryMuscle(world, creature, a, b, 
+                v2_add(pos, muscleDef->pivotPoint), muscleDef->minAngle, muscleDef->maxAngle);
+    }
 
     return creature;
 }
@@ -97,7 +93,7 @@ SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
 }
 
 void
-UpdateCreature(World *world, Creature *creature)
+UpdateCreature(FakeWorld *world, Creature *creature)
 {
     MinimalGatedUnit *brain = creature->brain;
     creature->internalClock+=1.0/60.0;

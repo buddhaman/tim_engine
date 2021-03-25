@@ -12,14 +12,24 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
+- Move ES outside of world.
+- Make subarena for world.
+- Function to throw away world and clear world subarena.
+- Keep track of al physics constraints and bodies for throwing away.
+
 - Visualize GRU.
 - Mouse input to move camera.
 - Mouse input to select creatures.
 - Do physics engine memory management.
 - 2D lighting.
+- Creature definition editor.
+
+- Write memory manager and give block to physics engine. Makes it easier to just throw away. 
 
 DONE:
 
+- Creature definition -> fake world + es
+- Build entire world based on Evolution Strategies.
 - Oh fuck.. memory management for minimal gated unit.
 - Minimal gated unit creation in evolution system.
 - Implement evolution strategies.

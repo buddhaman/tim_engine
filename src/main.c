@@ -76,7 +76,7 @@ ReadEntireFile(const char *path)
 #include "creature.c"
 
 #define MEM_TEST 0
-#define NEURALNET_TEST 1
+#define NEURALNET_TEST 0
 
 #if MEM_TEST==1
 #include "mem_test.cpp"
@@ -218,16 +218,10 @@ main(int argc, char**argv)
     screenCamera->isYDown = 0;
 
     // Init World
-    World *world = PushStruct(gameArena, World);
-    InitWorld(world, gameArena);
+    FakeWorld *world = PushStruct(gameArena, FakeWorld);
+    InitFakeWorld(world, gameArena);
 
     // Add ground
-    AddStaticRectangle(world, vec2(0,0), 1600.0, 40, 0.0);
-
-    for(int i = 0; i < 10; i++)
-    {
-        AddCreature(world, vec2(-300+i*40, 200));
-    }
 
     b32 paused = 0;
     while(!done)
@@ -345,7 +339,7 @@ main(int argc, char**argv)
 
         for(int i = 0; i < 1; i++)
         {
-            UpdateWorld(world);
+            UpdateFakeWorld(world);
         }
         UpdateCamera2D(camera, appState);
 
@@ -355,7 +349,7 @@ main(int argc, char**argv)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
         BeginSpritebatch(batch);
-        DrawWorld(world, batch, camera, &squareRegion);
+        DrawFakeWorld(world, batch, camera, &squareRegion);
 
         // Test
         batch->colorState = vec4(0,0,0,1);

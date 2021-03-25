@@ -50,7 +50,7 @@ DoNeuralNetTests()
     ui32 brainStateSize = GetMinimalGatedUnitStateSize(inputSize, outputSize, hiddenSize);
     r32 learningRate = 0.005;
     r32 dev = 0.05;
-    ui32 nGenerations = 100000;
+    ui32 nGenerations = 1000;
     size_t evolutionArenaSize = SizeOfEvolutionStrategies(geneSize, nGenes);
 
     // For testing evolution strategies.
