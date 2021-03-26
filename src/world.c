@@ -1,10 +1,4 @@
 
-void
-DestroyFakeWorld(FakeWorld *world)
-{
-    cpSpaceFree(world->space);
-}
-
 enum {
     GROUND_MASK = 1<<0,
     DYNAMIC_MASK = 1<<1
@@ -24,14 +18,14 @@ AddDynamicRectangle(FakeWorld *world, Vec2 pos, r32 width, r32 height, r32 angle
     cpFloat mass = 1;
     cpFloat moment = cpMomentForBox(mass, width, height);
     body->body = cpSpaceAddBody(space, cpBodyNew(mass, moment));
-    cpShape *shape = cpSpaceAddShape(space, cpBoxShapeNew(body->body, width, height, 0.01));
-    cpShapeSetFilter(shape, cpShapeFilterNew(group, DYNAMIC_MASK, DYNAMIC_MASK | GROUND_MASK));
+    body->shape = cpSpaceAddShape(space, cpBoxShapeNew(body->body, width, height, 0.01));
+    cpShapeSetFilter(body->shape, cpShapeFilterNew(group, DYNAMIC_MASK, DYNAMIC_MASK | GROUND_MASK));
 
     cpBodySetPosition(body->body, cpv(pos.x, pos.y));
     cpBodySetAngle(body->body, angle);
 
-    cpShapeSetFriction(shape, 0.8);
-    cpShapeSetElasticity(shape, 0.0);
+    cpShapeSetFriction(body->shape, 0.8);
+    cpShapeSetElasticity(body->shape, 0.0);
 
     return body;
 }
@@ -47,11 +41,11 @@ AddStaticRectangle(FakeWorld *world, Vec2 pos, r32 width, r32 height, r32 angle)
 
     // Create cpBody
     body->body = cpSpaceAddBody(space, cpBodyNewStatic());
-    cpShape *shape = cpBoxShapeNew(body->body, width, height, 0.01);
-    cpSpaceAddShape(space, shape);
-    cpShapeSetFilter(shape, cpShapeFilterNew(0, GROUND_MASK, DYNAMIC_MASK));
+    body->shape = cpBoxShapeNew(body->body, width, height, 0.01);
+    cpSpaceAddShape(space, body->shape);
+    cpShapeSetFilter(body->shape, cpShapeFilterNew(0, GROUND_MASK, DYNAMIC_MASK));
     
-    cpShapeSetFriction(shape, 1.0);
+    cpShapeSetFriction(body->shape, 1.0);
     cpBodySetPosition(body->body, cpv(pos.x, pos.y));
     cpBodySetAngle(body->body, angle);
     cpSpaceReindexShapesForBody(space, body->body);
@@ -59,14 +53,11 @@ AddStaticRectangle(FakeWorld *world, Vec2 pos, r32 width, r32 height, r32 angle)
     return body;
 }
 
-internal inline void
-RotaryLimitJoint(FakeWorld *world, RigidBody *bodyA, RigidBody *bodyB, Vec2 pivotPoint, r32 minAngle, r32 maxAngle)
+void
+DestroyRigidBody(RigidBody *body)
 {
-    cpConstraint *pivotConstraint = cpPivotJointNew(bodyA->body, bodyB->body, cpv(pivotPoint.x, pivotPoint.y));
-    cpSpaceAddConstraint(world->space, pivotConstraint);
-
-    cpConstraint *rotaryLimitConstraint = cpRotaryLimitJointNew(bodyA->body, bodyB->body, minAngle, maxAngle);
-    cpSpaceAddConstraint(world->space, rotaryLimitConstraint);
+    cpBodyFree(body->body);
+    cpShapeFree(body->shape);
 }
 
 internal inline void
@@ -113,6 +104,7 @@ void
 DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, AtlasRegion *texture)
 {
     r32 lineWidth = 2;
+#if 0
     for(ui32 bodyPartIdx = 0;
             bodyPartIdx < world->nRigidBodies;
             bodyPartIdx++)
@@ -130,6 +122,7 @@ DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, AtlasRegio
                 2,
                 texture);
     }
+#endif
 
     for(ui32 creatureIdx = 0;
             creatureIdx < world->nCreatures;
@@ -144,9 +137,20 @@ DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, AtlasRegio
             RigidBody *body = part->body;
             Vec2 pos = GetBodyPos(body);
             r32 angle = GetBodyAngle(body);
-
+            r32 alpha = creatureIdx==(world->nCreatures-1) ? 1.0 : 0.2;
             r32 shade = 1.0-part->body->drag;
-            batch->colorState = vec4(shade, shade, shade, 1.0);
+
+            if(creatureIdx==(world->nCreatures-1))
+            {
+            batch->colorState = vec4(0,0,0,1);
+            PushOrientedRectangle2(batch, 
+                    pos,
+                    body->width+lineWidth,
+                    body->height+lineWidth,
+                    angle,
+                    texture);
+            }
+            batch->colorState = vec4(shade, shade, shade, alpha);
             PushOrientedRectangle2(batch, 
                     pos,
                     body->width,
@@ -158,11 +162,9 @@ DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, AtlasRegio
 }
 
 void
-InitFakeWorld(FakeWorld *world, MemoryArena *arena)
+RestartFakeWorld(FakeWorld *world)
 {
-    world->arena = arena;
     world->space = cpSpaceNew();
-    //cpSpaceSetGravity(world->space, cpv(0, -5000));
     cpSpaceSetGravity(world->space, cpv(0, 0));
 
     world->physicsGroupCounter = 1U;
@@ -170,7 +172,7 @@ InitFakeWorld(FakeWorld *world, MemoryArena *arena)
 #define DefineFixedWorldArray(type, counterName, maxName, maxValue, arrayName) \
     world->counterName = 0;\
     world->maxName = maxValue;\
-    world->arrayName = PushArray(arena, type, maxValue)
+    world->arrayName = PushArray(world->transientMemory, type, maxValue)
 
     DefineFixedWorldArray(RigidBody, nRigidBodies, maxRigidBodies, 512, rigidBodies);
     DefineFixedWorldArray(Creature, nCreatures, maxCreatures, 128, creatures);
@@ -178,16 +180,37 @@ InitFakeWorld(FakeWorld *world, MemoryArena *arena)
     DefineFixedWorldArray(RotaryMuscle, nRotaryMuscles, maxRotaryMuscles, 512, rotaryMuscles);
 #undef DefineFixedWorldArray
 
+    ui32 transientStateSize = GetMinimalGatedUnitStateSize(world->inputSize, 
+            world->outputSize, 
+            world->hiddenSize);
+    for(int creatureIdx = 0; 
+            creatureIdx < world->nGenes;
+            creatureIdx++)
+    {
+        MinimalGatedUnit *brain = PushStruct(world->transientMemory, MinimalGatedUnit);
+        VecR32 *gene = world->strategies->genes+creatureIdx;
+        r32 *state = PushAndZeroArray(world->transientMemory, r32, transientStateSize);
+        InitMinimalGatedUnit(brain, world->inputSize, world->outputSize, world->hiddenSize, gene, state);
+        AddCreature(world, vec2(0,0), &world->def, brain);
+    }
+    //AddStaticRectangle(world, vec2(0,0), 1600.0, 40, 0.0);
+}
+
+void
+InitFakeWorld(FakeWorld *world, MemoryArena *persistentMemory, MemoryArena *transientMemory)
+{
+    world->persistentMemory = persistentMemory;
+    world->transientMemory = transientMemory;
+
     // Create creature definition
-    CreatureDefinition def = {};
     r32 partWidth = 10;
     r32 partHeight = 40;
-    ui32 bodyParts = 6;
+    ui32 bodyParts = 16;
     for(int bodyPartIdx = 0; 
             bodyPartIdx < bodyParts;
             bodyPartIdx++)
     {
-        BodyPartDefinition *body = def.bodyParts+def.nBodyParts++;
+        BodyPartDefinition *body = world->def.bodyParts+world->def.nBodyParts++;
         body->pos = vec2(0, bodyPartIdx*partHeight);
         body->width = partWidth;
         body->height = partHeight;
@@ -197,9 +220,9 @@ InitFakeWorld(FakeWorld *world, MemoryArena *arena)
             bodyPartIdx < bodyParts-1;
             bodyPartIdx++)
     {
-        RotaryMuscleDefinition *muscle = def.rotaryMuscles + def.nRotaryMuscles++;
-        BodyPartDefinition *a = def.bodyParts+bodyPartIdx;
-        BodyPartDefinition *b = def.bodyParts+bodyPartIdx+1;
+        RotaryMuscleDefinition *muscle = world->def.rotaryMuscles + world->def.nRotaryMuscles++;
+        BodyPartDefinition *a = world->def.bodyParts+bodyPartIdx;
+        BodyPartDefinition *b = world->def.bodyParts+bodyPartIdx+1;
         Vec2 pivotPoint = v2_muls(v2_add(a->pos, b->pos), 0.5);
 
         muscle->bodyPartIdx0 = bodyPartIdx;
@@ -209,28 +232,29 @@ InitFakeWorld(FakeWorld *world, MemoryArena *arena)
         muscle->maxAngle = 1;
     }
 
-    ui32 inputSize = 1;
-    ui32 outputSize = def.nBodyParts+def.nRotaryMuscles;
-    ui32 hiddenSize = 1;
-    ui32 transientStateSize = GetMinimalGatedUnitStateSize(inputSize, outputSize, hiddenSize);
-    world->geneSize = GetMinimalGatedUnitStateSize(inputSize, outputSize, hiddenSize);
-    world->nGenes = 10;
+    world->inputSize = 1;
+    world->outputSize = world->def.nBodyParts+world->def.nRotaryMuscles;
+    world->hiddenSize = 1;
+    world->geneSize = GetMinimalGatedUnitGeneSize(world->inputSize, world->outputSize, world->hiddenSize);
+    world->nGenes = 4;
 
-    // Create es from definition
-    world->strategies = ESCreate(arena, world->geneSize, world->nGenes, 0.01, 0.004);
+    // Create ee from definition
+    world->strategies = ESCreate(persistentMemory, world->geneSize, world->nGenes, 0.01, 0.008);
     ESGenerateGenes(world->strategies);
+    RestartFakeWorld(world);
+}
 
-    for(int creatureIdx = 0; 
-            creatureIdx < world->nGenes;
+void
+DestroyFakeWorld(FakeWorld *world)
+{
+    cpSpaceFree(world->space);
+    for(ui32 creatureIdx = 0;
+            creatureIdx < world->nCreatures;
             creatureIdx++)
     {
-        MinimalGatedUnit *brain = PushStruct(world->arena, MinimalGatedUnit);
-
-        VecR32 *gene = world->strategies->genes+creatureIdx;
-        r32 *state = PushArray(world->arena, r32, transientStateSize);
-        InitMinimalGatedUnit(brain, inputSize, outputSize, hiddenSize, gene, state);
-        AddCreature(world, vec2(-300+creatureIdx*40, 200), &def, brain);
+        DestroyCreature(world->creatures+creatureIdx);
     }
-    AddStaticRectangle(world, vec2(0,0), 1600.0, 40, 0.0);
+    ClearArena(world->transientMemory);
 }
+
 

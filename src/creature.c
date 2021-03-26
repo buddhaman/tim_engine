@@ -28,7 +28,16 @@ CreatureAddRotaryMuscle(FakeWorld *world,
     creature->nRotaryMuscles++;
     *muscle = (RotaryMuscle){};
 
-    RotaryLimitJoint(world, bodyA->body, bodyB->body, pivotPoint, minAngle, maxAngle);
+    muscle->pivotConstraint = cpPivotJointNew(bodyA->body->body, 
+            bodyB->body->body, 
+            cpv(pivotPoint.x, pivotPoint.y));
+    cpSpaceAddConstraint(world->space, muscle->pivotConstraint);
+
+    muscle->rotaryLimitConstraint = cpRotaryLimitJointNew(bodyA->body->body, 
+            bodyB->body->body, 
+            minAngle, 
+            maxAngle);
+    cpSpaceAddConstraint(world->space, muscle->rotaryLimitConstraint);
 
     muscle->bodyA = bodyA;
     muscle->bodyB = bodyB;
@@ -39,6 +48,14 @@ CreatureAddRotaryMuscle(FakeWorld *world,
     cpConstraintSetMaxForce(muscle->motor, 0);
 
     return muscle;
+}
+
+void
+DestroyRotaryMuscle(RotaryMuscle *muscle)
+{
+    cpConstraintFree(muscle->motor);
+    cpConstraintFree(muscle->rotaryLimitConstraint);
+    cpConstraintFree(muscle->pivotConstraint);
 }
 
 Creature *
@@ -55,7 +72,8 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
     creature->nRotaryMuscles = 0;
     creature->rotaryMuscles = world->rotaryMuscles+world->nRotaryMuscles;
 
-    creature->physicsGroup = world->physicsGroupCounter++;
+    //creature->physicsGroup = world->physicsGroupCounter++;
+    creature->physicsGroup = 1;
 
     // Build body
     for(int bodyPartIdx = 0; 
@@ -84,12 +102,45 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
 }
 
 void
+DestroyCreature(Creature *creature)
+{
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < creature->nBodyParts;
+            bodyPartIdx++)
+    {
+        DestroyRigidBody(creature->bodyParts[bodyPartIdx].body);
+    }
+    for(ui32 rotaryMuscleIdx = 0;
+            rotaryMuscleIdx < creature->nRotaryMuscles;
+            rotaryMuscleIdx++)
+    {
+        DestroyRotaryMuscle(creature->rotaryMuscles + rotaryMuscleIdx);
+    }
+}
+
+void
 SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
 {
-    r32 absActivation = fabs(activation);
+    r32 absActivation = fabsf(activation);
     cpSimpleMotorSetRate(muscle->motor, activation < 0.0 ? -5 : 5);
     r32 maxActivation = 500000.0;
     cpConstraintSetMaxForce(muscle->motor, absActivation*maxActivation);
+}
+
+r32
+CreatureGetFitness(Creature *creature)
+{
+    r32 avgY = 0.0;
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < creature->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPart *part = creature->bodyParts+bodyPartIdx;
+        cpVect pos = cpBodyGetPosition(part->body->body);
+        avgY+=pos.y;
+    }
+    avgY/=creature->nBodyParts;
+    return avgY;
 }
 
 void
@@ -98,7 +149,7 @@ UpdateCreature(FakeWorld *world, Creature *creature)
     MinimalGatedUnit *brain = creature->brain;
     creature->internalClock+=1.0/60.0;
     r32 drag = 0.2;
-    r32 input = sinf(creature->internalClock);
+    r32 input = sinf(2*creature->internalClock);
     brain->x.v[0] = input;
     UpdateMinimalGatedUnit(brain);
 

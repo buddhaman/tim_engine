@@ -13,6 +13,8 @@ typedef struct
     r32 maxAngle;
     // Control by fixing rate and setting max force by cpConstraintSetMaxForce();
     cpConstraint *motor;
+    cpConstraint *rotaryLimitConstraint;
+    cpConstraint *pivotConstraint;
 } RotaryMuscle;
 
 typedef struct
@@ -56,6 +58,9 @@ typedef struct
 
 Creature *
 AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUnit *brain);
+
+void
+DestroyCreature(Creature *creature);
 
 void
 UpdateCreature(FakeWorld *world, Creature *creature);

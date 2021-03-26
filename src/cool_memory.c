@@ -41,6 +41,9 @@ PushAndZeroMemory_(MemoryArena *arena, size_t size)
 #define PushArray(arena, type, nElements) \
     (type *)PushMemory_(arena, sizeof(type)*nElements); \
     DebugOut(""#type" : %p", (void*)(arena->base+arena->used))
+#define PushAndZeroArray(arena, type, nElements) \
+    (type *)PushAndZeroMemory_(arena, sizeof(type)*nElements); \
+    DebugOut(""#type" : %p", (void*)(arena->base+arena->used))
 
 MemoryArena *
 CreateSubArena(MemoryArena *parent, size_t sizeInBytes)

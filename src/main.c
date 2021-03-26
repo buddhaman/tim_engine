@@ -120,8 +120,8 @@ main(int argc, char**argv)
 
     SDL_WindowFlags window_flags = 
         (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    i32 screen_width = 1280;
-    i32 screen_height = 720;
+    int screen_width = 1280;
+    int screen_height = 720;
 
     SDL_Window *window = SDL_CreateWindow("Cool", SDL_WINDOWPOS_CENTERED, 
             SDL_WINDOWPOS_CENTERED, screen_width, screen_height, window_flags);
@@ -168,6 +168,8 @@ main(int argc, char**argv)
     b32 done = 0;
     ui32 frameCounter = 0;
 
+    ui32 stepsPerFrame = 1;
+
 #if 0
     // Array test
     int *array = NULL;
@@ -190,9 +192,13 @@ main(int argc, char**argv)
 #endif
 
     MemoryArena *gameArena = CreateMemoryArena(128*1000*1000);
+    MemoryArena *evolutionArena = CreateMemoryArena(128*1000*1000);
+    (void)evolutionArena;
 
+#if 0
     DebugOut("game arena : %lu / %lu bytes used. %lu procent", 
             gameArena->used, gameArena->size, (gameArena->used*100)/gameArena->size);
+#endif
 
     // Init spritebatch
     SpriteBatch *batch = PushStruct(gameArena, SpriteBatch);
@@ -219,9 +225,13 @@ main(int argc, char**argv)
 
     // Init World
     FakeWorld *world = PushStruct(gameArena, FakeWorld);
-    InitFakeWorld(world, gameArena);
+    InitFakeWorld(world, gameArena, evolutionArena);
 
-    // Add ground
+    // Handle evolution
+    ui32 generation = 0;
+    ui32 tick = 0;
+    ui32 ticksPerGeneration = 60*15;    // 10 seconds
+    r32 avgFitness = -100000.0;
 
     b32 paused = 0;
     while(!done)
@@ -304,11 +314,13 @@ main(int argc, char**argv)
         if(IsKeyActionDown(appState, ACTION_DOWN)) { camera->pos.y-=camSpeed; }
         if(IsKeyActionDown(appState, ACTION_LEFT)) { camera->pos.x-=camSpeed; }
         if(IsKeyActionDown(appState, ACTION_RIGHT)) { camera->pos.x+=camSpeed; }
-        if(IsKeyActionDown(appState, ACTION_Q))
+        if(IsKeyActionJustDown(appState, ACTION_Q))
         {
+            if(stepsPerFrame >= 2) stepsPerFrame/=2;
         }
-        if(IsKeyActionDown(appState, ACTION_E))
+        if(IsKeyActionJustDown(appState, ACTION_E))
         {
+            if(stepsPerFrame < 1024) stepsPerFrame*=2;
         }
 #endif
         if(IsKeyActionJustDown(appState, ACTION_P))
@@ -316,31 +328,49 @@ main(int argc, char**argv)
             paused = !paused;
             DebugOut(paused ? "Paused" : "Resumed");
         }
-#if 0
         if(IsKeyActionJustDown(appState, ACTION_R))
         {
+#if 0
+            DestroyFakeWorld(world);
+            RestartFakeWorld(world);
             UnloadShader(&simpleShader);
             LoadShader(&simpleShader);
             UnloadShader(&spriteShader);
             LoadShader(&spriteShader);
-        }
 #endif 
+        }
 
         glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
         AtlasRegion circleRegion = atlas->regions[0];
         (void)circleRegion;
         AtlasRegion squareRegion = atlas->regions[1];
-        // Draw some 2D
-#if 0
-        Mat3 transform = m3_translation_and_scale(
-                vec2(-appState->screenWidth/2.0, -appState->screenHeight/2.0), 
-                2.0/(appState->screenWidth), -2.0/(appState->screenHeight));
-#endif
 
-        for(int i = 0; i < 1; i++)
+        // Do evolution
+        for(ui32 atFrameStep = 0;
+                atFrameStep < stepsPerFrame;
+                atFrameStep++)
         {
             UpdateFakeWorld(world);
+            tick++;
+            if(tick >= ticksPerGeneration)
+            {
+                tick = 0;
+                generation++;
+                for(ui32 geneIdx = 0;
+                        geneIdx < world->nGenes;
+                        geneIdx++)
+                {
+                    world->strategies->fitness->v[geneIdx] = CreatureGetFitness(world->creatures+geneIdx);
+                }
+                avgFitness = VecR32Average(world->strategies->fitness);
+                ESNextSolution(world->strategies);
+                ESGenerateGenes(world->strategies);
+                DestroyFakeWorld(world);
+                RestartFakeWorld(world);
+            }
         }
+
+        // Draw some 2D
         UpdateCamera2D(camera, appState);
 
         int matLocation = glGetUniformLocation(spriteShader->program, "transform");
@@ -365,7 +395,16 @@ main(int argc, char**argv)
 
         local_persist r32 cooltime = 0.0;
         cooltime+=1;
-        DrawString2D(batch, &fontRenderer, vec2(20+cooltime, 900), "heyy");
+        char info[512];
+
+        sprintf(info, "Steps per frame: %u", stepsPerFrame);
+        DrawString2D(batch, &fontRenderer, vec2(20, 900), info);
+        sprintf(info, "At Generation %u (%u/%u) fitness = %f", 
+                generation, 
+                tick, 
+                ticksPerGeneration, 
+                avgFitness);
+        DrawString2D(batch, &fontRenderer, vec2(20, 930), info);
 
         EndSpritebatch(batch);
 

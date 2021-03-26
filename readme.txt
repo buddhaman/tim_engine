@@ -12,10 +12,10 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Move ES outside of world.
-- Make subarena for world.
-- Function to throw away world and clear world subarena.
-- Keep track of al physics constraints and bodies for throwing away.
+- Calculate creature fitness.
+- Next generation.
+
+After this, visualization ? right now last creatures seem to be stronger. This is weird.
 
 - Visualize GRU.
 - Mouse input to move camera.
@@ -28,6 +28,11 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 DONE:
 
+- Speed up/down.
+- Move ES outside of world.
+- Make subarena for world.
+- Function to throw away world and clear world subarena.
+- Keep track of al physics constraints and bodies for throwing away.
 - Creature definition -> fake world + es
 - Build entire world based on Evolution Strategies.
 - Oh fuck.. memory management for minimal gated unit.
