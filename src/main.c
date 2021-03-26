@@ -15,9 +15,6 @@ typedef mat3_t Mat3;
 #define MAX_VERTEX_MEMORY 512*1024
 #define MAX_ELEMENT_MEMORY 128*1024
 
-#define Min(a, b) (a) < (b) ? (a) : (b)
-#define Max(a, b) (a) < (b) ? (b) : (a)
-
 #define CheckOpenglError() { GLenum err = glGetError(); \
     if(err) { DebugOut("err =%04x", err);Assert(0); }}
 
@@ -299,7 +296,7 @@ main(int argc, char**argv)
         }
 
         // Clear screen
-        Vec4 clearColor = ARGBToVec4(0xffe0fffe);
+        Vec4 clearColor = ARGBToVec4(0x35637cff);
         glClearColor(clearColor.x, clearColor.y, clearColor.z, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, appState->screenWidth, appState->screenHeight);
@@ -381,9 +378,6 @@ main(int argc, char**argv)
         BeginSpritebatch(batch);
         DrawFakeWorld(world, batch, camera, &squareRegion);
 
-        // Test
-        batch->colorState = vec4(0,0,0,1);
-        PushLine2(batch, vec2(0,0), camera->mousePos,  9.0, squareRegion.pos, squareRegion.size);
 
         EndSpritebatch(batch);
 
@@ -397,6 +391,7 @@ main(int argc, char**argv)
         cooltime+=1;
         char info[512];
 
+        batch->colorState=vec4(1,1,1,1);
         sprintf(info, "Steps per frame: %u", stepsPerFrame);
         DrawString2D(batch, &fontRenderer, vec2(20, 900), info);
         sprintf(info, "At Generation %u (%u/%u) fitness = %f", 

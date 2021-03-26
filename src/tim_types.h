@@ -16,6 +16,9 @@
 #define internal static
 #define global_variable static
 
+#define Min(a, b) (a) < (b) ? (a) : (b)
+#define Max(a, b) (a) < (b) ? (b) : (a)
+
 typedef unsigned char ui8;
 typedef unsigned short ui16;
 typedef unsigned int ui32;

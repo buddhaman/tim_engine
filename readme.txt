@@ -12,22 +12,20 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Calculate creature fitness.
-- Next generation.
-
-After this, visualization ? right now last creatures seem to be stronger. This is weird.
-
+- Grid 
+- Creature definition editor.
 - Visualize GRU.
 - Mouse input to move camera.
 - Mouse input to select creatures.
 - Do physics engine memory management.
 - 2D lighting.
-- Creature definition editor.
 
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
 
 DONE:
 
+- Calculate creature fitness.
+- Next generation.
 - Speed up/down.
 - Move ES outside of world.
 - Make subarena for world.

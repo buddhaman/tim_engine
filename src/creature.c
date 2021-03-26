@@ -130,6 +130,7 @@ SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
 r32
 CreatureGetFitness(Creature *creature)
 {
+    r32 avgX= 0.0;
     r32 avgY = 0.0;
     for(ui32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
@@ -137,8 +138,10 @@ CreatureGetFitness(Creature *creature)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         cpVect pos = cpBodyGetPosition(part->body->body);
+        avgX+=pos.x;
         avgY+=pos.y;
     }
+    avgX/=creature->nBodyParts;
     avgY/=creature->nBodyParts;
     return avgY;
 }
@@ -149,7 +152,7 @@ UpdateCreature(FakeWorld *world, Creature *creature)
     MinimalGatedUnit *brain = creature->brain;
     creature->internalClock+=1.0/60.0;
     r32 drag = 0.2;
-    r32 input = sinf(2*creature->internalClock);
+    r32 input = sinf(4*creature->internalClock);
     brain->x.v[0] = input;
     UpdateMinimalGatedUnit(brain);
 
@@ -167,7 +170,7 @@ UpdateCreature(FakeWorld *world, Creature *creature)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         r32 activation = brain->h.v[brain->stateSize-brain->outputSize+creature->nRotaryMuscles+bodyPartIdx];
-        part->body->drag = 0.05+activation*drag + drag;
+        part->body->drag = 0.01+activation*drag + drag;
     }
 
 #if 0
