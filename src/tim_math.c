@@ -29,7 +29,7 @@ GetZIntersection(Vec3 rayPos, Vec3 rayDir, r32 z)
 }
 
 internal inline Vec4
-ARGBToVec4(ui32 hex)
+RGBAToVec4(ui32 hex)
 {
     return vec4( (hex >> 24 & 255)/255.0f,
             (hex >> 16 & 255)/255.0f,

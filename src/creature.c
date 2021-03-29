@@ -3,11 +3,12 @@ BodyPart *
 CreatureAddBodyPart(FakeWorld *world, 
         Creature *creature, 
         Vec2 pos, 
-        Vec2 size)
+        Vec2 size,
+        r32 angle)
 {
     BodyPart *part = world->bodyParts + world->nBodyParts++;
     creature->nBodyParts++;
-    RigidBody *body = AddDynamicRectangle(world, pos, size.x, size.y, 0, creature->physicsGroup);
+    RigidBody *body = AddDynamicRectangle(world, pos, size.x, size.y, angle, creature->physicsGroup);
 
     part->body = body;
     part->color = vec4(RandomR32(0, 1), RandomR32(0,1), RandomR32(0,1),  0.5);
@@ -84,7 +85,8 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
         CreatureAddBodyPart(world, 
                 creature, 
                 v2_add(pos, partDef->pos),
-                vec2(partDef->width, partDef->height));
+                vec2(partDef->width, partDef->height),
+                partDef->angle);
     }
 
     for(int muscleIdx = 0;
@@ -94,8 +96,12 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
         RotaryMuscleDefinition *muscleDef = def->rotaryMuscles+muscleIdx;
         BodyPart *a = creature->bodyParts+muscleDef->bodyPartIdx0;
         BodyPart *b = creature->bodyParts+muscleDef->bodyPartIdx1;
+        r32 angleA = cpBodyGetAngle(a->body->body);
+        r32 angleB = cpBodyGetAngle(b->body->body);
         CreatureAddRotaryMuscle(world, creature, a, b, 
-                v2_add(pos, muscleDef->pivotPoint), muscleDef->minAngle, muscleDef->maxAngle);
+                v2_add(pos, muscleDef->pivotPoint), 
+                muscleDef->minAngle+angleB-angleA, 
+                muscleDef->maxAngle+angleB-angleA);
     }
 
     return creature;
@@ -143,7 +149,7 @@ CreatureGetFitness(Creature *creature)
     }
     avgX/=creature->nBodyParts;
     avgY/=creature->nBodyParts;
-    return avgY;
+    return cpBodyGetPosition(creature->bodyParts->body->body).y;
 }
 
 void
@@ -151,9 +157,11 @@ UpdateCreature(FakeWorld *world, Creature *creature)
 {
     MinimalGatedUnit *brain = creature->brain;
     creature->internalClock+=1.0/60.0;
-    r32 drag = 0.2;
-    r32 input = sinf(4*creature->internalClock);
-    brain->x.v[0] = input;
+    r32 drag = 0.15;
+    r32 input0 = sinf(4*creature->internalClock);
+    r32 input1 = sinf(8*creature->internalClock);
+    brain->x.v[0] = input0;
+    brain->x.v[1] = input1;
     UpdateMinimalGatedUnit(brain);
 
     for(ui32 muscleIdx = 0;

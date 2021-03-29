@@ -12,18 +12,36 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Grid 
+- Define screens.
+- Make second screen for creature definition editor.
+- Move creature rendering to separate file to be reused by editor.
+- Make world buttons for scaling and rotating.
+- Visualize RotaryMuscleDefs, make draggable.
+- Also add ui for editing all these values in nuklear.
+- Start simulation from custom definition.
+- Serialization: Pull in json library and save the creature defs.
+- Serialization: load the creature defs and play.
+- Save entire trained brains.
+- Make googly eyes, or other decorations.
+- Generate textures with noise.
+
 - Creature definition editor.
 - Visualize GRU.
+- Graph in nuklear gui? or in own gui
+
 - Mouse input to move camera.
-- Mouse input to select creatures.
-- Do physics engine memory management.
+- set parameters before training.
 - 2D lighting.
 
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
 
 DONE:
 
+- Show all basic info in gui.
+- Make 2 digit bug.
+- Define rectangles under angle.
+- Bottom bar with all evolution info.
+- Grid 
 - Calculate creature fitness.
 - Next generation.
 - Speed up/down.

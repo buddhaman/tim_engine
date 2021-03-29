@@ -147,8 +147,10 @@ DrawGrid(SpriteBatch *batch,
 
 // For now assumes batch has already begun.
 void
-DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, AtlasRegion *texture)
+DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, TextureAtlas *atlas)
 {
+    AtlasRegion *circleRegion = atlas->regions;
+    AtlasRegion *squareRegion = atlas->regions+1;
     r32 lineWidth = 2;
 
 #if 0
@@ -171,8 +173,10 @@ DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, AtlasRegio
     }
 #endif
 
-    DrawGrid(batch, camera, 10.0, 1.0, texture);
-    DrawGrid(batch, camera, 50.0, 2.0, texture);
+    DrawGrid(batch, camera, 10.0, 1.0, squareRegion);
+    DrawGrid(batch, camera, 50.0, 2.0, squareRegion);
+    batch->colorState = vec4(1,1,1, 0.5);
+    PushCircle2(batch, vec2(0, 0), 3, circleRegion);
 
     Vec4 creatureColor = vec4(1.0, 0.8, 0.8, 1.0);
     for(ui32 creatureIdx = 0;
@@ -199,7 +203,7 @@ DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, AtlasRegio
                         body->width+lineWidth,
                         body->height+lineWidth,
                         angle,
-                        texture);
+                        squareRegion);
             }
 
             batch->colorState = vec4(shade*creatureColor.x, 
@@ -211,7 +215,7 @@ DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, AtlasRegio
                     body->width,
                     body->height,
                     angle,
-                    texture);
+                    squareRegion);
         }
     }
 }
@@ -283,6 +287,109 @@ DefineRotaryMuscle(CreatureDefinition *def,
 }
 
 void
+DefineMilli(CreatureDefinition *def)
+{
+    DefineBodyPart(def, vec2(0, 0), vec2(40, 180), 0);
+
+    DefineBodyPart(def, vec2(40, -80), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(40, -40), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(40, 0), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(40, 40), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(40, 80), vec2(40, 10), 0);
+
+    DefineRotaryMuscle(def, 0, 1, vec2(20, -80), -1, 1);
+    DefineRotaryMuscle(def, 0, 2, vec2(20, -40), -1, 1);
+    DefineRotaryMuscle(def, 0, 3, vec2(20, 0), -1, 1);
+    DefineRotaryMuscle(def, 0, 4, vec2(20, 40), -1, 1);
+    DefineRotaryMuscle(def, 0, 5, vec2(20, 80), -1, 1);
+
+    DefineBodyPart(def, vec2(-40, -80), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-40, -40), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-40, 0), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-40, 40), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-40, 80), vec2(40, 10), 0);
+
+    DefineRotaryMuscle(def, 0, 6, vec2(-20, -80), -1, 1);
+    DefineRotaryMuscle(def, 0, 7, vec2(-20, -40), -1, 1);
+    DefineRotaryMuscle(def, 0, 8, vec2(-20, 0), -1, 1);
+    DefineRotaryMuscle(def, 0, 9, vec2(-20, 40), -1, 1);
+    DefineRotaryMuscle(def, 0, 10, vec2(-20, 80), -1, 1);
+}
+
+void
+DefineBug(CreatureDefinition *def)
+{
+    DefineBodyPart(def, vec2(0, 0), vec2(40, 180), 0);
+
+    DefineBodyPart(def, vec2(40, -80), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(40, 0), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(40, 80), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(80, -80), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(80, 0), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(80, 80), vec2(40, 10), 0);
+
+    DefineRotaryMuscle(def, 0, 1, vec2(20, -80), -1, 1);
+    DefineRotaryMuscle(def, 0, 2, vec2(20, 0), -1, 1);
+    DefineRotaryMuscle(def, 0, 3, vec2(20, 80), -1, 1);
+    DefineRotaryMuscle(def, 1, 4, vec2(60, -80), -1, 1);
+    DefineRotaryMuscle(def, 2, 5, vec2(60, 0), -1, 1);
+    DefineRotaryMuscle(def, 3, 6, vec2(60, 80), -1, 1);
+
+    DefineBodyPart(def, vec2(-40, -80), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-40, 0), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-40, 80), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-80, -80), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-80, 0), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-80, 80), vec2(40, 10), 0);
+
+    DefineRotaryMuscle(def, 0, 7, vec2(-20, -80), -1, 1);
+    DefineRotaryMuscle(def, 0, 8, vec2(-20, 0), -1, 1);
+    DefineRotaryMuscle(def, 0, 9, vec2(-20, 80), -1, 1);
+    DefineRotaryMuscle(def, 7, 10, vec2(-60, -80), -1, 1);
+    DefineRotaryMuscle(def, 8, 11, vec2(-60, 0), -1, 1);
+    DefineRotaryMuscle(def, 9, 12, vec2(-60, 80), -1, 1);
+
+}
+
+void
+DefineQuadruped(CreatureDefinition *def)
+{
+    DefineBodyPart(def, vec2(0, 0), vec2(40, 40), M_PI/4.0);
+
+    DefineBodyPart(def, vec2(40, 0), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(80, 0), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(120, 0), vec2(40, 10), 0);
+
+    DefineBodyPart(def, vec2(-40, 0), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-80, 0), vec2(40, 10), 0);
+    DefineBodyPart(def, vec2(-120, 0), vec2(40, 10), 0);
+
+    DefineBodyPart(def, vec2(0, -40), vec2(10, 40), 0);
+    DefineBodyPart(def, vec2(0, -80), vec2(10, 40), 0);
+    DefineBodyPart(def, vec2(0, -120), vec2(10, 40), 0);
+
+    DefineBodyPart(def, vec2(0, 40), vec2(10, 40), 0);
+    DefineBodyPart(def, vec2(0, 80), vec2(10, 40), 0);
+    DefineBodyPart(def, vec2(0, 120), vec2(10, 40), 0);
+
+    DefineRotaryMuscle(def, 0, 1, vec2(20, 0), -1, 1);
+    DefineRotaryMuscle(def, 1, 2, vec2(60, 0), -1, 1);
+    DefineRotaryMuscle(def, 2, 3, vec2(100, 0), -1, 1);
+
+    DefineRotaryMuscle(def, 0, 4, vec2(-20, 0), -1, 1);
+    DefineRotaryMuscle(def, 4, 5, vec2(-60, 0), -1, 1);
+    DefineRotaryMuscle(def, 5, 6, vec2(-100, 0), -1, 1);
+
+    DefineRotaryMuscle(def, 0, 7, vec2(0, -20), -1, 1);
+    DefineRotaryMuscle(def, 7, 8, vec2(0, -60), -1, 1);
+    DefineRotaryMuscle(def, 8, 9, vec2(0, -100), -1, 1);
+
+    DefineRotaryMuscle(def, 0, 10, vec2(0, 20), -1, 1);
+    DefineRotaryMuscle(def, 10, 11, vec2(0, 60), -1, 1);
+    DefineRotaryMuscle(def, 11, 12, vec2(0, 100), -1, 1);
+}
+
+void
 InitFakeWorld(FakeWorld *world, MemoryArena *persistentMemory, MemoryArena *transientMemory)
 {
     world->persistentMemory = persistentMemory;
@@ -316,48 +423,17 @@ InitFakeWorld(FakeWorld *world, MemoryArena *persistentMemory, MemoryArena *tran
 #endif
 
     // Handmade creature
-    DefineBodyPart(&world->def, vec2(0, 0), vec2(40, 40), 0);
+    DefineBug(&world->def);
 
-    DefineBodyPart(&world->def, vec2(40, 0), vec2(40, 10), 0);
-    DefineBodyPart(&world->def, vec2(80, 0), vec2(40, 10), 0);
-    DefineBodyPart(&world->def, vec2(120, 0), vec2(40, 10), 0);
-
-    DefineBodyPart(&world->def, vec2(-40, 0), vec2(40, 10), 0);
-    DefineBodyPart(&world->def, vec2(-80, 0), vec2(40, 10), 0);
-    DefineBodyPart(&world->def, vec2(-120, 0), vec2(40, 10), 0);
-
-    DefineBodyPart(&world->def, vec2(0, -40), vec2(10, 40), 0);
-    DefineBodyPart(&world->def, vec2(0, -80), vec2(10, 40), 0);
-    DefineBodyPart(&world->def, vec2(0, -120), vec2(10, 40), 0);
-
-    DefineBodyPart(&world->def, vec2(0, 40), vec2(10, 40), 0);
-    DefineBodyPart(&world->def, vec2(0, 80), vec2(10, 40), 0);
-    DefineBodyPart(&world->def, vec2(0, 120), vec2(10, 40), 0);
-
-    DefineRotaryMuscle(&world->def, 0, 1, vec2(20, 0), -1, 1);
-    DefineRotaryMuscle(&world->def, 1, 2, vec2(60, 0), -1, 1);
-    DefineRotaryMuscle(&world->def, 2, 3, vec2(100, 0), -1, 1);
-
-    DefineRotaryMuscle(&world->def, 0, 4, vec2(-20, 0), -1, 1);
-    DefineRotaryMuscle(&world->def, 4, 5, vec2(-60, 0), -1, 1);
-    DefineRotaryMuscle(&world->def, 5, 6, vec2(-100, 0), -1, 1);
-
-    DefineRotaryMuscle(&world->def, 0, 7, vec2(0, -20), -1, 1);
-    DefineRotaryMuscle(&world->def, 7, 8, vec2(0, -60), -1, 1);
-    DefineRotaryMuscle(&world->def, 8, 9, vec2(0, -100), -1, 1);
-
-    DefineRotaryMuscle(&world->def, 0, 10, vec2(0, 20), -1, 1);
-    DefineRotaryMuscle(&world->def, 10, 11, vec2(0, 60), -1, 1);
-    DefineRotaryMuscle(&world->def, 11, 12, vec2(0, 100), -1, 1);
-
-    world->inputSize = 1;
+    world->inputSize = 2;
     world->outputSize = world->def.nBodyParts+world->def.nRotaryMuscles;
     world->hiddenSize = 1;
     world->geneSize = GetMinimalGatedUnitGeneSize(world->inputSize, world->outputSize, world->hiddenSize);
+    DebugOut("Gene size = %u" ,world->geneSize);
     world->nGenes = 2;
 
     // Create es from definition
-    world->strategies = ESCreate(persistentMemory, world->geneSize, world->nGenes, 0.01, 0.008);
+    world->strategies = ESCreate(persistentMemory, world->geneSize, world->nGenes, 0.003, 0.01);
     ESGenerateGenes(world->strategies);
     RestartFakeWorld(world);
 }

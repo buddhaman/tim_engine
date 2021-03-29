@@ -155,6 +155,7 @@ main(int argc, char**argv)
     // Creating appstate
     AppState *appState = (AppState *)malloc(sizeof(AppState));
     *appState = (AppState){};
+    appState->clearColor = RGBAToVec4(0x35637cff);
 
     r32 time = 0.0;
     r32 deltaTime = 0.0;
@@ -229,7 +230,6 @@ main(int argc, char**argv)
     ui32 tick = 0;
     ui32 ticksPerGeneration = 60*15;    // 10 seconds
     r32 avgFitness = -100000.0;
-
     b32 paused = 0;
     while(!done)
     {
@@ -296,7 +296,7 @@ main(int argc, char**argv)
         }
 
         // Clear screen
-        Vec4 clearColor = ARGBToVec4(0x35637cff);
+        Vec4 clearColor = appState->clearColor;
         glClearColor(clearColor.x, clearColor.y, clearColor.z, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, appState->screenWidth, appState->screenHeight);
@@ -376,30 +376,50 @@ main(int argc, char**argv)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
         BeginSpritebatch(batch);
-        DrawFakeWorld(world, batch, camera, &squareRegion);
-
+        DrawFakeWorld(world, batch, camera, atlas);
 
         EndSpritebatch(batch);
 
-        glBindTexture(GL_TEXTURE_2D, fontRenderer.font12Texture);
         FitCamera2DToScreen(screenCamera, appState);
         UpdateCamera2D(screenCamera, appState);
         BeginSpritebatch(batch);
         glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&screenCamera->transform);
 
-        local_persist r32 cooltime = 0.0;
-        cooltime+=1;
+        r32 screenWidth = screenCamera->size.x;
+        r32 screenHeight = screenCamera->size.y;
+        r32 bottomBarHeight = 50;
+
+        local_persist r32 coolTime = 0.0;
+        coolTime+=1;
+
+        glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
+        batch->colorState = appState->clearColor;
+        PushRect2(batch,
+                vec2(0,screenHeight-bottomBarHeight),
+                vec2(screenWidth, bottomBarHeight),
+                squareRegion.pos,
+                squareRegion.size);
+        batch->colorState = vec4(1,1,1,0.2);
+        PushRect2(batch,
+                vec2(0, screenHeight-bottomBarHeight),
+                vec2(screenWidth, 2),
+                squareRegion.pos,
+                squareRegion.size);
+
+        EndSpritebatch(batch);
+
+        // Only text from here
+        BeginSpritebatch(batch);
+        glBindTexture(GL_TEXTURE_2D, fontRenderer.font12Texture);
         char info[512];
 
         batch->colorState=vec4(1,1,1,1);
-        sprintf(info, "Steps per frame: %u", stepsPerFrame);
-        DrawString2D(batch, &fontRenderer, vec2(20, 900), info);
-        sprintf(info, "At Generation %u (%u/%u) fitness = %f", 
+        sprintf(info, "Steps per frame: %u. At Generation %u (%u/%u) fitness = %f", stepsPerFrame,
                 generation, 
                 tick, 
                 ticksPerGeneration, 
                 avgFitness);
-        DrawString2D(batch, &fontRenderer, vec2(20, 930), info);
+        DrawString2D(batch, &fontRenderer, vec2(20, screenHeight-bottomBarHeight/2+8), info);
 
         EndSpritebatch(batch);
 
@@ -408,10 +428,13 @@ main(int argc, char**argv)
         if(nk_begin(ctx, "Cool Window", nk_rect(50, 50, 220, 220),
                 NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE))
         {
-            nk_layout_row_static(ctx, 30, 80, 1);
-            local_persist int op = EASY;
-            if(nk_option_label(ctx, "easy", op==EASY)) op=EASY;
-            if(nk_option_label(ctx, "hard", op==HARD)) op=HARD;
+            nk_layout_row_static(ctx, 20, 220, 1);
+            nk_labelf(ctx,  NK_TEXT_LEFT, "Population: %d", world->nGenes);
+            nk_labelf(ctx,  NK_TEXT_LEFT, "Gene size: %d", world->geneSize);
+            nk_labelf(ctx,  NK_TEXT_LEFT, "Inputs: %d", world->inputSize);
+            nk_labelf(ctx,  NK_TEXT_LEFT, "Outputs: %d", world->outputSize);
+            nk_labelf(ctx,  NK_TEXT_LEFT, "Hidden: %d", world->hiddenSize);
+            DebugOut("Gene size = %u" ,world->geneSize);
         }
         nk_end(ctx);
 

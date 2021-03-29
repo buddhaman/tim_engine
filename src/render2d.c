@@ -229,9 +229,9 @@ PushOrientedLineRectangle2(SpriteBatch *batch,
 }
 
 void
-PushCircle2(SpriteBatch *batch, Vec2 center, r32 size, Vec2 texOrig, Vec2 texSize)
+PushCircle2(SpriteBatch *batch, Vec2 center, r32 size, AtlasRegion *tex)
 {
-    PushRect2(batch, vec2(center.x-size, center.y-size), vec2(size*2, size*2), texOrig, texSize);
+    PushRect2(batch, vec2(center.x-size, center.y-size), vec2(size*2, size*2), tex->pos, tex->size);
 }
 
 internal inline Vec2
