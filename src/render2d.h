@@ -30,7 +30,7 @@ typedef struct
     Vec2 pos;
     Vec2 size;
     r32 scale;
-    b32 isYDown;
+    b32 isYUp;
     Mat3 transform;
 
     Vec2 mousePos;  // World coordinates.

@@ -1,7 +1,6 @@
 
 typedef struct RigidBody RigidBody;
 typedef struct FakeWorld FakeWorld;
-typedef struct FakeWorldParams FakeWorldParams;
 
 struct RigidBody
 {

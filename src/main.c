@@ -54,11 +54,14 @@ ReadEntireFile(const char *path)
 #include "linalg.h"
 #include "shader.h"
 #include "neural_net.h"
-#include "app_state.h"
 #include "render2d.h"
-#include "evolution_strategies.h"
+#include "app_state.h"
 #include "texture_atlas.h"
+#include "render_context.h"
+#include "evolution_strategies.h"
 #include "world.h"
+#include "fake_world_screen.h"
+#include "creature_editor.h"
 
 #include "cool_memory.c"
 #include "tim_math.c"
@@ -68,9 +71,12 @@ ReadEntireFile(const char *path)
 #include "app_state.c"
 #include "render2d.c"
 #include "texture_atlas.c"
+#include "render_context.c"
 #include "evolution_strategies.c"
 #include "world.c"
 #include "creature.c"
+#include "fake_world_screen.c"
+#include "creature_editor.c"
 
 #define MEM_TEST 0
 #define NEURALNET_TEST 0
@@ -133,10 +139,6 @@ main(int argc, char**argv)
     {
         DebugOut("Failed to initialize OpenGl Loader!\n");
     }
-
-    FontRenderer fontRenderer;
-    InitFontRenderer(&fontRenderer, "DejaVuSansMono.ttf");
-
 #if 0
     // Load bitmaps
     int width, height, n;
@@ -152,10 +154,17 @@ main(int argc, char**argv)
     nk_sdl_font_stash_begin(&nkFontAtlas);
     nk_sdl_font_stash_end();
 
+    // MemoryArena
+    MemoryArena *gameArena = CreateMemoryArena(128*1000*1000);
     // Creating appstate
     AppState *appState = (AppState *)malloc(sizeof(AppState));
     *appState = (AppState){};
     appState->clearColor = RGBAToVec4(0x35637cff);
+    appState->currentScreen = SCREEN_CREATURE_EDITOR;
+    // Font/Gui Camera
+    appState->screenCamera = PushStruct(gameArena, Camera2D);
+    InitCamera2D(appState->screenCamera);
+    appState->screenCamera->isYUp = 0;
 
     r32 time = 0.0;
     r32 deltaTime = 0.0;
@@ -166,71 +175,16 @@ main(int argc, char**argv)
     b32 done = 0;
     ui32 frameCounter = 0;
 
-    ui32 stepsPerFrame = 1;
+    RenderContext *renderContext = PushStruct(gameArena, RenderContext);
+    InitRenderContext(renderContext, gameArena);
 
-#if 0
-    // Array test
-    int *array = NULL;
-    arrput(array, 2); 
-    arrput(array, 3); 
-    for(int i = 0; i < arrlen(array); i++)
-    {
-        DebugOut("%d", array[i]);
-    }
-    // Hashmap test
-    struct {float key; char value; } *hash = NULL;
-    hmput(hash, 10.5, 'h');
-    hmput(hash, 11.5, 'e');
-    hmput(hash, 12.5, 'l');
-    hmput(hash, 22.5, 'l');
-    hmput(hash, 22.2, 'o');
-    hmput(hash, 23.2, 'o');
+    FakeWorldScreen *fakeWorldScreen = PushStruct(gameArena, FakeWorldScreen);
+    InitFakeWorldScreen(appState, fakeWorldScreen, gameArena);
 
-    DebugOut("%c - ", hmget(hash, 11.5));
-#endif
-
-    MemoryArena *gameArena = CreateMemoryArena(128*1000*1000);
-    MemoryArena *evolutionArena = CreateMemoryArena(128*1000*1000);
-    (void)evolutionArena;
-
-#if 0
-    DebugOut("game arena : %lu / %lu bytes used. %lu procent", 
-            gameArena->used, gameArena->size, (gameArena->used*100)/gameArena->size);
-#endif
-
-    // Init spritebatch
-    SpriteBatch *batch = PushStruct(gameArena, SpriteBatch);
-    InitSpriteBatch(batch, 100000, gameArena);
-
-    // Init simple textureatlas
-    TextureAtlas *atlas = MakeDefaultTexture(gameArena, 256);
-
-    // Make spritebatch shader
-    Shader *spriteShader = PushStruct(gameArena, Shader);
-    InitShader(spriteShader, "shaders/sprite.vert", "shaders/sprite.frag");
-    LoadShader(spriteShader);
-
-    // + Camera
-    Camera2D *camera = PushStruct(gameArena, Camera2D);
-    InitCamera2D(camera);
-    camera->isYDown = 1;
-    camera->scale = 1.0;
-
-    // Font/Gui Camera
-    Camera2D *screenCamera = PushStruct(gameArena, Camera2D);
-    InitCamera2D(screenCamera);
-    screenCamera->isYDown = 0;
-
-    // Init World
-    FakeWorld *world = PushStruct(gameArena, FakeWorld);
-    InitFakeWorld(world, gameArena, evolutionArena);
+    CreatureEditorScreen *creatureEditorScreen = PushStruct(gameArena, CreatureEditorScreen);
+    InitCreatureEditorScreen(appState, creatureEditorScreen, gameArena);
 
     // Handle evolution
-    ui32 generation = 0;
-    ui32 tick = 0;
-    ui32 ticksPerGeneration = 60*15;    // 10 seconds
-    r32 avgFitness = -100000.0;
-    b32 paused = 0;
     while(!done)
     {
         SDL_Event event;
@@ -288,12 +242,8 @@ main(int argc, char**argv)
         appState->normalizedMX = 2*((r32)appState->mx)/appState->screenWidth - 1.0;
         appState->normalizedMY = -2*((r32)appState->my)/appState->screenHeight + 1.0;
 
-        if(IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT))
-        {
-            DebugOut("mx %d, my %d, nmx %f, nmy %f", 
-                    appState->mx, appState->my,
-                    appState->normalizedMX, appState->normalizedMY);
-        }
+        FitCamera2DToScreen(appState->screenCamera, appState);
+        UpdateCamera2D(appState->screenCamera, appState);
 
         // Clear screen
         Vec4 clearColor = appState->clearColor;
@@ -301,145 +251,23 @@ main(int argc, char**argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, appState->screenWidth, appState->screenHeight);
 
-        // Update Camera
-#if 1
-        r32 zoomSpeed = 0.98;
-        r32 camSpeed = 8.0 * camera->scale;
-        if(IsKeyActionDown(appState, ACTION_Z)) { camera->scale*=zoomSpeed; }
-        if(IsKeyActionDown(appState, ACTION_X)) { camera->scale/=zoomSpeed; }
-        if(IsKeyActionDown(appState, ACTION_UP)) { camera->pos.y+=camSpeed; }
-        if(IsKeyActionDown(appState, ACTION_DOWN)) { camera->pos.y-=camSpeed; }
-        if(IsKeyActionDown(appState, ACTION_LEFT)) { camera->pos.x-=camSpeed; }
-        if(IsKeyActionDown(appState, ACTION_RIGHT)) { camera->pos.x+=camSpeed; }
-        if(IsKeyActionJustDown(appState, ACTION_Q))
+        switch(appState->currentScreen)
         {
-            if(stepsPerFrame >= 2) stepsPerFrame/=2;
-        }
-        if(IsKeyActionJustDown(appState, ACTION_E))
+
+        case SCREEN_FAKE_WORLD:
         {
-            if(stepsPerFrame < 1024) stepsPerFrame*=2;
-        }
-#endif
-        if(IsKeyActionJustDown(appState, ACTION_P))
+            UpdateFakeWorldScreen(appState, fakeWorldScreen, renderContext, ctx);
+        } break;
+
+        case SCREEN_CREATURE_EDITOR:
         {
-            paused = !paused;
-            DebugOut(paused ? "Paused" : "Resumed");
-        }
-        if(IsKeyActionJustDown(appState, ACTION_R))
-        {
-#if 0
-            DestroyFakeWorld(world);
-            RestartFakeWorld(world);
-            UnloadShader(&simpleShader);
-            LoadShader(&simpleShader);
-            UnloadShader(&spriteShader);
-            LoadShader(&spriteShader);
-#endif 
+            UpdateCreatureEditorScreen(appState, creatureEditorScreen, renderContext, ctx);
+        } break;
+
         }
 
-        glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
-        AtlasRegion circleRegion = atlas->regions[0];
-        (void)circleRegion;
-        AtlasRegion squareRegion = atlas->regions[1];
-
-        // Do evolution
-        for(ui32 atFrameStep = 0;
-                atFrameStep < stepsPerFrame;
-                atFrameStep++)
-        {
-            UpdateFakeWorld(world);
-            tick++;
-            if(tick >= ticksPerGeneration)
-            {
-                tick = 0;
-                generation++;
-                for(ui32 geneIdx = 0;
-                        geneIdx < world->nGenes;
-                        geneIdx++)
-                {
-                    world->strategies->fitness->v[geneIdx] = CreatureGetFitness(world->creatures+geneIdx);
-                }
-                avgFitness = VecR32Average(world->strategies->fitness);
-                ESNextSolution(world->strategies);
-                ESGenerateGenes(world->strategies);
-                DestroyFakeWorld(world);
-                RestartFakeWorld(world);
-            }
-        }
-
-        // Draw some 2D
-        UpdateCamera2D(camera, appState);
-
-        int matLocation = glGetUniformLocation(spriteShader->program, "transform");
-        glUseProgram(spriteShader->program);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
-        BeginSpritebatch(batch);
-        DrawFakeWorld(world, batch, camera, atlas);
-
-        EndSpritebatch(batch);
-
-        FitCamera2DToScreen(screenCamera, appState);
-        UpdateCamera2D(screenCamera, appState);
-        BeginSpritebatch(batch);
-        glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&screenCamera->transform);
-
-        r32 screenWidth = screenCamera->size.x;
-        r32 screenHeight = screenCamera->size.y;
-        r32 bottomBarHeight = 50;
-
-        local_persist r32 coolTime = 0.0;
-        coolTime+=1;
-
-        glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
-        batch->colorState = appState->clearColor;
-        PushRect2(batch,
-                vec2(0,screenHeight-bottomBarHeight),
-                vec2(screenWidth, bottomBarHeight),
-                squareRegion.pos,
-                squareRegion.size);
-        batch->colorState = vec4(1,1,1,0.2);
-        PushRect2(batch,
-                vec2(0, screenHeight-bottomBarHeight),
-                vec2(screenWidth, 2),
-                squareRegion.pos,
-                squareRegion.size);
-
-        EndSpritebatch(batch);
-
-        // Only text from here
-        BeginSpritebatch(batch);
-        glBindTexture(GL_TEXTURE_2D, fontRenderer.font12Texture);
-        char info[512];
-
-        batch->colorState=vec4(1,1,1,1);
-        sprintf(info, "Steps per frame: %u. At Generation %u (%u/%u) fitness = %f", stepsPerFrame,
-                generation, 
-                tick, 
-                ticksPerGeneration, 
-                avgFitness);
-        DrawString2D(batch, &fontRenderer, vec2(20, screenHeight-bottomBarHeight/2+8), info);
-
-        EndSpritebatch(batch);
-
-        // Begin UI
-        enum {EASY, HARD};
-        if(nk_begin(ctx, "Cool Window", nk_rect(50, 50, 220, 220),
-                NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE))
-        {
-            nk_layout_row_static(ctx, 20, 220, 1);
-            nk_labelf(ctx,  NK_TEXT_LEFT, "Population: %d", world->nGenes);
-            nk_labelf(ctx,  NK_TEXT_LEFT, "Gene size: %d", world->geneSize);
-            nk_labelf(ctx,  NK_TEXT_LEFT, "Inputs: %d", world->inputSize);
-            nk_labelf(ctx,  NK_TEXT_LEFT, "Outputs: %d", world->outputSize);
-            nk_labelf(ctx,  NK_TEXT_LEFT, "Hidden: %d", world->hiddenSize);
-            DebugOut("Gene size = %u" ,world->geneSize);
-        }
-        nk_end(ctx);
-
+        // Render UI
         nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
-        // End UI
 
         // frame timing
         ui32 frameEnd = SDL_GetTicks();

@@ -12,8 +12,6 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Define screens.
-- Make second screen for creature definition editor.
 - Move creature rendering to separate file to be reused by editor.
 - Make world buttons for scaling and rotating.
 - Visualize RotaryMuscleDefs, make draggable.
@@ -37,6 +35,8 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 DONE:
 
+- Make second screen for creature definition editor.
+- Define screens.
 - Show all basic info in gui.
 - Make 2 digit bug.
 - Define rectangles under angle.
@@ -152,4 +152,6 @@ FUN:
 
     Make brain location, show connections. 
     Make googly eyes, mouth, claws.
+
+    Make everything wiggly. Including mouse cursor. Pay attention to details.
  

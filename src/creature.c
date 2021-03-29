@@ -129,14 +129,14 @@ SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
 {
     r32 absActivation = fabsf(activation);
     cpSimpleMotorSetRate(muscle->motor, activation < 0.0 ? -5 : 5);
-    r32 maxActivation = 500000.0;
+    r32 maxActivation = 800000.0;
     cpConstraintSetMaxForce(muscle->motor, absActivation*maxActivation);
 }
 
 r32
 CreatureGetFitness(Creature *creature)
 {
-    r32 avgX= 0.0;
+    r32 avgX = 0.0;
     r32 avgY = 0.0;
     for(ui32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
@@ -157,7 +157,7 @@ UpdateCreature(FakeWorld *world, Creature *creature)
 {
     MinimalGatedUnit *brain = creature->brain;
     creature->internalClock+=1.0/60.0;
-    r32 drag = 0.15;
+    r32 drag = 0.2;
     r32 input0 = sinf(4*creature->internalClock);
     r32 input1 = sinf(8*creature->internalClock);
     brain->x.v[0] = input0;
@@ -178,7 +178,7 @@ UpdateCreature(FakeWorld *world, Creature *creature)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         r32 activation = brain->h.v[brain->stateSize-brain->outputSize+creature->nRotaryMuscles+bodyPartIdx];
-        part->body->drag = 0.01+activation*drag + drag;
+        part->body->drag = 0.03+activation*drag + drag;
     }
 
 #if 0

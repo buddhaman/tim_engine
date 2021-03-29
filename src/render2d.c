@@ -98,7 +98,7 @@ EndSpritebatch(SpriteBatch *batch)
             batch->vertexBuffer, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, batch->nVertices*batch->stride*sizeof(ui16), 
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, batch->nIndices*sizeof(ui16), 
             batch->indexBuffer, GL_DYNAMIC_DRAW);
 
     glDrawElements(GL_TRIANGLES, batch->nIndices, GL_UNSIGNED_SHORT, 0);
@@ -126,11 +126,6 @@ internal inline void
 PushIndex(SpriteBatch *batch, ui16 index)
 {
     batch->indexBuffer[batch->nIndices++] = index;
-}
-
-internal inline void 
-PrintBuffers(SpriteBatch *batch)
-{
 }
 
 void
@@ -288,14 +283,14 @@ UpdateCamera2D(Camera2D *camera, AppState *appState)
     Vec2 size = vec2(camera->scale*appState->screenWidth, camera->scale*appState->screenHeight);
     camera->transform = m3_translation_and_scale(
             vec2(-camera->pos.x, -camera->pos.y),
-            2.0/size.x, (-1.0+2*camera->isYDown)*2.0/size.y);
+            2.0/size.x, (-1.0+2*camera->isYUp)*2.0/size.y);
     camera->size = size;
 
     r32 ny = ((r32)appState->my)/((r32)appState->screenHeight) - 0.5;// In [-0.5, 0.5]
     // Mouse location.
     camera->mousePos = vec2(
             appState->mx*camera->scale+camera->pos.x-camera->size.x/2.0, 
-            (1.0-2.0*camera->isYDown)*camera->size.y*ny + camera->pos.y);
+            (1.0-2.0*camera->isYUp)*camera->size.y*ny + camera->pos.y);
 }
 
 void

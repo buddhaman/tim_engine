@@ -100,51 +100,6 @@ GetBodyAngle(RigidBody *body)
     return (r32)cpBodyGetAngle(body->body);
 }
 
-void
-DrawGrid(SpriteBatch *batch, 
-        Camera2D *camera, 
-        r32 gridResolution, 
-        r32 gridLineWidth,
-        AtlasRegion *texture)
-{
-    r32 minX = camera->pos.x-camera->size.x/2;
-    r32 minY = camera->pos.y-camera->size.y/2;
-    r32 maxX = camera->pos.x+camera->size.x;
-    r32 maxY = camera->pos.y+camera->size.y;
-    ui32 nXLines = camera->size.x/gridResolution+2;
-    ui32 nYLines = camera->size.y/gridResolution+2;
-    r32 xStart = floorf(minX/gridResolution)*gridResolution;
-    r32 yStart = floorf(minY/gridResolution)*gridResolution;
-    ui32 maxLines = 100;
-    ui32 fadeAfter = 50;
-    r32 alpha = 0.2;
-    ui32 mostLines = Max(nXLines, nYLines);
-    if(mostLines < maxLines)
-    {
-        r32 fade = (maxLines-mostLines)/((r32)(maxLines-fadeAfter));
-        if(fade > 1.0) fade = 1.0;
-        batch->colorState = vec4(1.0, 1.0, 1.0, fade*alpha);
-        for(ui32 xIdx = 0; xIdx < nXLines; xIdx++)
-        {
-            r32 x = xStart+xIdx*gridResolution;
-            PushRect2(batch, 
-                    vec2(x-gridLineWidth/2.0, minY), 
-                    vec2(gridLineWidth, maxY-minY), 
-                    texture->pos, 
-                    texture->size);
-        }
-        for(ui32 yIdx = 0; yIdx < nYLines; yIdx++)
-        {
-            r32 y = yStart+yIdx*gridResolution;
-            PushRect2(batch, 
-                    vec2(minX, y-gridLineWidth/2.0),
-                    vec2(maxX-minX, gridLineWidth), 
-                    texture->pos, 
-                    texture->size);
-        }
-    }
-}
-
 // For now assumes batch has already begun.
 void
 DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, TextureAtlas *atlas)
@@ -287,6 +242,55 @@ DefineRotaryMuscle(CreatureDefinition *def,
 }
 
 void
+DefineGuy(CreatureDefinition *def)
+{
+    r32 size = 90;
+    r32 headSize = 60;
+    DefineBodyPart(def, vec2(0, 0), vec2(20, 2*size), 0);   // torso
+
+    DefineBodyPart(def, vec2(size/2, -size), vec2(size, 20), 0);   // leg
+    DefineBodyPart(def, vec2(3*size/2, -size), vec2(size, 20), 0);  
+    DefineBodyPart(def, vec2(2*size, -size+size/4), vec2(20, size/2), 0);   // foot
+
+    DefineBodyPart(def, vec2(-size/2, -size), vec2(size, 20), 0);   // leg
+    DefineBodyPart(def, vec2(-3*size/2, -size), vec2(size, 20), 0);  
+    DefineBodyPart(def, vec2(-2*size, -size+size/4), vec2(20, size/2), 0);   // foot
+
+    // Arms
+    DefineBodyPart(def, vec2(size/2, size), vec2(size, 20), 0);   
+    DefineBodyPart(def, vec2(3*size/2, size), vec2(size, 20), 0);  
+    DefineBodyPart(def, vec2(2*size+size/4, size), vec2(size/2, 20), 0);   
+
+    DefineBodyPart(def, vec2(-size/2, size), vec2(size, 20), 0);   
+    DefineBodyPart(def, vec2(-3*size/2, size), vec2(size, 20), 0);  
+    DefineBodyPart(def, vec2(-2*size-size/4, size), vec2(size/2, 20), 0);   
+
+    DefineBodyPart(def, vec2(0, size+10), vec2(20, 20), 0);   // neck
+    DefineBodyPart(def, vec2(0, size+20+headSize/2), vec2(headSize, headSize), 0);   // head
+
+    DefineRotaryMuscle(def, 0, 1, vec2(0, -size), -M_PI/2, 0.0);
+    DefineRotaryMuscle(def, 1, 2, vec2(size, -size), -M_PI/2, 0.0);
+    DefineRotaryMuscle(def, 2, 3, vec2(2*size, -size), -M_PI/2, 0.0);
+
+    DefineRotaryMuscle(def, 0, 4, vec2(0, -size), 0, M_PI/2);
+    DefineRotaryMuscle(def, 4, 5, vec2(-size, -size), 0, M_PI/2);
+    DefineRotaryMuscle(def, 5, 6, vec2(-2*size, -size), 0, M_PI/2);
+
+    // Arms
+    DefineRotaryMuscle(def, 0, 7, vec2(0, size), -M_PI/2, M_PI/2);
+    DefineRotaryMuscle(def, 7, 8, vec2(size, size), 0, M_PI);
+    DefineRotaryMuscle(def, 8, 9, vec2(2*size, size), M_PI/2, -M_PI/2);
+
+    DefineRotaryMuscle(def, 0, 10, vec2(0, size), -M_PI/2, M_PI/2);
+    DefineRotaryMuscle(def, 10, 11, vec2(-size, size), -M_PI, 0);
+    DefineRotaryMuscle(def, 11, 12, vec2(-2*size, size), M_PI/2, -M_PI/2);
+
+    // Neck and head
+    DefineRotaryMuscle(def, 0, 13, vec2(0, size), -0.1, 0.1);
+    DefineRotaryMuscle(def, 13, 14, vec2(0, size+20), -0.1, 0.1);
+}
+
+void
 DefineMilli(CreatureDefinition *def)
 {
     DefineBodyPart(def, vec2(0, 0), vec2(40, 180), 0);
@@ -423,17 +427,17 @@ InitFakeWorld(FakeWorld *world, MemoryArena *persistentMemory, MemoryArena *tran
 #endif
 
     // Handmade creature
-    DefineBug(&world->def);
+    DefineGuy(&world->def);
 
     world->inputSize = 2;
     world->outputSize = world->def.nBodyParts+world->def.nRotaryMuscles;
     world->hiddenSize = 1;
     world->geneSize = GetMinimalGatedUnitGeneSize(world->inputSize, world->outputSize, world->hiddenSize);
     DebugOut("Gene size = %u" ,world->geneSize);
-    world->nGenes = 2;
+    world->nGenes = 10;
 
     // Create es from definition
-    world->strategies = ESCreate(persistentMemory, world->geneSize, world->nGenes, 0.003, 0.01);
+    world->strategies = ESCreate(persistentMemory, world->geneSize, world->nGenes, 0.05, 0.025);
     ESGenerateGenes(world->strategies);
     RestartFakeWorld(world);
 }

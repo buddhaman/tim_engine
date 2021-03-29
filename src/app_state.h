@@ -15,6 +15,12 @@ typedef enum
     NUM_KEY_ACTIONS
 } KeyAction;
 
+typedef enum
+{
+    SCREEN_CREATURE_EDITOR,
+    SCREEN_FAKE_WORLD
+} ScreenType;
+
 typedef struct AppState AppState;
 struct AppState
 {
@@ -26,6 +32,8 @@ struct AppState
     r32 normalizedMX;
     r32 normalizedMY;
     Vec4 clearColor;
+    ScreenType currentScreen;
+    Camera2D *screenCamera;
 
     b32 isActionDown[NUM_KEY_ACTIONS];
     b32 wasActionDown[NUM_KEY_ACTIONS];
