@@ -12,8 +12,9 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Move creature rendering to separate file to be reused by editor.
+- Make tim_ui basics for pressing buttons and axis button.
 - Make world buttons for scaling and rotating.
+- Move creature definition to creature editor or separate file.
 - Visualize RotaryMuscleDefs, make draggable.
 - Also add ui for editing all these values in nuklear.
 - Start simulation from custom definition.

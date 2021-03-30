@@ -45,6 +45,12 @@ IsKeyActionJustDown(AppState *appState, KeyAction action)
     return appState->isActionDown[action] && !appState->wasActionDown[action];
 }
 
+b32
+IsKeyActionJustReleased(AppState *appState, KeyAction action)
+{
+    return !appState->isActionDown[action] && appState->wasActionDown[action];
+}
+
 //TODO: Move to camera file. This is a weird place.
 void
 UpdateCameraInput(AppState *appState, Camera2D *camera)

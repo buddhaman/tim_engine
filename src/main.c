@@ -60,6 +60,7 @@ ReadEntireFile(const char *path)
 #include "render_context.h"
 #include "evolution_strategies.h"
 #include "world.h"
+#include "tim_ui.h"
 #include "fake_world_screen.h"
 #include "creature_editor.h"
 
@@ -75,6 +76,7 @@ ReadEntireFile(const char *path)
 #include "evolution_strategies.c"
 #include "world.c"
 #include "creature.c"
+#include "tim_ui.c"
 #include "fake_world_screen.c"
 #include "creature_editor.c"
 
@@ -182,7 +184,7 @@ main(int argc, char**argv)
     InitFakeWorldScreen(appState, fakeWorldScreen, gameArena);
 
     CreatureEditorScreen *creatureEditorScreen = PushStruct(gameArena, CreatureEditorScreen);
-    InitCreatureEditorScreen(appState, creatureEditorScreen, gameArena);
+    InitCreatureEditorScreen(appState, creatureEditorScreen, renderContext, gameArena);
 
     // Handle evolution
     while(!done)
