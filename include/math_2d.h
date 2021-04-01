@@ -46,6 +46,13 @@ static inline float   v2_dist(vec2_t a, vec2_t b)   { return v2_length(v2_sub(b,
 
 static inline vec2_t  v2_norm(vec2_t v)             { return v2_muls(v, 1.0/v2_length(v)); }
 
+static inline vec2_t v2_rotate(vec2_t v, float t)   
+{ 
+    float c = cosf(t);
+    float s = sinf(t);
+    return vec2(c*v.x - s*v.y, s*v.x+c*v.y);
+}
+
 mat3_t m3_translation(vec2_t translation)
 {
     return mat3(

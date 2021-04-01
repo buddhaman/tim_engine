@@ -12,10 +12,12 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Make tim_ui basics for pressing buttons and axis button.
-- Make world buttons for scaling and rotating.
-- Move creature definition to creature editor or separate file.
-- Visualize RotaryMuscleDefs, make draggable.
+- Calculate everything recursively in creature_definition. 
+- Grid snap / creature snap / rotation snap.
+- Visualize all constraints.
+- Make ui with button for adding bodypart.
+- Constraint system, build recursively from center body.
+- Show body center.
 - Also add ui for editing all these values in nuklear.
 - Start simulation from custom definition.
 - Serialization: Pull in json library and save the creature defs.
@@ -36,6 +38,13 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 DONE:
 
+- Return full BoxEdgePosition.
+- Define new bodypart+constraint.
+- Remove RotoryMuscleDef and store inside bodydef
+- Delete from dynamic array.
+- Move creature definition to creature editor or separate file.
+- Make world buttons for scaling and rotating.
+- Make tim_ui basics for pressing buttons and axis button.
 - Make second screen for creature definition editor.
 - Define screens.
 - Show all basic info in gui.

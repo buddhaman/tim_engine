@@ -76,6 +76,7 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
     //creature->physicsGroup = world->physicsGroupCounter++;
     creature->physicsGroup = 1;
 
+#if 0
     // Build body
     for(int bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts; 
@@ -103,6 +104,7 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
                 muscleDef->minAngle+angleB-angleA, 
                 muscleDef->maxAngle+angleB-angleA);
     }
+#endif
 
     return creature;
 }

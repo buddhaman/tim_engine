@@ -16,7 +16,7 @@ typedef mat3_t Mat3;
 #define MAX_ELEMENT_MEMORY 128*1024
 
 #define CheckOpenglError() { GLenum err = glGetError(); \
-    if(err) { DebugOut("err =%04x", err);Assert(0); }}
+    if(err) { DebugOut("err = %04x", err);Assert(0); }}
 
 char *
 ReadEntireFile(const char *path)
@@ -58,6 +58,7 @@ ReadEntireFile(const char *path)
 #include "app_state.h"
 #include "texture_atlas.h"
 #include "render_context.h"
+#include "creature_definition.h"
 #include "evolution_strategies.h"
 #include "world.h"
 #include "tim_ui.h"
@@ -73,6 +74,7 @@ ReadEntireFile(const char *path)
 #include "render2d.c"
 #include "texture_atlas.c"
 #include "render_context.c"
+#include "creature_definition.c"
 #include "evolution_strategies.c"
 #include "world.c"
 #include "creature.c"

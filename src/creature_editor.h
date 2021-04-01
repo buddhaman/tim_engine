@@ -4,6 +4,9 @@ typedef enum
     EDIT_CREATURE_NONE,
     EDIT_CREATURE_WIDTH,
     EDIT_CREATURE_HEIGHT,
+    EDIT_CREATURE_ROTATION,
+    EDIT_ADD_BODYPART_FIND_EDGE,
+    EDIT_ADD_BODYPART_PLACE,
 } EditCreatureState;
 
 typedef struct
@@ -12,12 +15,12 @@ typedef struct
     Camera2D *camera;
     Gui *gui;
 
+    ui32 idCounter;
     BodyPartDefinition *selectedBodyPart;
 
     // Bodypart editing info
     EditCreatureState editState;
-    Vec2 widthDragPos;
-    Vec2 heightDragPos;
-
+    BoxEdgeLocation bodyPartLocation;
+    BodyPartDefinition *attachTo;
 } CreatureEditorScreen;
 
