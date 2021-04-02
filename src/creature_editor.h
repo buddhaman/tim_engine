@@ -6,6 +6,8 @@ typedef enum
     EDIT_CREATURE_HEIGHT,
     EDIT_CREATURE_ROTATION,
     EDIT_CREATURE_ROTATION_AND_LENGTH,
+    EDIT_CREATURE_MIN_ANGLE,
+    EDIT_CREATURE_MAX_ANGLE,
     EDIT_ADD_BODYPART_FIND_EDGE,
     EDIT_ADD_BODYPART_PLACE,
 } EditCreatureState;
@@ -18,7 +20,14 @@ typedef struct
     b32 isInputCaptured;
 
     ui32 idCounter;
-    BodyPartDefinition *selectedBodyPart;
+    ui32 selectedId;
+
+    b32 isDimSnapEnabled;
+    r32 dimSnapResolution;
+    b32 isAngleSnapEnabled;
+    r32 angleSnapResolution;
+    b32 isEdgeSnapEnabled;
+    ui32 edgeSnapDivisions;
 
     // Bodypart editing info
     EditCreatureState editState;

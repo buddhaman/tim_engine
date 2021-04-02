@@ -1,4 +1,17 @@
 
+ui32
+GetIndexOfBodyPart(CreatureDefinition *def, ui32 id)
+{
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < def->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
+        if(part->id == id) return bodyPartIdx;
+    }
+    return -1;
+}
+
 BodyPartDefinition *
 GetBodyPartById(CreatureDefinition *def, ui32 id)
 {
@@ -12,20 +25,39 @@ GetBodyPartById(CreatureDefinition *def, ui32 id)
     return NULL;
 }
 
-void
-SetLocalAngleFromAbsoluteAngle(CreatureDefinition *def,
+r32
+GetLocalAngleFromAbsoluteAngle(CreatureDefinition *def,
         BodyPartDefinition *part,
         r32 absAngle)
 {
     r32 edgeAngle = atan2f(part->yEdge, part->xEdge);
     BodyPartDefinition *parent = GetBodyPartById(def, part->connectionId);
-    part->localAngle = NormalizeAngle(absAngle - parent->angle -edgeAngle);
+    return NormalizeAngle(absAngle - parent->angle -edgeAngle);
 }
 
 r32 
 GetAbsoluteEdgeAngle(BodyPartDefinition *part, int xEdge, int yEdge)
 {
     return NormalizeAngle(atan2f(yEdge, xEdge)+part->angle);
+}
+
+ui32
+GetSubNodeBodyPartsById(CreatureDefinition *def, 
+        BodyPartDefinition *parent,
+        ui32 parts[def->nBodyParts])
+{
+    ui32 counter = 0;
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < def->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
+        if(part->connectionId==parent->id)
+        {
+            parts[counter++] = part->id;
+        }
+    }
+    return counter;
 }
 
 ui32
@@ -39,20 +71,30 @@ GetSubNodeBodyParts(CreatureDefinition *def,
             bodyPartIdx++)
     {
         BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
-        if(part->id==parent->id)
+        if(part->connectionId==parent->id)
         {
-            continue;
-        }
-        else
-        {
-            if(part->connectionId==parent->id)
-            {
-                parts[counter++] = part;
-            }
+            parts[counter++] = part;
         }
     }
     return counter;
 }
+
+// Also removes all subnodes
+void
+RemoveBodyPart(CreatureDefinition *def, ui32 id)
+{
+    BodyPartDefinition *parent = GetBodyPartById(def, id);
+    ui32 parts[def->nBodyParts];
+    ui32 nParts = GetSubNodeBodyPartsById(def, parent, parts);
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < nParts;
+            bodyPartIdx++)
+    {
+        RemoveBodyPart(def, parts[bodyPartIdx]);
+    }
+    ArrayRemoveElement(def->bodyParts, sizeof(BodyPartDefinition), def->nBodyParts--, parent);
+}
+
 
 void
 RecalculateSubNodeBodyParts(CreatureDefinition *def,

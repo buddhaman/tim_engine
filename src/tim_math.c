@@ -158,6 +158,12 @@ RadToDeg(r32 rad)
 }
 
 internal inline r32
+DegToRad(r32 rad)
+{
+    return rad*(M_PI/180.0);
+}
+
+internal inline r32
 NormalizeAngle(r32 rad)
 {
     rad = fmodf(rad, M_PI*2);
@@ -174,6 +180,12 @@ GetNormalizedAngDiff(r32 a, r32 b)
 {
     r32 diff = a-b;
     return NormalizeAngle(diff);
+}
+
+internal inline r32
+ClampF(r32 min, r32 max, r32 x)
+{
+    return x < min ? min : (x > max ? max : x);
 }
 
 // TODO: maybe move somewhere else

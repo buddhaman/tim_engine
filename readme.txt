@@ -12,9 +12,7 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Visualize all constraints.
-- Grid snap / creature snap / rotation snap.
-- Add ui for editing all these values in nuklear.
+- Show size of proto brain.
 
 - Start simulation from custom definition.
 - Serialization: Pull in json library and save the creature defs.
@@ -24,19 +22,26 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 - Generate textures with noise.
 - Add googly eyes.
 
-- Creature definition editor.
 - Visualize GRU.
 - Graph in nuklear gui? or in own gui
+- Make function for visualizing constraint without gui to reuse.
 
 - Mouse input to move camera.
 - set parameters before training.
 - 2D lighting.
 - Only recalculate when dirty.
 
+- Add icons for all edit buttons.
+
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
 
 DONE:
 
+- Grid snap / creature snap / rotation snap.
+- Creature definition editor.
+- Delete bodypart and all children.
+- Add ui for editing all these values in nuklear.
+- Visualize constraint when selecting bodypart.
 - Nicer visualization of angle.
 - Top bar with tools. Or sidebar? no topbar. Sidebar.
 - Constraint system, build recursively from center body.
@@ -174,4 +179,6 @@ FUN:
     Make googly eyes, mouth, claws.
 
     Make everything wiggly. Including mouse cursor. Pay attention to details.
+
+    Make gun creature for video.
  
