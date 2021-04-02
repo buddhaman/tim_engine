@@ -28,7 +28,30 @@ DoCircularButtonOnPress(Gui *gui, Vec2 pos, r32 radius)
         color = gui->defaultColor;
     }
     GuiPushCircle(gui, pos, radius, color);
-    return hit & IsKeyActionJustDown(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
+    return hit & IsKeyActionDown(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
+}
+
+b32
+DoAngleLengthButton(Gui *gui,
+        Vec2 center,
+        r32 *angle,
+        r32 *length,
+        r32 radius,
+        b32 isDragging)
+{
+    Vec2 mousePos = gui->camera->mousePos;
+    Vec2 pos = v2_add(center, v2_polar(*angle, *length));
+    if(isDragging)
+    {
+        *angle = atan2f(mousePos.y-center.y, mousePos.x-center.x);
+        *length = v2_dist(center, mousePos);
+        GuiPushCircle(gui, pos, radius, gui->pressedColor);
+        return IsKeyActionDown(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
+    }
+    else
+    {
+        return DoCircularButtonOnPress(gui, pos, radius);
+    }
 }
 
 b32

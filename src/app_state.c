@@ -17,6 +17,7 @@ MapKeyCodeToAction(SDL_Keycode code)
         case SDLK_DOWN: { return ACTION_DOWN; } break;
         case SDLK_LEFT: { return ACTION_LEFT; } break;
         case SDLK_RIGHT: { return ACTION_RIGHT; } break;
+        case SDLK_ESCAPE: { return ACTION_ESCAPE; } break;
         default: { return ACTION_UNKNOWN; } break;
     }
 }

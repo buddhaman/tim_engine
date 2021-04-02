@@ -156,7 +156,9 @@ main(int argc, char**argv)
 
     struct nk_font_atlas *nkFontAtlas;
     nk_sdl_font_stash_begin(&nkFontAtlas);
+    struct nk_font *font = nk_font_atlas_add_from_file(nkFontAtlas, "DejaVuSansMono.ttf", 16.0, 0);
     nk_sdl_font_stash_end();
+    nk_style_set_font(ctx, &font->handle);
 
     // MemoryArena
     MemoryArena *gameArena = CreateMemoryArena(128*1000*1000);

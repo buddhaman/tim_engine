@@ -169,6 +169,13 @@ NormalizeAngle(r32 rad)
     return rad;
 }
 
+internal inline r32
+GetNormalizedAngDiff(r32 a, r32 b)
+{
+    r32 diff = a-b;
+    return NormalizeAngle(diff);
+}
+
 // TODO: maybe move somewhere else
 
 internal inline size_t

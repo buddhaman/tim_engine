@@ -31,8 +31,8 @@ DrawGrid(SpriteBatch *batch,
     ui32 nYLines = camera->size.y/gridResolution+2;
     r32 xStart = floorf(minX/gridResolution)*gridResolution;
     r32 yStart = floorf(minY/gridResolution)*gridResolution;
-    ui32 maxLines = 100;
-    ui32 fadeAfter = 50;
+    ui32 maxLines = 60;
+    ui32 fadeAfter = 40;
     r32 alpha = 0.2;
     ui32 mostLines = Max(nXLines, nYLines);
     if(mostLines < maxLines)

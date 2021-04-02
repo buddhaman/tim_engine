@@ -5,6 +5,24 @@ CreatureEditorIsEditing(CreatureEditorScreen *editor)
     return editor->editState!=EDIT_CREATURE_NONE;
 }
 
+b32
+EditorIsMouseJustPressed(AppState *appState, CreatureEditorScreen *editor)
+{
+    return !editor->isInputCaptured && IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT);
+}
+
+b32
+EditorIsMouseJustReleased(AppState *appState, CreatureEditorScreen *editor)
+{
+    return IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT);
+}
+
+b32
+EditorIsMousePressed(AppState *appState, CreatureEditorScreen *editor)
+{
+    return !editor->isInputCaptured && IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT);
+}
+
 void
 UpdateCreatureEditorScreen(AppState *appState, 
         CreatureEditorScreen *editor, 
@@ -27,21 +45,28 @@ UpdateCreatureEditorScreen(AppState *appState,
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
     (void)circleRegion;
 
+    Vec4 creatureColor = RGBAToVec4(0x7c4d35ff);
+    
+    // Key and mouse input
+    editor->isInputCaptured = nk_window_is_any_hovered(ctx);
+    if(IsKeyActionJustDown(appState, ACTION_ESCAPE))
+    {
+        editor->editState = EDIT_CREATURE_NONE;
+    }
+
+    UpdateCameraInput(appState, camera);
+    UpdateCamera2D(camera, appState);
+    Vec2 mousePos = camera->mousePos;
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
 
     glUseProgram(spriteShader->program);
 
-    UpdateCameraInput(appState, camera);
-    UpdateCamera2D(camera, appState);
-    Vec2 mousePos = camera->mousePos;
-
     int matLocation = glGetUniformLocation(spriteShader->program, "transform");
     glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
     BeginSpritebatch(batch);
-    local_persist r32 time = 0.0;
-    time+=1.0/60;
 
     batch->colorState = vec4(1,1,1,0.1);
     PushRect2(batch, 
@@ -50,7 +75,7 @@ UpdateCreatureEditorScreen(AppState *appState,
             circleRegion->pos,
             circleRegion->size);
 
-    DrawGrid(batch, camera, 50, 1.0, squareRegion);
+    DrawGrid(batch, camera, 50, 2.0, squareRegion);
 
     // Check intersection with bodyparts.
     BodyPartDefinition *bodyPartIntersect = NULL;
@@ -66,14 +91,16 @@ UpdateCreatureEditorScreen(AppState *appState,
                 bodyPartIntersect = part;
             }
         }
-        if(IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT))
-        {
-            editor->selectedBodyPart = bodyPartIntersect;
-        }
     }
 
+    // TODO: collect in editor and display at the same time. Just like spritebatch.
     char info[256];
     memset(info, 0, 256);
+
+    char angleInfo[256];
+    memset(angleInfo, 0, 256);
+    Vec2 angleInfoPos = vec2(0,0);
+
     if(editor->editState==EDIT_ADD_BODYPART_FIND_EDGE)
     {
         r32 minDist = 10000000.0;
@@ -128,24 +155,31 @@ UpdateCreatureEditorScreen(AppState *appState,
         r32 localAngle = angle-part->angle - edgeAngle;
         localAngle = NormalizeAngle(localAngle);
         sprintf(info, "%.1f deg", RadToDeg(localAngle));
-        if(IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT))
+        if(EditorIsMouseJustReleased(appState, editor))
         {
-            BodyPartDefinition *newPart = def->bodyParts+def->nBodyParts++;
-            
-            newPart->id = editor->idCounter++;
-            newPart->pos = center;
-            newPart->width = dist;
-            newPart->height = 20;
-            newPart->angle = angle;
-            newPart->localAngle = localAngle;
-            newPart->connectionId = part->id;
-            newPart->offset = location->offset;
-            newPart->xEdge = location->xEdge;
-            newPart->yEdge = location->yEdge;
-            newPart->pivotPoint = location->pos;
-            newPart->minAngle = -1;
-            newPart->maxAngle = 1;
-            editor->editState=EDIT_CREATURE_NONE;
+            if(editor->isInputCaptured)
+            {
+                editor->editState=EDIT_CREATURE_NONE;
+            }
+            else
+            {
+                BodyPartDefinition *newPart = def->bodyParts+def->nBodyParts++;
+                
+                newPart->id = editor->idCounter++;
+                newPart->pos = center;
+                newPart->width = dist;
+                newPart->height = 20;
+                newPart->angle = angle;
+                newPart->localAngle = localAngle;
+                newPart->connectionId = part->id;
+                newPart->offset = location->offset;
+                newPart->xEdge = location->xEdge;
+                newPart->yEdge = location->yEdge;
+                newPart->pivotPoint = location->pos;
+                newPart->minAngle = -1;
+                newPart->maxAngle = 1;
+                editor->editState=EDIT_ADD_BODYPART_FIND_EDGE;
+            }
         }
     }
 
@@ -155,7 +189,7 @@ UpdateCreatureEditorScreen(AppState *appState,
     {
         BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
         if(editor->selectedBodyPart==part) batch->colorState = vec4(1, 0, 0, 1);
-        else batch->colorState = vec4(1,1,1,1);
+        else batch->colorState = creatureColor;
         PushOrientedRectangle2(batch,
                 part->pos,
                 part->width,
@@ -184,51 +218,95 @@ UpdateCreatureEditorScreen(AppState *appState,
     {
         BodyPartDefinition *part = editor->selectedBodyPart;
 
+        b32 hitWidthDragButton = 0;
+        b32 hitHeightDragButton = 0;
+        b32 hitRotationDragButton = 0;
+        b32 hitRotationAndLengthDragButton = 0;
+
         r32 halfWidth = part->width/2;
         r32 halfHeight = part->height/2;
         r32 angleButtonLength = sqrtf(halfWidth*halfWidth+halfHeight*halfHeight);
         r32 angleButtonAngle = part->angle+atan2(-halfHeight, -halfWidth);
-        b32 hitWidthDragButton = DoDragButtonAlongAxis(gui, 
-                    part->pos, 
-                    v2_polar(part->angle, 1.0),
-                    &halfWidth,
-                    5, editor->editState==EDIT_CREATURE_WIDTH);
-        part->width = Max(1, halfWidth*2);
 
-        b32 hitHeightDragButton = DoDragButtonAlongAxis(gui, 
+        hitHeightDragButton = DoDragButtonAlongAxis(gui, 
                     part->pos, 
                     v2_polar(part->angle+M_PI/2, 1.0),
                     &halfHeight,
-                    5, editor->editState==EDIT_CREATURE_HEIGHT);
+                    5, 
+                    editor->editState==EDIT_CREATURE_HEIGHT);
         part->height = Max(1, halfHeight*2);
 
-        r32 newAngle = angleButtonAngle;
-        b32 hitRotationDragButton = DoRotationDragButton(gui, part->pos,
-            &newAngle, angleButtonLength, 5, editor->editState==EDIT_CREATURE_ROTATION);
-        part->angle+=newAngle-angleButtonAngle;
+        if(!part->connectionId)
+        {
+            hitWidthDragButton = DoDragButtonAlongAxis(gui, 
+                        part->pos, 
+                        v2_polar(part->angle, 1.0),
+                        &halfWidth,
+                        5, 
+                        editor->editState==EDIT_CREATURE_WIDTH);
+            part->width = Max(1, halfWidth*2);
+
+            r32 newAngle = angleButtonAngle;
+            hitRotationDragButton = DoRotationDragButton(gui, 
+                    part->pos,
+                &newAngle, 
+                angleButtonLength, 
+                5, 
+                editor->editState==EDIT_CREATURE_ROTATION);
+            part->angle+=newAngle-angleButtonAngle;
+        }
+        else
+        {
+            BodyPartDefinition *parent = GetBodyPartById(def, part->connectionId);
+            Vec2 pivotPoint = part->pivotPoint;
+            r32 absAngle = part->angle;
+            r32 width = part->width;
+            hitRotationAndLengthDragButton = DoAngleLengthButton(gui,
+                    pivotPoint, 
+                    &absAngle,
+                    &width,
+                    5,
+                    editor->editState==EDIT_CREATURE_ROTATION_AND_LENGTH);
+            part->width = width;
+            //part->pos = v2_add(pivotPoint, v2_polar(absAngle, width/2.0));
+            SetLocalAngleFromAbsoluteAngle(def, part, absAngle);
+            // Draw nice angle thing
+            Vec2 to = v2_add(pivotPoint, v2_polar(absAngle, width));
+            r32 edgeAngle = GetAbsoluteEdgeAngle(parent, part->xEdge, part->yEdge);
+            Vec2 normalPoint = v2_add(pivotPoint, v2_polar(edgeAngle, 50));
+            sprintf(angleInfo, "%.1f deg", RadToDeg(part->localAngle));
+            angleInfoPos = v2_add(pivotPoint, vec2(10, 10));
+
+            batch->colorState = vec4(1,1,1,1);
+            PushLine2(batch, pivotPoint, to, 1, squareRegion->pos, squareRegion->size);
+            PushLine2(batch, pivotPoint, normalPoint, 1, squareRegion->pos, squareRegion->size);
+            batch->colorState = vec4(1,1,1,0.5);
+            // Turn this into a function
+            r32 angDiff = GetNormalizedAngDiff(absAngle, edgeAngle);
+            PushSemiCircle2(batch, pivotPoint, 20, edgeAngle, edgeAngle+angDiff, 20, squareRegion);
+        }
+
+        if(editor->editState==EDIT_CREATURE_HEIGHT &&
+            !hitHeightDragButton) editor->editState = EDIT_CREATURE_NONE;
+        if(editor->editState==EDIT_CREATURE_WIDTH 
+                && !hitWidthDragButton) editor->editState = EDIT_CREATURE_NONE;
+        if(editor->editState==EDIT_CREATURE_ROTATION
+                && !hitRotationDragButton) editor->editState = EDIT_CREATURE_NONE;
+        if(editor->editState==EDIT_CREATURE_ROTATION_AND_LENGTH
+                && !hitRotationAndLengthDragButton) editor->editState = EDIT_CREATURE_NONE;
 
         if(!CreatureEditorIsEditing(editor))
         {
-            if(hitWidthDragButton) editor->editState = EDIT_CREATURE_WIDTH;
+            if(hitWidthDragButton) {
+            editor->editState = EDIT_CREATURE_WIDTH;
+                DebugOut("start editing width");
+            }
             if(hitHeightDragButton) editor->editState = EDIT_CREATURE_HEIGHT;
             if(hitRotationDragButton) editor->editState = EDIT_CREATURE_ROTATION;
-        }
-
-        if(editor->editState==EDIT_CREATURE_HEIGHT)
-        {
-            if(!hitHeightDragButton) editor->editState = EDIT_CREATURE_NONE;
-        }
-        if(editor->editState==EDIT_CREATURE_WIDTH)
-        {
-            if(!hitWidthDragButton) editor->editState = EDIT_CREATURE_NONE;
-        }
-        if(editor->editState==EDIT_CREATURE_ROTATION)
-        {
-            if(!hitRotationDragButton) editor->editState = EDIT_CREATURE_NONE;
+            if(hitRotationAndLengthDragButton) editor->editState = EDIT_CREATURE_ROTATION_AND_LENGTH;
         }
         
-        RecalculateSubNodeBodyParts(def, part);
-
+        RecalculateSubNodeBodyParts(def, def->bodyParts);
     }
 
     EndSpritebatch(batch);
@@ -243,21 +321,46 @@ UpdateCreatureEditorScreen(AppState *appState,
     {
         DrawString2D(batch, fontRenderer, screenCamera->mousePos, info);
     }
+    if(angleInfo[0])
+    {
+        Vec2 pos = CameraToScreenPos(camera, appState, angleInfoPos);
+        DrawString2D(batch, fontRenderer, 
+                pos,
+                angleInfo);
+    }
 
     EndSpritebatch(batch);
 
     // Begin UI
-    if(nk_begin(ctx, "Editor", nk_rect(50, 50, 220, 220),
-            NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE))
+    //r32 screenWidth = screenCamera->size.x;
+    r32 screenHeight = screenCamera->size.y;
+    if(nk_begin(ctx, "Editor", nk_rect(5, 5, 300, screenHeight/2-10), 
+                NK_WINDOW_TITLE | 
+                NK_WINDOW_BORDER | 
+                NK_WINDOW_MOVABLE | 
+                NK_WINDOW_SCALABLE | 
+                NK_WINDOW_NO_SCROLLBAR))
     {
-        nk_layout_row_static(ctx, 20, 220, 1);
-        nk_labelf(ctx,  NK_TEXT_LEFT, "heyo: %f", 12.3);
+        nk_layout_row_static(ctx, 30, 200, 1);
         if(nk_button_label(ctx, "Add Bodypart"))
         {
             editor->editState = EDIT_ADD_BODYPART_FIND_EDGE;
         }
+        if(editor->editState==EDIT_ADD_BODYPART_FIND_EDGE)
+        {
+            if(nk_button_label(ctx, "Cancel"))
+            {
+                editor->editState = EDIT_CREATURE_NONE;
+            }
+        }
     }
     nk_end(ctx);
+
+    if(!CreatureEditorIsEditing(editor) 
+            && EditorIsMousePressed(appState, editor))
+    {
+        editor->selectedBodyPart = bodyPartIntersect;
+    }
 }
 
 void

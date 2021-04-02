@@ -1,4 +1,33 @@
 
+BodyPartDefinition *
+GetBodyPartById(CreatureDefinition *def, ui32 id)
+{
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < def->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
+        if(part->id == id) return part;
+    }
+    return NULL;
+}
+
+void
+SetLocalAngleFromAbsoluteAngle(CreatureDefinition *def,
+        BodyPartDefinition *part,
+        r32 absAngle)
+{
+    r32 edgeAngle = atan2f(part->yEdge, part->xEdge);
+    BodyPartDefinition *parent = GetBodyPartById(def, part->connectionId);
+    part->localAngle = NormalizeAngle(absAngle - parent->angle -edgeAngle);
+}
+
+r32 
+GetAbsoluteEdgeAngle(BodyPartDefinition *part, int xEdge, int yEdge)
+{
+    return NormalizeAngle(atan2f(yEdge, xEdge)+part->angle);
+}
+
 ui32
 GetSubNodeBodyParts(CreatureDefinition *def, 
         BodyPartDefinition *parent,
@@ -49,6 +78,7 @@ RecalculateSubNodeBodyParts(CreatureDefinition *def,
         subPart->pivotPoint = pivotPoint;
         subPart->pos = center;
         subPart->angle = totalAngle;
+        RecalculateSubNodeBodyParts(def, subPart);
     }
     return;
 }

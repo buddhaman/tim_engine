@@ -12,19 +12,17 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Calculate everything recursively in creature_definition. 
-- Grid snap / creature snap / rotation snap.
 - Visualize all constraints.
-- Make ui with button for adding bodypart.
-- Constraint system, build recursively from center body.
-- Show body center.
-- Also add ui for editing all these values in nuklear.
+- Grid snap / creature snap / rotation snap.
+- Add ui for editing all these values in nuklear.
+
 - Start simulation from custom definition.
 - Serialization: Pull in json library and save the creature defs.
 - Serialization: load the creature defs and play.
 - Save entire trained brains.
 - Make googly eyes, or other decorations.
 - Generate textures with noise.
+- Add googly eyes.
 
 - Creature definition editor.
 - Visualize GRU.
@@ -33,11 +31,19 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 - Mouse input to move camera.
 - set parameters before training.
 - 2D lighting.
+- Only recalculate when dirty.
 
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
 
 DONE:
 
+- Nicer visualization of angle.
+- Top bar with tools. Or sidebar? no topbar. Sidebar.
+- Constraint system, build recursively from center body.
+- Button for moving and stretching limb.
+- Show body center.
+- Make ui with button for adding bodypart.
+- Calculate everything recursively in creature_definition. 
 - Return full BoxEdgePosition.
 - Define new bodypart+constraint.
 - Remove RotoryMuscleDef and store inside bodydef
@@ -152,6 +158,10 @@ COOL THINGS:
 Some lay eggs, some dont.
 complicated long term behavior. 
 Carnivore herbivore ofcourse.
+
+STUDY BIOLOGY:
+
+And implement specific behavior and ecosystems.
 
 FUN:
     Visualize everything!!!!

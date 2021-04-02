@@ -146,6 +146,36 @@ PushQuad2(SpriteBatch *batch, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, 
 }
 
 void
+PushSemiCircle2(SpriteBatch *batch, 
+        Vec2 pos, 
+        r32 radius, 
+        r32 minAngle, 
+        r32 maxAngle, 
+        int nPoints, 
+        AtlasRegion *tex)
+{
+    ui16 lastIdx = batch->nVertices;
+    PushVertex2(batch, pos, tex->pos, batch->colorState);
+    r32 angDiff = (maxAngle-minAngle)/(nPoints-1);
+    for(int atPoint = 0;
+            atPoint < nPoints;
+            atPoint++)
+    {
+        r32 angle = minAngle+angDiff*atPoint;
+        Vec2 point = v2_add(pos, v2_polar(angle, radius));
+        PushVertex2(batch, point, tex->pos, batch->colorState); // hope this tex position works. 0-dimensional.
+    }
+    for(int atPoint = 0;
+            atPoint < nPoints-1;
+            atPoint++)
+    {
+        PushIndex(batch, lastIdx);
+        PushIndex(batch, lastIdx+atPoint+1);
+        PushIndex(batch, lastIdx+atPoint+2);
+    }
+}
+
+void
 PushRect2(SpriteBatch *batch, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
 {
     PushQuad2(batch, 
@@ -300,4 +330,14 @@ FitCamera2DToScreen(Camera2D *camera, AppState *appState)
     camera->pos = vec2(appState->screenWidth/2.0, appState->screenHeight/2.0);
 }
 
+internal inline Vec2
+CameraToScreenPos(Camera2D *camera, AppState *appState, Vec2 pos)
+{
+    r32 dx = pos.x-camera->pos.x;
+    r32 dy = pos.y-camera->pos.y;
+
+    dx = dx/camera->size.x+0.5;
+    dy = (1-2*camera->isYUp)*dy/camera->size.y+0.5;
+    return vec2(appState->screenWidth*dx, appState->screenHeight*dy);
+}
 
