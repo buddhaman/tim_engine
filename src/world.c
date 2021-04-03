@@ -211,47 +211,27 @@ RestartFakeWorld(FakeWorld *world)
 }
 
 void
-InitFakeWorld(FakeWorld *world, MemoryArena *persistentMemory, MemoryArena *transientMemory)
+InitFakeWorld(FakeWorld *world, 
+        MemoryArena *persistentMemory, 
+        MemoryArena *transientMemory, 
+        CreatureDefinition *creatureDefinition, 
+        ui32 nGenes,
+        r32 learningRate,
+        r32 dev)
 {
     world->persistentMemory = persistentMemory;
     world->transientMemory = transientMemory;
-
-    // Create creature definition
-#if 0
-    r32 partWidth = 10;
-    r32 partHeight = 40;
-    ui32 bodyParts = 16;
-    for(int bodyPartIdx = 0; 
-            bodyPartIdx < bodyParts;
-            bodyPartIdx++)
-    {
-        DefineBodyPart(&world->def, 
-            vec2(0, bodyPartIdx*partHeight),
-            vec2(partWidth, partHeight),
-            0);
-    }
-    for(int bodyPartIdx = 0; 
-            bodyPartIdx < bodyParts-1;
-            bodyPartIdx++)
-    {
-        //RotaryMuscleDefinition *muscle = world->def.rotaryMuscles + world->def.nRotaryMuscles++;
-        BodyPartDefinition *a = world->def.bodyParts+bodyPartIdx;
-        BodyPartDefinition *b = world->def.bodyParts+bodyPartIdx+1;
-        Vec2 pivotPoint = v2_muls(v2_add(a->pos, b->pos), 0.5);
-
-        DefineRotaryMuscle(&world->def,bodyPartIdx, bodyPartIdx+1, pivotPoint, -1, 1);
-    }
-#endif
+    world->def = *creatureDefinition;
 
     world->inputSize = 2;
     world->outputSize = world->def.nBodyParts;
     world->hiddenSize = 1;
     world->geneSize = GetMinimalGatedUnitGeneSize(world->inputSize, world->outputSize, world->hiddenSize);
     DebugOut("Gene size = %u" ,world->geneSize);
-    world->nGenes = 10;
+    world->nGenes = nGenes;
 
     // Create es from definition
-    world->strategies = ESCreate(persistentMemory, world->geneSize, world->nGenes, 0.05, 0.025);
+    world->strategies = ESCreate(persistentMemory, world->geneSize, world->nGenes, dev, learningRate);
     ESGenerateGenes(world->strategies);
     RestartFakeWorld(world);
 }

@@ -1,4 +1,7 @@
 
+#ifndef CREATURE_DEFINITION_H
+#define CREATURE_DEFINITION_H
+
 typedef struct
 {
     ui32 id;
@@ -18,8 +21,12 @@ typedef struct
     r32 maxAngle;
 } BodyPartDefinition;
 
+#define MAX_BODYPARTS 32
+
 typedef struct
 {
     ui32 nBodyParts;
-    BodyPartDefinition bodyParts[32];
+    BodyPartDefinition bodyParts[MAX_BODYPARTS];
 } CreatureDefinition;
+
+#endif

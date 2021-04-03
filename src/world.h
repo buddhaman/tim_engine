@@ -1,4 +1,7 @@
 
+#ifndef WORLD_H
+#define WORLD_H
+
 typedef struct RigidBody RigidBody;
 typedef struct FakeWorld FakeWorld;
 
@@ -49,4 +52,6 @@ struct FakeWorld
     int maxRotaryMuscles;
     RotaryMuscle *rotaryMuscles;
 };
+
+#endif
 

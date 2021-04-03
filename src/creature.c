@@ -59,6 +59,45 @@ DestroyRotaryMuscle(RotaryMuscle *muscle)
     cpConstraintFree(muscle->pivotConstraint);
 }
 
+void
+BuildCreature(FakeWorld *world, 
+        Creature *creature, 
+        Vec2 pos,
+        CreatureDefinition *def, 
+        BodyPart *parentPart,
+        BodyPartDefinition *parentPartDef,
+        BodyPartDefinition *partDef)
+{
+    BodyPart *part = CreatureAddBodyPart(world, 
+            creature, 
+            v2_add(pos, partDef->pos),
+            vec2(partDef->width, partDef->height),
+            partDef->angle);
+    ui32 subDefs[def->nBodyParts];
+    ui32 nConnections = GetSubNodeBodyPartsById(def, partDef, subDefs);
+    for(ui32 connectionIdx = 0;
+            connectionIdx < nConnections;
+            connectionIdx++)
+    {
+        BodyPartDefinition *subPartDef = GetBodyPartById(def, subDefs[connectionIdx]);
+        BuildCreature(world, creature, pos, def, part, partDef, subPartDef);
+    }
+    // Connect to parent
+    if(partDef->connectionId)
+    {
+        BodyPart *a = parentPart;
+        BodyPart *b = part;
+        r32 angleA = parentPartDef->angle;
+        //r32 angleB = partDef->angle;
+        r32 angleOffset = -angleA;
+        r32 edgeAngle = GetAbsoluteEdgeAngle(parentPartDef, partDef->xEdge, partDef->yEdge);
+        CreatureAddRotaryMuscle(world, creature, a, b, 
+                v2_add(pos, partDef->pivotPoint), 
+                edgeAngle+partDef->minAngle+angleOffset,
+                edgeAngle+partDef->maxAngle+angleOffset);
+    }
+}
+
 Creature *
 AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUnit *brain)
 {
@@ -76,8 +115,11 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
     //creature->physicsGroup = world->physicsGroupCounter++;
     creature->physicsGroup = 1;
 
+    BuildCreature(world, creature, pos, def, NULL, NULL, def->bodyParts);
+
 #if 0
-    // Build body
+    // Build body recursively.
+    
     for(int bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts; 
             bodyPartIdx++)
@@ -88,12 +130,7 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
                 v2_add(pos, partDef->pos),
                 vec2(partDef->width, partDef->height),
                 partDef->angle);
-    }
 
-    for(int muscleIdx = 0;
-            muscleIdx < def->nRotaryMuscles;
-            muscleIdx++)
-    {
         RotaryMuscleDefinition *muscleDef = def->rotaryMuscles+muscleIdx;
         BodyPart *a = creature->bodyParts+muscleDef->bodyPartIdx0;
         BodyPart *b = creature->bodyParts+muscleDef->bodyPartIdx1;

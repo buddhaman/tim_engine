@@ -29,6 +29,16 @@ typedef struct
     b32 isEdgeSnapEnabled;
     ui32 edgeSnapDivisions;
 
+    ui32 inputSize;
+    ui32 outputSize;
+    ui32 hiddenSize;
+    ui32 geneSize;
+
+    // Simulation settings
+    ui32 nGenes;
+    r32 learningRate;
+    r32 deviation;
+
     // Bodypart editing info
     EditCreatureState editState;
     BoxEdgeLocation bodyPartLocation;

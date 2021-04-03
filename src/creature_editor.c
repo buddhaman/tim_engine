@@ -5,6 +5,12 @@ CreatureEditorIsEditing(CreatureEditorScreen *editor)
     return editor->editState!=EDIT_CREATURE_NONE;
 }
 
+b32 
+EditorCanAddBodyPart(CreatureEditorScreen *editor)
+{
+    return editor->creatureDefinition->nBodyParts < MAX_BODYPARTS;
+}
+
 b32
 EditorIsMouseJustPressed(AppState *appState, CreatureEditorScreen *editor)
 {
@@ -14,7 +20,7 @@ EditorIsMouseJustPressed(AppState *appState, CreatureEditorScreen *editor)
 b32
 EditorIsMouseJustReleased(AppState *appState, CreatureEditorScreen *editor)
 {
-    return IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT);
+    return !editor->isInputCaptured && IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT);
 }
 
 b32
@@ -66,6 +72,15 @@ SnapEdge(CreatureEditorScreen *editor, r32 offset)
     {
         return offset;
     }
+}
+
+void
+CalculateBrainProperties(CreatureEditorScreen *editor)
+{
+    editor->inputSize = 2;
+    editor->outputSize = editor->creatureDefinition->nBodyParts*2;
+    editor->hiddenSize = 1;
+    editor->geneSize = GetMinimalGatedUnitGeneSize(editor->inputSize, editor->outputSize, editor->hiddenSize);
 }
 
 b32
@@ -187,44 +202,51 @@ UpdateCreatureEditorScreen(AppState *appState,
 
     if(editor->editState==EDIT_ADD_BODYPART_FIND_EDGE)
     {
-        r32 minDist = 10000000.0;
-        BoxEdgeLocation location = {};
-        BoxEdgeLocation minLocation = {};
-        b32 hasLocation = 0;
-        BodyPartDefinition *attachTo = NULL;
-        for(ui32 bodyPartIdx = 0;
-                bodyPartIdx < def->nBodyParts;
-                bodyPartIdx++)
+        if(EditorCanAddBodyPart(editor)) 
         {
-            BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
-            r32 dist = GetNearestBoxEdgeLocation(part->pos, vec2(part->width, part->height), part->angle, mousePos, &location);
-            if(dist > 0 
-                    && dist < minDist)
+            r32 minDist = 10000000.0;
+            BoxEdgeLocation location = {};
+            BoxEdgeLocation minLocation = {};
+            b32 hasLocation = 0;
+            BodyPartDefinition *attachTo = NULL;
+            for(ui32 bodyPartIdx = 0;
+                    bodyPartIdx < def->nBodyParts;
+                    bodyPartIdx++)
             {
-                minDist = dist;
-                minLocation = location;
-                hasLocation = 1;
-                attachTo = part;
+                BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
+                r32 dist = GetNearestBoxEdgeLocation(part->pos, vec2(part->width, part->height), part->angle, mousePos, &location);
+                if(dist > 0 
+                        && dist < minDist)
+                {
+                    minDist = dist;
+                    minLocation = location;
+                    hasLocation = 1;
+                    attachTo = part;
+                }
+            }
+            if(hasLocation)
+            {
+                minLocation.offset = SnapEdge(editor, minLocation.offset);
+                minLocation.pos = GetBoxEdgePosition(attachTo->pos, 
+                        vec2(attachTo->width, attachTo->height), 
+                        attachTo->angle, 
+                        minLocation.xEdge, 
+                        minLocation.yEdge, 
+                        minLocation.offset);
+                batch->colorState = vec4(0, 1.0, 0.0, 1.0);
+                PushCircle2(batch, minLocation.pos, 3, circleRegion);
+                sprintf(info, "offset = %.2f, (%d, %d)", minLocation.offset, minLocation.xEdge, minLocation.yEdge);
+                if(IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT))
+                {
+                    editor->bodyPartLocation = minLocation;
+                    editor->attachTo = attachTo;
+                    editor->editState=EDIT_ADD_BODYPART_PLACE;
+                }
             }
         }
-        if(hasLocation)
+        else
         {
-            minLocation.offset = SnapEdge(editor, minLocation.offset);
-            minLocation.pos = GetBoxEdgePosition(attachTo->pos, 
-                    vec2(attachTo->width, attachTo->height), 
-                    attachTo->angle, 
-                    minLocation.xEdge, 
-                    minLocation.yEdge, 
-                    minLocation.offset);
-            batch->colorState = vec4(0, 1.0, 0.0, 1.0);
-            PushCircle2(batch, minLocation.pos, 3, circleRegion);
-            sprintf(info, "offset = %.2f, (%d, %d)", minLocation.offset, minLocation.xEdge, minLocation.yEdge);
-            if(IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT))
-            {
-                editor->bodyPartLocation = minLocation;
-                editor->attachTo = attachTo;
-                editor->editState=EDIT_ADD_BODYPART_PLACE;
-            }
+            editor->editState=EDIT_CREATURE_NONE;
         }
     } else if(editor->editState==EDIT_ADD_BODYPART_PLACE)
     {
@@ -408,6 +430,11 @@ UpdateCreatureEditorScreen(AppState *appState,
             PushLine2(batch, pivotPoint, to, 1, squareRegion->pos, squareRegion->size);
             part->maxAngle = SnapAngle(editor, 
                     ClampF(part->minAngle+0.1, M_PI-0.1, GetNormalizedAngDiff(maxAngle, edgeAngle)));
+            if(hitMinAngleDragButton || hitMaxAngleDragButton)
+            {
+                sprintf(info, "%.1f deg", 
+                        hitMinAngleDragButton ? RadToDeg(part->minAngle) : RadToDeg(part->maxAngle));
+            }
 
             batch->colorState = vec4(0.3, 0.3, 0.8, 0.5);
             PushSemiCircle2(batch, pivotPoint, 20, edgeAngle+part->minAngle, 
@@ -430,10 +457,7 @@ UpdateCreatureEditorScreen(AppState *appState,
 
         if(!CreatureEditorIsEditing(editor))
         {
-            if(hitWidthDragButton) {
-            editor->editState = EDIT_CREATURE_WIDTH;
-                DebugOut("start editing width");
-            }
+            if(hitWidthDragButton) editor->editState = EDIT_CREATURE_WIDTH; 
             if(hitHeightDragButton) editor->editState = EDIT_CREATURE_HEIGHT;
             if(hitRotationDragButton) editor->editState = EDIT_CREATURE_ROTATION;
             if(hitRotationAndLengthDragButton) editor->editState = EDIT_CREATURE_ROTATION_AND_LENGTH;
@@ -468,9 +492,7 @@ UpdateCreatureEditorScreen(AppState *appState,
     EndSpritebatch(batch);
 
     // Begin UI
-    //r32 screenWidth = screenCamera->size.x;
-    r32 screenHeight = screenCamera->size.y;
-    if(nk_begin(ctx, "Editor", nk_rect(5, 5, 300, screenHeight/2-10), 
+    if(nk_begin(ctx, "Editor", nk_rect(5, 5, 300, 600), 
                 NK_WINDOW_TITLE | 
                 NK_WINDOW_BORDER | 
                 NK_WINDOW_MOVABLE | 
@@ -478,6 +500,11 @@ UpdateCreatureEditorScreen(AppState *appState,
                 NK_WINDOW_NO_SCROLLBAR))
     {
         nk_layout_row_dynamic(ctx, 30, 2);
+        b32 canAddBodyPart = EditorCanAddBodyPart(editor);
+        struct nk_color bodyPartTextColor = 
+            canAddBodyPart ? nk_rgb(255, 255, 255) : nk_rgb(255, 0, 0);
+        nk_labelf_colored(ctx, NK_TEXT_LEFT, bodyPartTextColor, "%u / %u Bodyparts", def->nBodyParts, MAX_BODYPARTS);
+        nk_spacing(ctx, 1);
         nk_checkbox_label(ctx, "Snap Dims", &editor->isDimSnapEnabled);
         if(editor->isDimSnapEnabled)
         {
@@ -508,30 +535,22 @@ UpdateCreatureEditorScreen(AppState *appState,
 
         //nk_layout_row_static(ctx, 30, 250, 1);
         nk_layout_row_dynamic(ctx, 30, 1);
-        ui32 nButtons = 0;
-        nButtons++;
         if(nk_button_label(ctx, "Add Bodypart"))
         {
             editor->editState = EDIT_ADD_BODYPART_FIND_EDGE;
         }
-        if(editor->editState==EDIT_ADD_BODYPART_FIND_EDGE)
+        if(nk_button_label(ctx, "Cancel"))
         {
-            nButtons++;
-            if(nk_button_label(ctx, "Cancel"))
-            {
-                editor->editState = EDIT_CREATURE_NONE;
-            }
+            editor->editState = EDIT_CREATURE_NONE;
         }
-        if(editor->selectedId>1)
+        if(nk_button_label(ctx, "Delete"))
         {
-            nButtons++;
-            if(nk_button_label(ctx, "Delete"))
+            if(editor->selectedId > 1)
             {
                 RemoveBodyPart(def, editor->selectedId);
                 editor->selectedId = 0;
             }
         }
-        nk_spacing(ctx, 4-nButtons);
         if(editor->selectedId)
         {
             BodyPartDefinition *part = GetBodyPartById(def, editor->selectedId);
@@ -558,11 +577,34 @@ UpdateCreatureEditorScreen(AppState *appState,
                 RecalculateSubNodeBodyParts(def, def->bodyParts);
             }
         }
+        if(nk_tree_push(ctx, NK_TREE_TAB, "Brain Properties", NK_MINIMIZED))
+        {
+            nk_layout_row_dynamic(ctx, 30, 1);
+            CalculateBrainProperties(editor);
+            nk_labelf(ctx, NK_TEXT_LEFT, "Inputs : %u", editor->inputSize);
+            nk_labelf(ctx, NK_TEXT_LEFT, "Outputs : %u", editor->outputSize);
+            nk_labelf(ctx, NK_TEXT_LEFT, "Hidden : %u", editor->hiddenSize);
+            nk_labelf(ctx, NK_TEXT_LEFT, "Gene Size : %u", editor->geneSize);
+            nk_tree_pop(ctx);
+        }
+        if(nk_tree_push(ctx, NK_TREE_TAB, "Simulation Settings", NK_MAXIMIZED))
+        {
+            nk_layout_row_dynamic(ctx, 30, 1);
+            editor->nGenes = nk_propertyi(ctx, "Population Size", 2, editor->nGenes, 50, 1, 1);
+            //TODO: Make logarithmic ? 
+            NKEditFloatProperty(ctx, "LearningRate", 0.0001, &editor->learningRate, 1, 0.001, 0.001);
+            NKEditFloatProperty(ctx, "Deviation", 0.001, &editor->deviation, 10, 0.01, 0.01);
+            if(nk_button_label(ctx, "Start Simulation"))
+            {
+                StartFakeWorld(appState, def, editor->nGenes, editor->learningRate, editor->deviation);
+            }
+            nk_tree_pop(ctx);
+        }
     }
     nk_end(ctx);
 
     if(!CreatureEditorIsEditing(editor) 
-            && EditorIsMousePressed(appState, editor))
+            && EditorIsMouseJustReleased(appState, editor))
     {
         editor->selectedId = intersectId;
     }
@@ -593,7 +635,10 @@ InitCreatureEditorScreen(AppState *appState,
     editor->edgeSnapDivisions = 8;
     editor->isEdgeSnapEnabled = 1;
 
-    //DefineGuy(editor->creatureDefinition);
+    editor->nGenes = 2;
+    editor->learningRate = 0.003;
+    editor->deviation = 0.03;
+
     editor->idCounter = 1;
     BodyPartDefinition *torso = editor->creatureDefinition->bodyParts+editor->creatureDefinition->nBodyParts++;
     torso->id = editor->idCounter++;

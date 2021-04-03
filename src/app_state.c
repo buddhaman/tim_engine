@@ -65,3 +65,13 @@ UpdateCameraInput(AppState *appState, Camera2D *camera)
     if(IsKeyActionDown(appState, ACTION_LEFT)) { camera->pos.x-=camSpeed; }
     if(IsKeyActionDown(appState, ACTION_RIGHT)) { camera->pos.x+=camSpeed; }
 }
+
+void
+StartFakeWorld(AppState *appState, CreatureDefinition *definition, ui32 nGenes, r32 dev, r32 learningRate)
+{
+    MemoryArena *arena = appState->fakeWorldArena;
+    ClearArena(arena);
+    appState->fakeWorldScreen = PushStruct(arena, FakeWorldScreen);
+    InitFakeWorldScreen(appState, appState->fakeWorldScreen, arena, definition, nGenes, dev, learningRate);
+    appState->currentScreen = SCREEN_FAKE_WORLD;
+}

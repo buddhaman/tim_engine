@@ -126,12 +126,12 @@ UpdateFakeWorldScreen(AppState *appState,
 void 
 InitFakeWorldScreen(AppState *appState, 
         FakeWorldScreen *screen, 
-        MemoryArena *arena)
+        MemoryArena *arena, 
+        CreatureDefinition *def,
+        ui32 nGenes,
+        r32 dev,
+        r32 learningRate)
 {
-    screen->world = PushStruct(arena, FakeWorld);
-    screen->evolutionArena = CreateMemoryArena(128*1000*1000);
-    InitFakeWorld(screen->world, arena, screen->evolutionArena);
-    ESGenerateGenes(screen->world->strategies);
 
     screen->stepsPerFrame = 1;
     screen->generation = 0;
@@ -144,5 +144,12 @@ InitFakeWorldScreen(AppState *appState,
     InitCamera2D(screen->camera);
     screen->camera->isYUp = 1;
     screen->camera->scale = 1.0;
+
+    // Init fake world
+    screen->world = PushStruct(arena, FakeWorld);
+    screen->evolutionArena = CreateSubArena(arena, 64L*1000L*1000L);
+    InitFakeWorld(screen->world, arena, screen->evolutionArena, def, nGenes, learningRate, dev);
+
+    ESGenerateGenes(screen->world->strategies);
 }
 

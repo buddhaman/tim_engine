@@ -12,15 +12,16 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Show size of proto brain.
-
 - Start simulation from custom definition.
-- Serialization: Pull in json library and save the creature defs.
+- Save by dumping creaturedef data.
+
 - Serialization: load the creature defs and play.
 - Save entire trained brains.
+- Put everything into appstate instead of on the stack in main.
 - Make googly eyes, or other decorations.
 - Generate textures with noise.
 - Add googly eyes.
+- Serialization: Pull in json library and save the creature defs.
 
 - Visualize GRU.
 - Graph in nuklear gui? or in own gui
@@ -29,14 +30,20 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 - Mouse input to move camera.
 - set parameters before training.
 - 2D lighting.
-- Only recalculate when dirty.
+- Only recalculate body positions when dirty.
 
 - Add icons for all edit buttons.
+- Solve snap bug when its smaller than the minimum.
 
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
 
 DONE:
 
+- Put fakeworldscreen into separate arena, throw away and rebuild when training starts.
+- Set max bodyparts.
+- Show size of proto brain.
+- Simulation settings and start button somewhere...
+- Fix moving buttons.
 - Grid snap / creature snap / rotation snap.
 - Creature definition editor.
 - Delete bodypart and all children.

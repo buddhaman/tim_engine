@@ -55,12 +55,12 @@ ReadEntireFile(const char *path)
 #include "shader.h"
 #include "neural_net.h"
 #include "render2d.h"
-#include "app_state.h"
 #include "texture_atlas.h"
 #include "render_context.h"
 #include "creature_definition.h"
 #include "evolution_strategies.h"
 #include "world.h"
+#include "app_state.h"
 #include "tim_ui.h"
 #include "fake_world_screen.h"
 #include "creature_editor.h"
@@ -70,7 +70,6 @@ ReadEntireFile(const char *path)
 #include "linalg.c"
 #include "shader.c"
 #include "neural_net.c"
-#include "app_state.c"
 #include "render2d.c"
 #include "texture_atlas.c"
 #include "render_context.c"
@@ -78,6 +77,7 @@ ReadEntireFile(const char *path)
 #include "evolution_strategies.c"
 #include "world.c"
 #include "creature.c"
+#include "app_state.c"
 #include "tim_ui.c"
 #include "fake_world_screen.c"
 #include "creature_editor.c"
@@ -165,6 +165,8 @@ main(int argc, char**argv)
     // Creating appstate
     AppState *appState = (AppState *)malloc(sizeof(AppState));
     *appState = (AppState){};
+
+    appState->fakeWorldArena = CreateMemoryArena(128L*1000L*1000L);
     appState->clearColor = RGBAToVec4(0x35637cff);
     appState->currentScreen = SCREEN_CREATURE_EDITOR;
     // Font/Gui Camera
@@ -183,9 +185,6 @@ main(int argc, char**argv)
 
     RenderContext *renderContext = PushStruct(gameArena, RenderContext);
     InitRenderContext(renderContext, gameArena);
-
-    FakeWorldScreen *fakeWorldScreen = PushStruct(gameArena, FakeWorldScreen);
-    InitFakeWorldScreen(appState, fakeWorldScreen, gameArena);
 
     CreatureEditorScreen *creatureEditorScreen = PushStruct(gameArena, CreatureEditorScreen);
     InitCreatureEditorScreen(appState, creatureEditorScreen, renderContext, gameArena);
@@ -262,7 +261,7 @@ main(int argc, char**argv)
 
         case SCREEN_FAKE_WORLD:
         {
-            UpdateFakeWorldScreen(appState, fakeWorldScreen, renderContext, ctx);
+            UpdateFakeWorldScreen(appState, appState->fakeWorldScreen, renderContext, ctx);
         } break;
 
         case SCREEN_CREATURE_EDITOR:
