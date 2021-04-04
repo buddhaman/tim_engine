@@ -259,7 +259,7 @@ UpdateCreatureEditorScreen(AppState *appState,
         r32 edgeAngle = atan2f(location->yEdge, location->xEdge);
         r32 localAngle = angle-part->angle - edgeAngle;
         localAngle = SnapAngle(editor, NormalizeAngle(localAngle));
-        angle = NormalizeAngle(edgeAngle+part->angle+localAngle);
+        angle = NormalizeAngle(edgeAngle+part->angle)+localAngle;
         Vec2 center = v2_add(from, v2_polar(angle, dist/2));
 
         sprintf(info, "%.1f deg", RadToDeg(localAngle));
@@ -596,7 +596,7 @@ UpdateCreatureEditorScreen(AppState *appState,
             NKEditFloatProperty(ctx, "Deviation", 0.001, &editor->deviation, 10, 0.01, 0.01);
             if(nk_button_label(ctx, "Start Simulation"))
             {
-                StartFakeWorld(appState, def, editor->nGenes, editor->learningRate, editor->deviation);
+                StartFakeWorld(appState, def, editor->nGenes, editor->deviation, editor->learningRate);
             }
             nk_tree_pop(ctx);
         }
@@ -635,9 +635,9 @@ InitCreatureEditorScreen(AppState *appState,
     editor->edgeSnapDivisions = 8;
     editor->isEdgeSnapEnabled = 1;
 
-    editor->nGenes = 2;
-    editor->learningRate = 0.003;
-    editor->deviation = 0.03;
+    editor->nGenes = 12;
+    editor->learningRate = 0.03;
+    editor->deviation = 0.003;
 
     editor->idCounter = 1;
     BodyPartDefinition *torso = editor->creatureDefinition->bodyParts+editor->creatureDefinition->nBodyParts++;

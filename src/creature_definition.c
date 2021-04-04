@@ -32,7 +32,7 @@ GetLocalAngleFromAbsoluteAngle(CreatureDefinition *def,
 {
     r32 edgeAngle = atan2f(part->yEdge, part->xEdge);
     BodyPartDefinition *parent = GetBodyPartById(def, part->connectionId);
-    return NormalizeAngle(absAngle - parent->angle -edgeAngle);
+    return NormalizeAngle(absAngle - parent->angle - edgeAngle);
 }
 
 r32 
@@ -114,7 +114,7 @@ RecalculateSubNodeBodyParts(CreatureDefinition *def,
                 subPart->yEdge,
                 subPart->offset);
         r32 edgeAngle = atan2f(subPart->yEdge, subPart->xEdge);
-        r32 totalAngle = NormalizeAngle(parent->angle + edgeAngle + subPart->localAngle);
+        r32 totalAngle = NormalizeAngle(parent->angle + edgeAngle) + subPart->localAngle;
         Vec2 center = v2_add(pivotPoint, v2_polar(totalAngle, subPart->width/2));
 
         subPart->pivotPoint = pivotPoint;

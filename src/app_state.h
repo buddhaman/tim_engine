@@ -54,4 +54,5 @@ InitFakeWorldScreen(AppState *appState,
         r32 learningRate);
 
 void
-StartFakeWorld(AppState *appState, CreatureDefinition *definition, ui32 nGenes, r32 learningRate, r32 dev);
+StartFakeWorld(AppState *appState, CreatureDefinition *definition, ui32 nGenes, r32 dev, r32 learningRate);
+

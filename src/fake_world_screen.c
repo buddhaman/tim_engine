@@ -110,15 +110,23 @@ UpdateFakeWorldScreen(AppState *appState,
     EndSpritebatch(batch);
 
     // Begin UI
-    if(nk_begin(ctx, "Cool Window", nk_rect(50, 50, 220, 220),
+    if(nk_begin(ctx, "Cool Window", nk_rect(50, 50, 220, 320),
             NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE))
     {
-        nk_layout_row_static(ctx, 20, 220, 1);
+        nk_layout_row_dynamic(ctx, 20, 1);
         nk_labelf(ctx,  NK_TEXT_LEFT, "Population: %d", world->nGenes);
         nk_labelf(ctx,  NK_TEXT_LEFT, "Gene size: %d", world->geneSize);
         nk_labelf(ctx,  NK_TEXT_LEFT, "Inputs: %d", world->inputSize);
         nk_labelf(ctx,  NK_TEXT_LEFT, "Outputs: %d", world->outputSize);
         nk_labelf(ctx,  NK_TEXT_LEFT, "Hidden: %d", world->hiddenSize);
+
+        nk_property_float(ctx, "Dev", 0.0, &world->strategies->dev, 0.5, 0.001, 0.001);
+        nk_property_float(ctx, "Learning Rate", 0.0, &world->strategies->learningRate, 0.5, 0.001, 0.001);
+        if(nk_button_label(ctx, "Editor"))
+        {
+            appState->currentScreen = SCREEN_CREATURE_EDITOR;
+        }
+
     }
     nk_end(ctx);
 }

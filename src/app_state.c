@@ -75,3 +75,4 @@ StartFakeWorld(AppState *appState, CreatureDefinition *definition, ui32 nGenes, 
     InitFakeWorldScreen(appState, appState->fakeWorldScreen, arena, definition, nGenes, dev, learningRate);
     appState->currentScreen = SCREEN_FAKE_WORLD;
 }
+

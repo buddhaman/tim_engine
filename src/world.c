@@ -224,7 +224,7 @@ InitFakeWorld(FakeWorld *world,
     world->def = *creatureDefinition;
 
     world->inputSize = 2;
-    world->outputSize = world->def.nBodyParts;
+    world->outputSize = world->def.nBodyParts*2;
     world->hiddenSize = 1;
     world->geneSize = GetMinimalGatedUnitGeneSize(world->inputSize, world->outputSize, world->hiddenSize);
     DebugOut("Gene size = %u" ,world->geneSize);

@@ -12,8 +12,11 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
-- Start simulation from custom definition.
+- Add more inputs for coordination.
+- Add inputs to only some bodyparts.
+- Set generation duration in menu.
 - Save by dumping creaturedef data.
+- Write single make file with options for compiling external, internal, windows, linux.
 
 - Serialization: load the creature defs and play.
 - Save entire trained brains.
@@ -39,6 +42,10 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 DONE:
 
+- Fix bug where limb turns 180 degrees on startup.
+- Go back to editor and restart simulation.
+- Edit learningrate and dev inside simulation.
+- Start simulation from custom definition.
 - Put fakeworldscreen into separate arena, throw away and rebuild when training starts.
 - Set max bodyparts.
 - Show size of proto brain.
@@ -166,6 +173,7 @@ COOL THINGS:
     Infinite generated zoom. Generate cells, dna, atoms.
     Fancy textures + normals and lighting.
     Generate textures, based on dna.
+    Draw on textures.
 
 Some lay eggs, some dont.
 complicated long term behavior. 
@@ -174,6 +182,9 @@ Carnivore herbivore ofcourse.
 STUDY BIOLOGY:
 
 And implement specific behavior and ecosystems.
+
+MORE AI:
+    Make Ai library that only uses bytes instead of floats.
 
 FUN:
     Visualize everything!!!!
