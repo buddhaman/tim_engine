@@ -73,6 +73,7 @@ BuildCreature(FakeWorld *world,
             v2_add(pos, partDef->pos),
             vec2(partDef->width, partDef->height),
             partDef->angle);
+    part->def = partDef;
     ui32 subDefs[def->nBodyParts];
     ui32 nConnections = GetSubNodeBodyPartsById(def, partDef, subDefs);
     for(ui32 connectionIdx = 0;
@@ -91,10 +92,11 @@ BuildCreature(FakeWorld *world,
         //r32 angleB = partDef->angle;
         r32 angleOffset = -angleA;
         r32 edgeAngle = GetAbsoluteEdgeAngle(parentPartDef, partDef->xEdge, partDef->yEdge);
-        CreatureAddRotaryMuscle(world, creature, a, b, 
+        RotaryMuscle *muscle = CreatureAddRotaryMuscle(world, creature, a, b, 
                 v2_add(pos, partDef->pivotPoint), 
                 edgeAngle+partDef->minAngle+angleOffset,
                 edgeAngle+partDef->maxAngle+angleOffset);
+        part->rotaryMuscle = muscle;
     }
 }
 
@@ -199,10 +201,13 @@ UpdateCreature(FakeWorld *world, Creature *creature)
     r32 drag = 0.2;
     r32 input0 = sinf(4*creature->internalClock);
     r32 input1 = sinf(8*creature->internalClock);
+
     brain->x.v[0] = input0;
     brain->x.v[1] = input1;
+
     UpdateMinimalGatedUnit(brain);
 
+#if 0
     for(ui32 muscleIdx = 0;
             muscleIdx < creature->nRotaryMuscles;
             muscleIdx++)
@@ -211,39 +216,26 @@ UpdateCreature(FakeWorld *world, Creature *creature)
         r32 activation = brain->h.v[brain->stateSize-brain->outputSize+muscleIdx];
         SetMuscleActivation(muscle, activation);
     }
-    for(ui32 bodyPartIdx = 0;
-            bodyPartIdx < creature->nBodyParts;
-            bodyPartIdx++)
-    {
-        BodyPart *part = creature->bodyParts+bodyPartIdx;
-        r32 activation = brain->h.v[brain->stateSize-brain->outputSize+creature->nRotaryMuscles+bodyPartIdx];
-        part->body->drag = 0.03+activation*drag + drag;
-    }
-
-#if 0
-    int nRotaryMuscles = creature->nRotaryMuscles;
-    int nHalfPhases = 2;
-    r32 secondsPerStrokeCycle = 4;
-    r32 secondsPerDragCycle = 4;
-    r32 offsetPerMuscle = nHalfPhases*M_PI/nRotaryMuscles;
-    r32 offsetPerBodyPart = nHalfPhases*M_PI/(nRotaryMuscles+1);
-
-    for(ui32 muscleIdx = 0;
-            muscleIdx < creature->nRotaryMuscles;
-            muscleIdx++)
-    {
-        RotaryMuscle *muscle = creature->rotaryMuscles+muscleIdx;
-        r32 activation = sinf(creature->internalClock/secondsPerStrokeCycle*M_PI*2+offsetPerMuscle*muscleIdx);
-        SetMuscleActivation(muscle, activation);
-    }
-    for(ui32 bodyPartIdx = 0;
-            bodyPartIdx < creature->nBodyParts;
-            bodyPartIdx++)
-    {
-        BodyPart *part = creature->bodyParts+bodyPartIdx;
-        r32 activation = sinf(creature->internalClock/secondsPerDragCycle*M_PI*2+offsetPerBodyPart*bodyPartIdx);
-        part->body->drag = 0.05+activation*drag + drag;
-    }
 #endif
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < creature->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPart *part = creature->bodyParts+bodyPartIdx;
+        if(part->def->hasDragOutput)
+        {
+            r32 activation = brain->h.v[brain->stateSize-brain->outputSize+part->def->dragOutputIdx];
+
+            part->body->drag = 0.03+activation*drag + drag;
+        }
+        if(part->def->hasRotaryMuscleOutput)
+        {
+            r32 activation = brain->h.v[brain->stateSize-brain->outputSize+part->def->rotaryMuscleOutputIdx];
+
+            RotaryMuscle *muscle = part->rotaryMuscle;
+            Assert(muscle);
+            SetMuscleActivation(muscle, activation);
+        }
+    }
 }
 

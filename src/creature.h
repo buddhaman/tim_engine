@@ -1,11 +1,8 @@
 
-typedef struct
-{
-    RigidBody *body;
-    Vec4 color;
-} BodyPart;
+typedef struct RotaryMuscle RotaryMuscle;
+typedef struct BodyPart BodyPart;
 
-typedef struct
+struct RotaryMuscle
 {
     BodyPart *bodyA;
     BodyPart *bodyB;
@@ -15,7 +12,15 @@ typedef struct
     cpConstraint *motor;
     cpConstraint *rotaryLimitConstraint;
     cpConstraint *pivotConstraint;
-} RotaryMuscle;
+};
+
+struct BodyPart
+{
+    RigidBody *body;
+    Vec4 color;
+    BodyPartDefinition *def;
+    RotaryMuscle *rotaryMuscle; // new bodyparts always have this muscle but cannot always control it.
+};
 
 typedef struct
 {

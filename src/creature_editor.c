@@ -83,6 +83,14 @@ CalculateBrainProperties(CreatureEditorScreen *editor)
     editor->geneSize = GetMinimalGatedUnitGeneSize(editor->inputSize, editor->outputSize, editor->hiddenSize);
 }
 
+void
+EditorRemoveBodyPart(CreatureEditorScreen *editor, ui32 id)
+{
+    RemoveBodyPart(editor->creatureDefinition, editor->selectedId);
+    editor->selectedId = 0;
+    AssignBrainIO(editor->creatureDefinition);
+}
+
 b32
 NKEditFloatProperty(struct nk_context *ctx, 
         char *label, 
@@ -293,6 +301,11 @@ UpdateCreatureEditorScreen(AppState *appState,
                 newPart->pivotPoint = location->pos;
                 newPart->minAngle = -1;
                 newPart->maxAngle = 1;
+                
+                newPart->hasDragOutput = 1;
+                newPart->hasRotaryMuscleOutput = 1;
+
+                AssignBrainIO(def);
                 editor->editState=EDIT_ADD_BODYPART_FIND_EDGE;
             }
         }
@@ -496,8 +509,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                 NK_WINDOW_TITLE | 
                 NK_WINDOW_BORDER | 
                 NK_WINDOW_MOVABLE | 
-                NK_WINDOW_SCALABLE | 
-                NK_WINDOW_NO_SCROLLBAR))
+                NK_WINDOW_SCALABLE ))
     {
         nk_layout_row_dynamic(ctx, 30, 2);
         b32 canAddBodyPart = EditorCanAddBodyPart(editor);
@@ -547,14 +559,14 @@ UpdateCreatureEditorScreen(AppState *appState,
         {
             if(editor->selectedId > 1)
             {
-                RemoveBodyPart(def, editor->selectedId);
-                editor->selectedId = 0;
+                EditorRemoveBodyPart(editor, editor->selectedId);
             }
         }
         if(editor->selectedId)
         {
             BodyPartDefinition *part = GetBodyPartById(def, editor->selectedId);
             b32 isEdited = 0;
+            b32 isBrainEdited = 0;
 
             nk_labelf(ctx, NK_TEXT_LEFT, "BodyPart %d", part->id);
 
@@ -572,9 +584,44 @@ UpdateCreatureEditorScreen(AppState *appState,
                 isEdited = 1;
             nk_labelf(ctx, NK_TEXT_LEFT, "Center: (%.2f %.2f)", part->pos.x, part->pos.y);
 
+            nk_layout_row_dynamic(ctx, 30, 2);
+
+            // TODO: Def turn into function
+            if(nk_checkbox_label(ctx, "Drag", &part->hasDragOutput))
+                isBrainEdited = 1;
+            if(part->hasDragOutput)
+            {
+                nk_labelf(ctx, NK_TEXT_LEFT, "Index = %u", part->dragOutputIdx);
+            }
+            else
+            {
+                nk_spacing(ctx, 1);
+            }
+
+            // Torso cannot have a rotary muscle.
+            if(part->connectionId)
+            {
+                if(nk_checkbox_label(ctx, "Rotary Muscle", &part->hasRotaryMuscleOutput))
+                    isBrainEdited = 1;
+                if(part->hasRotaryMuscleOutput)
+                {
+                    nk_labelf(ctx, NK_TEXT_LEFT, "Index = %u", part->rotaryMuscleOutputIdx);
+                }
+                else
+                {
+                    nk_spacing(ctx, 1);
+                }
+            }
+
+            nk_layout_row_dynamic(ctx, 30, 1);
+
             if(isEdited)
             {
                 RecalculateSubNodeBodyParts(def, def->bodyParts);
+            }
+            if(isBrainEdited)
+            {
+                AssignBrainIO(def);
             }
         }
         if(nk_tree_push(ctx, NK_TREE_TAB, "Brain Properties", NK_MINIMIZED))
@@ -645,5 +692,8 @@ InitCreatureEditorScreen(AppState *appState,
     torso->pos = vec2(0,0);
     torso->width = 50;
     torso->height = 50;
+    torso->hasDragOutput = 1;
+    torso->hasRotaryMuscleOutput = 0;
+    AssignBrainIO(editor->creatureDefinition);
 }
 

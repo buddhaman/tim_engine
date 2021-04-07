@@ -1,16 +1,23 @@
 CC=gcc
 
-SRC = $(wildcard src_chipmunk/*.c)
+SRC_CHIPMUNK = $(wildcard src_chipmunk/*.c)
+SRC = $(wildcard src/*.c)
 
 DEBUG0 = -g
-DEBUG1 = -fsanitize=address -g
 CFLAGS = -DNDEBUG
 ODIR = obj
-_OBJ = $(SRC:.c=.o)
+_OBJ = $(SRC_CHIPMUNK:.c=.o)
 OBJ = $(patsubst %,$(ODIR)/%,$(notdir $(_OBJ)))
 
-chipmunk_lib.a: $(OBJ) 
-	ar rcs $@ $^ 
+exe: $(SRC)
+	$(CC) src/main.c -L./. -l:chipmunk_lib.a -lm -ldl -o exe -g -Iinclude_chipmunk -Iinclude -I/usr/local/include/SDL2 -Bstatic -lSDL2 -Wall -pthread external.o -Lchipmunk_lib 
+
+external:
+	$(CC) src/external_libs.c -c -o external.o -Iinclude \
+    -Iinclude_chipmunk -I/usr/local/include/SDL2 -lSDL2 -Wall 
+
+chipmunk: $(OBJ) 
+	ar rcs chipmunk_lib.a $^ 
 
 $(ODIR)/%.o : src_chipmunk/%.c 
 	@mkdir -p $(ODIR)

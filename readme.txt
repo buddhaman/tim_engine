@@ -12,11 +12,12 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 ------Game Engine-------
 
+- Adjust brainsize, base on definition. 
+- Pause simulation, click bodyparts and show all info.
 - Add more inputs for coordination.
 - Add inputs to only some bodyparts.
 - Set generation duration in menu.
 - Save by dumping creaturedef data.
-- Write single make file with options for compiling external, internal, windows, linux.
 
 - Serialization: load the creature defs and play.
 - Save entire trained brains.
@@ -39,9 +40,15 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 - Solve snap bug when its smaller than the minimum.
 
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
+- Write single make file with options for compiling external, internal, windows, linux.
 
 DONE:
 
+- Copy input and output data to the bodypart or reference definition.
+- Use output definition in creature to set brain input vector values.
+- Show input and output data in editor gui.
+- Make input and output data editable.
+- Collect all input/output info and assign to indices in brain input/output.
 - Fix bug where limb turns 180 degrees on startup.
 - Go back to editor and restart simulation.
 - Edit learningrate and dev inside simulation.
@@ -174,6 +181,8 @@ COOL THINGS:
     Fancy textures + normals and lighting.
     Generate textures, based on dna.
     Draw on textures.
+
+Make everything look good. Its ugly now.
 
 Some lay eggs, some dont.
 complicated long term behavior. 

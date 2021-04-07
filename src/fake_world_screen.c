@@ -113,7 +113,7 @@ UpdateFakeWorldScreen(AppState *appState,
     if(nk_begin(ctx, "Cool Window", nk_rect(50, 50, 220, 320),
             NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE))
     {
-        nk_layout_row_dynamic(ctx, 20, 1);
+        nk_layout_row_dynamic(ctx, 30, 1);
         nk_labelf(ctx,  NK_TEXT_LEFT, "Population: %d", world->nGenes);
         nk_labelf(ctx,  NK_TEXT_LEFT, "Gene size: %d", world->geneSize);
         nk_labelf(ctx,  NK_TEXT_LEFT, "Inputs: %d", world->inputSize);

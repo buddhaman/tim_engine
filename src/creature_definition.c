@@ -95,7 +95,6 @@ RemoveBodyPart(CreatureDefinition *def, ui32 id)
     ArrayRemoveElement(def->bodyParts, sizeof(BodyPartDefinition), def->nBodyParts--, parent);
 }
 
-
 void
 RecalculateSubNodeBodyParts(CreatureDefinition *def,
         BodyPartDefinition *parent)
@@ -123,6 +122,22 @@ RecalculateSubNodeBodyParts(CreatureDefinition *def,
         RecalculateSubNodeBodyParts(def, subPart);
     }
     return;
+}
+
+void
+AssignBrainIO(CreatureDefinition *def)
+{
+    ui32 atInputIdx = 2;
+    (void)atInputIdx;
+    ui32 atOutputIdx = 0;
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < def->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPartDefinition *bodyPartDef = def->bodyParts+bodyPartIdx;
+        if(bodyPartDef->hasDragOutput) bodyPartDef->dragOutputIdx = atOutputIdx++;
+        if(bodyPartDef->hasRotaryMuscleOutput) bodyPartDef->rotaryMuscleOutputIdx = atOutputIdx++;
+    }
 }
 
 #if 0
