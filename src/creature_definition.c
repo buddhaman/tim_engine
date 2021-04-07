@@ -128,16 +128,24 @@ void
 AssignBrainIO(CreatureDefinition *def)
 {
     ui32 atInputIdx = 2;
-    (void)atInputIdx;
     ui32 atOutputIdx = 0;
     for(ui32 bodyPartIdx = 0;
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
         BodyPartDefinition *bodyPartDef = def->bodyParts+bodyPartIdx;
+        //Inputs
+        if(bodyPartDef->hasAbsoluteXPositionInput) bodyPartDef->absoluteXPositionInputIdx = atInputIdx++;
+
+        // Outputs
         if(bodyPartDef->hasDragOutput) bodyPartDef->dragOutputIdx = atOutputIdx++;
         if(bodyPartDef->hasRotaryMuscleOutput) bodyPartDef->rotaryMuscleOutputIdx = atOutputIdx++;
     }
+    
+    def->nInputs = atInputIdx;
+    def->nOutputs = atOutputIdx;
+    def->nHidden = 1;
+    def->geneSize = GetMinimalGatedUnitGeneSize(def->nInputs, def->nOutputs, def->nHidden);
 }
 
 #if 0

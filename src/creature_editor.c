@@ -75,15 +75,6 @@ SnapEdge(CreatureEditorScreen *editor, r32 offset)
 }
 
 void
-CalculateBrainProperties(CreatureEditorScreen *editor)
-{
-    editor->inputSize = 2;
-    editor->outputSize = editor->creatureDefinition->nBodyParts*2;
-    editor->hiddenSize = 1;
-    editor->geneSize = GetMinimalGatedUnitGeneSize(editor->inputSize, editor->outputSize, editor->hiddenSize);
-}
-
-void
 EditorRemoveBodyPart(CreatureEditorScreen *editor, ui32 id)
 {
     RemoveBodyPart(editor->creatureDefinition, editor->selectedId);
@@ -128,6 +119,25 @@ NKEditRadInDegProperty(struct nk_context *ctx,
         return 1;
     }
     return 0;
+}
+
+b32 
+NKEditCreatureIO(struct nk_context *ctx,
+        char *label,
+        b32 *value,
+        ui32 brainIdx)
+{
+    b32 edited = 0;
+    nk_layout_row_begin(ctx, NK_DYNAMIC, 30, 2);
+    nk_layout_row_push(ctx, 0.5);
+    if(nk_checkbox_label(ctx, label, value))
+        edited = 1;
+    if(*value)
+    {
+        nk_labelf(ctx, NK_TEXT_LEFT, "Index = %u", brainIdx);
+    }
+    nk_layout_row_end(ctx);
+    return edited;
 }
 
 void
@@ -584,33 +594,19 @@ UpdateCreatureEditorScreen(AppState *appState,
                 isEdited = 1;
             nk_labelf(ctx, NK_TEXT_LEFT, "Center: (%.2f %.2f)", part->pos.x, part->pos.y);
 
-            nk_layout_row_dynamic(ctx, 30, 2);
-
-            // TODO: Def turn into function
-            if(nk_checkbox_label(ctx, "Drag", &part->hasDragOutput))
-                isBrainEdited = 1;
-            if(part->hasDragOutput)
-            {
-                nk_labelf(ctx, NK_TEXT_LEFT, "Index = %u", part->dragOutputIdx);
-            }
-            else
-            {
-                nk_spacing(ctx, 1);
-            }
+            if(NKEditCreatureIO(ctx, "Abs X pos", 
+                        &part->hasAbsoluteXPositionInput, 
+                        part->absoluteXPositionInputIdx)) isBrainEdited = 1;
+            if(NKEditCreatureIO(ctx, "Rotary Muscle", 
+                        &part->hasDragOutput, 
+                        part->dragOutputIdx)) isBrainEdited = 1;
 
             // Torso cannot have a rotary muscle.
             if(part->connectionId)
             {
-                if(nk_checkbox_label(ctx, "Rotary Muscle", &part->hasRotaryMuscleOutput))
-                    isBrainEdited = 1;
-                if(part->hasRotaryMuscleOutput)
-                {
-                    nk_labelf(ctx, NK_TEXT_LEFT, "Index = %u", part->rotaryMuscleOutputIdx);
-                }
-                else
-                {
-                    nk_spacing(ctx, 1);
-                }
+                if(NKEditCreatureIO(ctx, "Rotary Muscle", 
+                            &part->hasRotaryMuscleOutput, 
+                            part->rotaryMuscleOutputIdx)) isBrainEdited = 1;
             }
 
             nk_layout_row_dynamic(ctx, 30, 1);
@@ -627,11 +623,10 @@ UpdateCreatureEditorScreen(AppState *appState,
         if(nk_tree_push(ctx, NK_TREE_TAB, "Brain Properties", NK_MINIMIZED))
         {
             nk_layout_row_dynamic(ctx, 30, 1);
-            CalculateBrainProperties(editor);
-            nk_labelf(ctx, NK_TEXT_LEFT, "Inputs : %u", editor->inputSize);
-            nk_labelf(ctx, NK_TEXT_LEFT, "Outputs : %u", editor->outputSize);
-            nk_labelf(ctx, NK_TEXT_LEFT, "Hidden : %u", editor->hiddenSize);
-            nk_labelf(ctx, NK_TEXT_LEFT, "Gene Size : %u", editor->geneSize);
+            nk_labelf(ctx, NK_TEXT_LEFT, "Inputs : %u", def->nInputs);
+            nk_labelf(ctx, NK_TEXT_LEFT, "Outputs : %u", def->nOutputs);
+            nk_labelf(ctx, NK_TEXT_LEFT, "Hidden : %u", def->nHidden);
+            nk_labelf(ctx, NK_TEXT_LEFT, "Gene Size : %u", def->geneSize);
             nk_tree_pop(ctx);
         }
         if(nk_tree_push(ctx, NK_TREE_TAB, "Simulation Settings", NK_MAXIMIZED))

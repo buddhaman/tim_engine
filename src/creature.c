@@ -165,6 +165,13 @@ DestroyCreature(Creature *creature)
     }
 }
 
+Vec2
+GetBodyPartCenter(BodyPart *part)
+{
+    cpVect bodyPos= cpBodyGetPosition(part->body->body);
+    return vec2(bodyPos.x, bodyPos.y);
+}
+
 void
 SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
 {
@@ -177,20 +184,18 @@ SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
 r32
 CreatureGetFitness(Creature *creature)
 {
-    r32 avgX = 0.0;
-    r32 avgY = 0.0;
+    r32 maxX = -10000.0;
+    r32 minY = 10000.0;
     for(ui32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         cpVect pos = cpBodyGetPosition(part->body->body);
-        avgX+=pos.x;
-        avgY+=pos.y;
+        maxX = Max(maxX, fabsf(pos.x));
+        minY = Min(minY, pos.y);
     }
-    avgX/=creature->nBodyParts;
-    avgY/=creature->nBodyParts;
-    return cpBodyGetPosition(creature->bodyParts->body->body).y;
+    return minY - maxX;
 }
 
 void
@@ -205,18 +210,21 @@ UpdateCreature(FakeWorld *world, Creature *creature)
     brain->x.v[0] = input0;
     brain->x.v[1] = input1;
 
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < creature->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPart *part = creature->bodyParts+bodyPartIdx;
+        Vec2 pos = GetBodyPartCenter(part);
+        if(part->def->hasAbsoluteXPositionInput)
+        {
+            r32 activation = pos.x/100;
+            brain->x.v[part->def->absoluteXPositionInputIdx] = activation;
+        }
+    }
+
     UpdateMinimalGatedUnit(brain);
 
-#if 0
-    for(ui32 muscleIdx = 0;
-            muscleIdx < creature->nRotaryMuscles;
-            muscleIdx++)
-    {
-        RotaryMuscle *muscle = creature->rotaryMuscles+muscleIdx;
-        r32 activation = brain->h.v[brain->stateSize-brain->outputSize+muscleIdx];
-        SetMuscleActivation(muscle, activation);
-    }
-#endif
     for(ui32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)

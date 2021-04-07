@@ -178,6 +178,7 @@ DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, TextureAtl
 void
 RestartFakeWorld(FakeWorld *world)
 {
+    CreatureDefinition *def = &world->def;
     world->space = cpSpaceNew();
     cpSpaceSetGravity(world->space, cpv(0, 0));
 
@@ -194,9 +195,11 @@ RestartFakeWorld(FakeWorld *world)
     DefineFixedWorldArray(RotaryMuscle, nRotaryMuscles, maxRotaryMuscles, 512, rotaryMuscles);
 #undef DefineFixedWorldArray
 
-    ui32 transientStateSize = GetMinimalGatedUnitStateSize(world->inputSize, 
-            world->outputSize, 
-            world->hiddenSize);
+    ui32 transientStateSize = GetMinimalGatedUnitStateSize(def->nInputs, 
+            def->nOutputs,
+            def->nHidden);
+
+    r32 startXDev = 0.0;
     for(int creatureIdx = 0; 
             creatureIdx < world->nGenes;
             creatureIdx++)
@@ -204,8 +207,8 @@ RestartFakeWorld(FakeWorld *world)
         MinimalGatedUnit *brain = PushStruct(world->transientMemory, MinimalGatedUnit);
         VecR32 *gene = world->strategies->genes+creatureIdx;
         r32 *state = PushAndZeroArray(world->transientMemory, r32, transientStateSize);
-        InitMinimalGatedUnit(brain, world->inputSize, world->outputSize, world->hiddenSize, gene, state);
-        AddCreature(world, vec2(0,0), &world->def, brain);
+        InitMinimalGatedUnit(brain, def->nInputs, def->nOutputs, def->nHidden, gene, state);
+        AddCreature(world, vec2(RandomR32(-startXDev, startXDev), 0), &world->def, brain);
     }
     //AddStaticRectangle(world, vec2(0,0), 1600.0, 40, 0.0);
 }
@@ -222,16 +225,12 @@ InitFakeWorld(FakeWorld *world,
     world->persistentMemory = persistentMemory;
     world->transientMemory = transientMemory;
     world->def = *creatureDefinition;
-
-    world->inputSize = 2;
-    world->outputSize = world->def.nBodyParts*2;
-    world->hiddenSize = 1;
-    world->geneSize = GetMinimalGatedUnitGeneSize(world->inputSize, world->outputSize, world->hiddenSize);
-    DebugOut("Gene size = %u" ,world->geneSize);
     world->nGenes = nGenes;
 
+    DebugOut("Gene size = %u" ,world->def.geneSize);
+
     // Create es from definition
-    world->strategies = ESCreate(persistentMemory, world->geneSize, world->nGenes, dev, learningRate);
+    world->strategies = ESCreate(persistentMemory, world->def.geneSize, world->nGenes, dev, learningRate);
     ESGenerateGenes(world->strategies);
     RestartFakeWorld(world);
 }

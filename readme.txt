@@ -10,14 +10,20 @@ Pivot: Make alife creatures 2. Use physics engine and limbs with revolute joints
 
 Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
+TODO BEFORE DEMO LAUNCH:
+
+- Save creatures.
+- Visualize GRU,
+- Think about nice way to render creatures, or at least add googly eyes.
+
 ------Game Engine-------
 
-- Adjust brainsize, base on definition. 
 - Pause simulation, click bodyparts and show all info.
 - Add more inputs for coordination.
 - Add inputs to only some bodyparts.
 - Set generation duration in menu.
 - Save by dumping creaturedef data.
+- Save absolute index into brain input and output.
 
 - Serialization: load the creature defs and play.
 - Save entire trained brains.
@@ -25,7 +31,7 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 - Make googly eyes, or other decorations.
 - Generate textures with noise.
 - Add googly eyes.
-- Serialization: Pull in json library and save the creature defs.
+- Serialization: Pull in json? library and save the creature defs.
 
 - Visualize GRU.
 - Graph in nuklear gui? or in own gui
@@ -44,6 +50,7 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 DONE:
 
+- Adjust brainsize, base on definition. 
 - Copy input and output data to the bodypart or reference definition.
 - Use output definition in creature to set brain input vector values.
 - Show input and output data in editor gui.
@@ -194,6 +201,12 @@ And implement specific behavior and ecosystems.
 
 MORE AI:
     Make Ai library that only uses bytes instead of floats.
+
+RESEARCH:
+    It would be nice to know the effect of an input on the output to
+    see if an input is actually being used. Think of a meassure for this.
+    Can also be used in robotics. Learning how neural networks actually work
+    and generating feedback based on this.
 
 FUN:
     Visualize everything!!!!

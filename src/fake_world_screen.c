@@ -115,10 +115,10 @@ UpdateFakeWorldScreen(AppState *appState,
     {
         nk_layout_row_dynamic(ctx, 30, 1);
         nk_labelf(ctx,  NK_TEXT_LEFT, "Population: %d", world->nGenes);
-        nk_labelf(ctx,  NK_TEXT_LEFT, "Gene size: %d", world->geneSize);
-        nk_labelf(ctx,  NK_TEXT_LEFT, "Inputs: %d", world->inputSize);
-        nk_labelf(ctx,  NK_TEXT_LEFT, "Outputs: %d", world->outputSize);
-        nk_labelf(ctx,  NK_TEXT_LEFT, "Hidden: %d", world->hiddenSize);
+        nk_labelf(ctx,  NK_TEXT_LEFT, "Gene size: %d", world->def.geneSize);
+        nk_labelf(ctx,  NK_TEXT_LEFT, "Inputs: %d", world->def.nInputs);
+        nk_labelf(ctx,  NK_TEXT_LEFT, "Outputs: %d", world->def.nOutputs);
+        nk_labelf(ctx,  NK_TEXT_LEFT, "Hidden: %d", world->def.nHidden);
 
         nk_property_float(ctx, "Dev", 0.0, &world->strategies->dev, 0.5, 0.001, 0.001);
         nk_property_float(ctx, "Learning Rate", 0.0, &world->strategies->learningRate, 0.5, 0.001, 0.001);

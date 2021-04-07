@@ -19,7 +19,7 @@ struct BodyPart
     RigidBody *body;
     Vec4 color;
     BodyPartDefinition *def;
-    RotaryMuscle *rotaryMuscle; // new bodyparts always have this muscle but cannot always control it.
+    RotaryMuscle *rotaryMuscle; // New bodyparts always have this muscle but cannot always control it.
 };
 
 typedef struct

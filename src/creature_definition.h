@@ -27,6 +27,8 @@ typedef struct
     b32 hasAbsoluteXPositionInput;      
     b32 hasAbsoluteYPositionInput;       
 
+    ui32 absoluteXPositionInputIdx;
+
     ui32 dragOutputIdx;
     ui32 rotaryMuscleOutputIdx;
     //b32 hasTargetOrientationInput;
@@ -41,6 +43,8 @@ typedef struct
     BodyPartDefinition bodyParts[MAX_BODYPARTS];
     ui32 nInputs;
     ui32 nOutputs;
+    ui32 nHidden;
+    ui32 geneSize;
     ui32 nInternalClocks;
 } CreatureDefinition;
 

@@ -26,11 +26,7 @@ struct FakeWorld
     MemoryArena *transientMemory;
     cpSpace *space;
 
-    ui32 inputSize;
-    ui32 outputSize;
-    ui32 hiddenSize;
     ui32 nGenes;
-    ui32 geneSize;
     CreatureDefinition def;
     EvolutionStrategies *strategies;
 
