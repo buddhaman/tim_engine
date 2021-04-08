@@ -1,4 +1,12 @@
 
+
+void AdjustFakeWorldTimeScale(FakeWorldScreen *screen, int upOrDown)
+{
+    Assert(upOrDown==-1 || upOrDown==1);
+    if(upOrDown==-1 && screen->stepsPerFrame >= 2) screen->stepsPerFrame/=2;
+    if(upOrDown==1 && screen->stepsPerFrame < 1024) screen->stepsPerFrame*=2;
+}
+
 void
 UpdateFakeWorldScreen(AppState *appState, 
         FakeWorldScreen *screen, 
@@ -20,36 +28,39 @@ UpdateFakeWorldScreen(AppState *appState,
     // Adjust timescale
     if(IsKeyActionJustDown(appState, ACTION_Q))
     {
-        if(screen->stepsPerFrame >= 2) screen->stepsPerFrame/=2;
+        AdjustFakeWorldTimeScale(screen, -1);
     }
     if(IsKeyActionJustDown(appState, ACTION_E))
     {
-        if(screen->stepsPerFrame < 1024) screen->stepsPerFrame*=2;
+        AdjustFakeWorldTimeScale(screen, 1);
     }
     UpdateCameraInput(appState, camera);
 
     // Do evolution
-    for(ui32 atFrameStep = 0;
-            atFrameStep < screen->stepsPerFrame;
-            atFrameStep++)
+    if(!screen->isPaused)
     {
-        UpdateFakeWorld(world);
-        screen->tick++;
-        if(screen->tick >= screen->ticksPerGeneration)
+        for(ui32 atFrameStep = 0;
+                atFrameStep < screen->stepsPerFrame;
+                atFrameStep++)
         {
-            screen->tick = 0;
-            screen->generation++;
-            for(ui32 geneIdx = 0;
-                    geneIdx < world->nGenes;
-                    geneIdx++)
+            UpdateFakeWorld(world);
+            screen->tick++;
+            if(screen->tick >= screen->ticksPerGeneration)
             {
-                world->strategies->fitness->v[geneIdx] = CreatureGetFitness(world->creatures+geneIdx);
+                screen->tick = 0;
+                screen->generation++;
+                for(ui32 geneIdx = 0;
+                        geneIdx < world->nGenes;
+                        geneIdx++)
+                {
+                    world->strategies->fitness->v[geneIdx] = CreatureGetFitness(world->creatures+geneIdx);
+                }
+                screen->avgFitness = VecR32Average(world->strategies->fitness);
+                ESNextSolution(world->strategies);
+                ESGenerateGenes(world->strategies);
+                DestroyFakeWorld(world);
+                RestartFakeWorld(world);
             }
-            screen->avgFitness = VecR32Average(world->strategies->fitness);
-            ESNextSolution(world->strategies);
-            ESGenerateGenes(world->strategies);
-            DestroyFakeWorld(world);
-            RestartFakeWorld(world);
         }
     }
     
@@ -110,18 +121,54 @@ UpdateFakeWorldScreen(AppState *appState,
     EndSpritebatch(batch);
 
     // Begin UI
-    if(nk_begin(ctx, "Cool Window", nk_rect(50, 50, 220, 320),
-            NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE))
+    if(nk_begin(ctx, "Simulation", nk_rect(50, 50, 280, 400),
+            NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE))
     {
-        nk_layout_row_dynamic(ctx, 30, 1);
-        nk_labelf(ctx,  NK_TEXT_LEFT, "Population: %d", world->nGenes);
-        nk_labelf(ctx,  NK_TEXT_LEFT, "Gene size: %d", world->def.geneSize);
-        nk_labelf(ctx,  NK_TEXT_LEFT, "Inputs: %d", world->def.nInputs);
-        nk_labelf(ctx,  NK_TEXT_LEFT, "Outputs: %d", world->def.nOutputs);
-        nk_labelf(ctx,  NK_TEXT_LEFT, "Hidden: %d", world->def.nHidden);
+        nk_layout_row_static(ctx, 30, 30, 4);
 
-        nk_property_float(ctx, "Dev", 0.0, &world->strategies->dev, 0.5, 0.001, 0.001);
-        nk_property_float(ctx, "Learning Rate", 0.0, &world->strategies->learningRate, 0.5, 0.001, 0.001);
+        // Edit time
+        if(nk_button_label(ctx, "<<"))
+        {
+            AdjustFakeWorldTimeScale(screen, -1);
+        }
+        if(nk_button_label(ctx, screen->isPaused ? ">" : "||"))
+        {
+            screen->isPaused = !screen->isPaused;
+        }
+        if(nk_button_label(ctx, ">>"))
+        {
+            AdjustFakeWorldTimeScale(screen, 1);
+        }
+        nk_labelf(ctx, NK_TEXT_LEFT, "x%u", screen->stepsPerFrame);
+
+        nk_layout_row_dynamic(ctx, 30, 1);
+
+        int seconds = screen->ticksPerGeneration/60;
+        seconds = nk_propertyi(ctx, "Seconds per generation", 1, seconds, 60, 1, 1);
+        screen->ticksPerGeneration = seconds*60;
+
+        r32 parameterScale = 1000.0;
+
+        r32 deviationScaled = parameterScale * world->strategies->dev;
+        NKEditFloatPropertyWithTooltip(ctx, "Dev", "How much is each creature mutated.", 
+                1.0, &deviationScaled, parameterScale, 1.0, 1.0);
+        world->strategies->dev = deviationScaled/parameterScale;
+
+        r32 learningRateScaled = parameterScale*world->strategies->learningRate;
+        NKEditFloatPropertyWithTooltip(ctx, "Learning Rate", "How fast will genes adapt.", 
+                1.0, &learningRateScaled, parameterScale, 1.0, 1.0);
+        world->strategies->learningRate = learningRateScaled/parameterScale;
+
+        if(nk_tree_push(ctx, NK_TREE_TAB, "Properties", NK_MINIMIZED))
+        {
+            nk_labelf(ctx,  NK_TEXT_LEFT, "Population: %d", world->nGenes);
+            nk_labelf(ctx,  NK_TEXT_LEFT, "Gene size: %d", world->def.geneSize);
+            nk_labelf(ctx,  NK_TEXT_LEFT, "Inputs: %d", world->def.nInputs);
+            nk_labelf(ctx,  NK_TEXT_LEFT, "Outputs: %d", world->def.nOutputs);
+            nk_labelf(ctx,  NK_TEXT_LEFT, "Hidden: %d", world->def.nHidden);
+            nk_tree_pop(ctx);
+        }
+
         if(nk_button_label(ctx, "Editor"))
         {
             appState->currentScreen = SCREEN_CREATURE_EDITOR;

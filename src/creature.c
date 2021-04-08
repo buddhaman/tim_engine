@@ -182,7 +182,7 @@ SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
 }
 
 r32
-CreatureGetFitness(Creature *creature)
+FitnessStrictlyMoveForward(Creature *creature)
 {
     r32 maxX = -10000.0;
     r32 minY = 10000.0;
@@ -196,6 +196,30 @@ CreatureGetFitness(Creature *creature)
         minY = Min(minY, pos.y);
     }
     return minY - maxX;
+}
+
+r32
+FitnessStrictlyMoveRight(Creature *creature)
+{
+    r32 minX = 10000.0;
+    r32 maxY = -10000.0;
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < creature->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPart *part = creature->bodyParts+bodyPartIdx;
+        cpVect pos = cpBodyGetPosition(part->body->body);
+        minX = Min(minX, pos.x);
+        maxY = Max(maxY, fabs(pos.y));
+    }
+    return minX - maxY;
+}
+
+
+r32
+CreatureGetFitness(Creature *creature)
+{
+    return FitnessStrictlyMoveRight(creature);
 }
 
 void
@@ -220,6 +244,11 @@ UpdateCreature(FakeWorld *world, Creature *creature)
         {
             r32 activation = pos.x/100;
             brain->x.v[part->def->absoluteXPositionInputIdx] = activation;
+        }
+        if(part->def->hasAbsoluteYPositionInput)
+        {
+            r32 activation = pos.y/100;
+            brain->x.v[part->def->absoluteYPositionInputIdx] = activation;
         }
     }
 

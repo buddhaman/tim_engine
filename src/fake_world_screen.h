@@ -7,10 +7,12 @@ typedef struct
     FakeWorld *world;
     MemoryArena *evolutionArena;
 
+    b32 isPaused;
+    ui32 stepsPerFrame;
+
     ui32 generation;
     ui32 tick;
     ui32 ticksPerGeneration;
-    ui32 stepsPerFrame;
     r32 avgFitness;
 
     Camera2D *camera;

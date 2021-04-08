@@ -18,38 +18,48 @@ TODO BEFORE DEMO LAUNCH:
 
 ------Game Engine-------
 
+- Edit time in fake world screen.
+- Click on creature and show bodypart params.
+- Visualize GRU.
+- Mouse input to move camera.
+
+- Calculate fitness per second.
+- Make nuklear graph.
+
+- Set training function.
 - Pause simulation, click bodyparts and show all info.
-- Add more inputs for coordination.
-- Add inputs to only some bodyparts.
-- Set generation duration in menu.
-- Save by dumping creaturedef data.
-- Save absolute index into brain input and output.
 
 - Serialization: load the creature defs and play.
 - Save entire trained brains.
-- Put everything into appstate instead of on the stack in main.
 - Make googly eyes, or other decorations.
 - Generate textures with noise.
 - Add googly eyes.
 - Serialization: Pull in json? library and save the creature defs.
 
-- Visualize GRU.
 - Graph in nuklear gui? or in own gui
 - Make function for visualizing constraint without gui to reuse.
 
-- Mouse input to move camera.
 - set parameters before training.
 - 2D lighting.
 - Only recalculate body positions when dirty.
 
 - Add icons for all edit buttons.
-- Solve snap bug when its smaller than the minimum.
 
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
 - Write single make file with options for compiling external, internal, windows, linux.
 
+- Make website that explains everything and has a devlog.
+
 DONE:
 
+- Keep focus on bodypart after editing.
+- Tooltips with explanation of settings.
+- Increase training time in fakeworldscreen.
+- Solve snap bug when its smaller than the minimum.
+- Put everything into appstate instead of on the stack in main.
+- Save absolute index into brain input and output.
+- Add inputs to only some bodyparts.
+- Add more inputs for coordination.
 - Adjust brainsize, base on definition. 
 - Copy input and output data to the bodypart or reference definition.
 - Use output definition in creature to set brain input vector values.

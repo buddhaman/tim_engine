@@ -5,6 +5,12 @@ CreatureEditorIsEditing(CreatureEditorScreen *editor)
     return editor->editState!=EDIT_CREATURE_NONE;
 }
 
+internal inline b32
+CreatureEditorWasEditing(CreatureEditorScreen *editor)
+{
+    return editor->prevEditState!=EDIT_CREATURE_NONE;
+}
+
 b32 
 EditorCanAddBodyPart(CreatureEditorScreen *editor)
 {
@@ -82,54 +88,20 @@ EditorRemoveBodyPart(CreatureEditorScreen *editor, ui32 id)
     AssignBrainIO(editor->creatureDefinition);
 }
 
-b32
-NKEditFloatProperty(struct nk_context *ctx, 
-        char *label, 
-        r32 min, 
-        r32 *value, 
-        r32 max, 
-        r32 stepSize, 
-        r32 incPerPixel)
-{
-    r32 v = *value;
-    nk_property_float(ctx, label, min, &v, max, stepSize, incPerPixel);
-    if(v!=*value)
-    {
-        *value = v;
-        return 1;
-    }
-    return 0;
-}
-
-b32
-NKEditRadInDegProperty(struct nk_context *ctx, 
-        char *label, 
-        r32 minRad, 
-        r32 *rad, 
-        r32 maxRad, 
-        r32 stepSize, 
-        r32 incPerPixel)
-{
-    r32 valInDeg = RadToDeg(*rad);
-    r32 v = valInDeg;
-    nk_property_float(ctx, label, RadToDeg(minRad), &v, RadToDeg(maxRad), stepSize, incPerPixel);
-    if(v!=valInDeg)
-    {
-        *rad = DegToRad(v);
-        return 1;
-    }
-    return 0;
-}
-
 b32 
 NKEditCreatureIO(struct nk_context *ctx,
         char *label,
+        char *tooltip,
         b32 *value,
         ui32 brainIdx)
 {
     b32 edited = 0;
     nk_layout_row_begin(ctx, NK_DYNAMIC, 30, 2);
     nk_layout_row_push(ctx, 0.5);
+    if(nk_widget_is_hovered(ctx))
+    {
+        nk_tooltip(ctx, tooltip);
+    }
     if(nk_checkbox_label(ctx, label, value))
         edited = 1;
     if(*value)
@@ -148,19 +120,15 @@ UpdateCreatureEditorScreen(AppState *appState,
 {
     Camera2D *camera = editor->camera;
     Camera2D *screenCamera = appState->screenCamera;    // Mildly confusing
-    (void) screenCamera;
     SpriteBatch *batch = renderer->batch;
     FontRenderer *fontRenderer = renderer->fontRenderer;
-    (void) fontRenderer;
     TextureAtlas *defaultAtlas = renderer->defaultAtlas;
-    (void) defaultAtlas;
     Shader *spriteShader = renderer->spriteShader;
     CreatureDefinition *def = editor->creatureDefinition;
     Gui *gui = editor->gui;
 
     AtlasRegion *circleRegion = defaultAtlas->regions;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
-    (void)circleRegion;
 
     Vec4 creatureColor = RGBAToVec4(0x7c4d35ff);
     
@@ -374,7 +342,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                     &halfHeight,
                     5, 
                     editor->editState==EDIT_CREATURE_HEIGHT);
-        part->height = SnapDim(editor, Max(1.0, halfHeight*2));
+        part->height = Max(1.0, SnapDim(editor, halfHeight*2));
 
         if(!part->connectionId)
         {
@@ -384,7 +352,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                         &halfWidth,
                         5, 
                         editor->editState==EDIT_CREATURE_WIDTH);
-            part->width = SnapDim(editor, Max(1, halfWidth*2));
+            part->width = Max(1, SnapDim(editor, halfWidth*2));
 
             r32 newAngle = angleButtonAngle;
             hitRotationDragButton = DoRotationDragButton(gui, 
@@ -462,7 +430,6 @@ UpdateCreatureEditorScreen(AppState *appState,
             batch->colorState = vec4(0.3, 0.3, 0.8, 0.5);
             PushSemiCircle2(batch, pivotPoint, 20, edgeAngle+part->minAngle, 
                     edgeAngle+part->maxAngle, 20, squareRegion);
-
         }
 
         if(editor->editState==EDIT_CREATURE_HEIGHT &&
@@ -595,9 +562,15 @@ UpdateCreatureEditorScreen(AppState *appState,
             nk_labelf(ctx, NK_TEXT_LEFT, "Center: (%.2f %.2f)", part->pos.x, part->pos.y);
 
             if(NKEditCreatureIO(ctx, "Abs X pos", 
+                        "This bodypart can sense how much it deviates from the y-axis",
                         &part->hasAbsoluteXPositionInput, 
                         part->absoluteXPositionInputIdx)) isBrainEdited = 1;
-            if(NKEditCreatureIO(ctx, "Rotary Muscle", 
+            if(NKEditCreatureIO(ctx, "Abs Y pos", 
+                        "This bodypart can sense how much it deviates from the x-axis",
+                        &part->hasAbsoluteYPositionInput, 
+                        part->absoluteYPositionInputIdx)) isBrainEdited = 1;
+            if(NKEditCreatureIO(ctx, "Drag", 
+                        "This bodypart can adjust its friction",
                         &part->hasDragOutput, 
                         part->dragOutputIdx)) isBrainEdited = 1;
 
@@ -605,6 +578,7 @@ UpdateCreatureEditorScreen(AppState *appState,
             if(part->connectionId)
             {
                 if(NKEditCreatureIO(ctx, "Rotary Muscle", 
+                            "This bodypart can move",
                             &part->hasRotaryMuscleOutput, 
                             part->rotaryMuscleOutputIdx)) isBrainEdited = 1;
             }
@@ -646,10 +620,12 @@ UpdateCreatureEditorScreen(AppState *appState,
     nk_end(ctx);
 
     if(!CreatureEditorIsEditing(editor) 
+            && !CreatureEditorWasEditing(editor)
             && EditorIsMouseJustReleased(appState, editor))
     {
         editor->selectedId = intersectId;
     }
+    editor->prevEditState = editor->editState;
 }
 
 void

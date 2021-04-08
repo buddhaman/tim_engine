@@ -36,6 +36,7 @@ typedef struct
 
     // Bodypart editing info
     EditCreatureState editState;
+    EditCreatureState prevEditState;        //TODO: Is this a hack? 
     BoxEdgeLocation bodyPartLocation;
     BodyPartDefinition *attachTo;
 } CreatureEditorScreen;

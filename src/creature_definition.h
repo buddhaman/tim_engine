@@ -28,6 +28,7 @@ typedef struct
     b32 hasAbsoluteYPositionInput;       
 
     ui32 absoluteXPositionInputIdx;
+    ui32 absoluteYPositionInputIdx;
 
     ui32 dragOutputIdx;
     ui32 rotaryMuscleOutputIdx;
