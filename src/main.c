@@ -125,6 +125,9 @@ main(int argc, char**argv)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
     SDL_WindowFlags window_flags = 
         (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     int screen_width = 1280;
@@ -135,6 +138,7 @@ main(int argc, char**argv)
 
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
+
 
     SDL_GL_SetSwapInterval(1);
     
@@ -188,6 +192,9 @@ main(int argc, char**argv)
 
     CreatureEditorScreen *creatureEditorScreen = PushStruct(gameArena, CreatureEditorScreen);
     InitCreatureEditorScreen(appState, creatureEditorScreen, renderContext, gameArena);
+
+    // Anti aliasing in opengl.
+    glEnable(GL_MULTISAMPLE);
 
     // Handle evolution
     while(!done)

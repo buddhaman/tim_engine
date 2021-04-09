@@ -61,6 +61,27 @@ DestroyRigidBody(RigidBody *body)
     cpShapeFree(body->shape);
 }
 
+internal inline Vec2
+GetBodyPos(RigidBody *body)
+{
+    cpVect pos = cpBodyGetPosition(body->body);
+    return vec2(pos.x, pos.y);
+}
+
+internal inline r32
+GetBodyAngle(RigidBody *body)
+{
+    return (r32)cpBodyGetAngle(body->body);
+}
+
+internal inline OrientedBox
+GetRigidBodyBox(RigidBody *body)
+{
+    cpVect pos = cpBodyGetPosition(body->body);
+    r32 angle = GetBodyAngle(body);
+    return (OrientedBox){vec2(pos.x, pos.y), vec2(body->width, body->height), angle};
+}
+
 internal inline void
 UpdateFakeWorld(FakeWorld *world)
 {
@@ -83,94 +104,6 @@ UpdateFakeWorld(FakeWorld *world)
             cpVect vel = cpBodyGetVelocity(body->body);
             vel = cpvmult(vel, 1.0-body->drag);
             cpBodySetVelocity(body->body, vel);
-        }
-    }
-}
-
-Vec2
-GetBodyPos(RigidBody *body)
-{
-    cpVect pos = cpBodyGetPosition(body->body);
-    return vec2(pos.x, pos.y);
-}
-
-r32
-GetBodyAngle(RigidBody *body)
-{
-    return (r32)cpBodyGetAngle(body->body);
-}
-
-// For now assumes batch has already begun.
-void
-DrawFakeWorld(FakeWorld *world, SpriteBatch *batch, Camera2D *camera, TextureAtlas *atlas)
-{
-    AtlasRegion *circleRegion = atlas->regions;
-    AtlasRegion *squareRegion = atlas->regions+1;
-    r32 lineWidth = 2;
-
-#if 0
-    for(ui32 bodyPartIdx = 0;
-            bodyPartIdx < world->nRigidBodies;
-            bodyPartIdx++)
-    {
-        RigidBody *body = world->rigidBodies+bodyPartIdx;
-        Vec2 pos = GetBodyPos(body);
-        r32 angle = GetBodyAngle(body);
-
-        batch->colorState = vec4(0.0, 0.0, 0.0, 1.0);
-        PushOrientedLineRectangle2(batch, 
-                pos,
-                body->width+lineWidth,
-                body->height+lineWidth,
-                angle,
-                2,
-                texture);
-    }
-#endif
-
-    DrawGrid(batch, camera, 10.0, 1.0, squareRegion);
-    DrawGrid(batch, camera, 50.0, 2.0, squareRegion);
-    batch->colorState = vec4(1,1,1, 0.5);
-    PushCircle2(batch, vec2(0, 0), 3, circleRegion);
-
-    Vec4 creatureColor = vec4(1.0, 0.8, 0.8, 1.0);
-    for(ui32 creatureIdx = 0;
-            creatureIdx < world->nCreatures;
-            creatureIdx++)
-    {
-        Creature *creature = world->creatures+creatureIdx;
-        for(ui32 bodyPartIdx = 0;
-                bodyPartIdx < creature->nBodyParts;
-                bodyPartIdx++)
-        {
-            BodyPart *part = creature->bodyParts+bodyPartIdx;
-            RigidBody *body = part->body;
-            Vec2 pos = GetBodyPos(body);
-            r32 angle = GetBodyAngle(body);
-            r32 alpha = creatureIdx==(world->nCreatures-1) ? 1.0 : 0.2;
-            r32 shade = 1.0-part->body->drag;
-
-            if(creatureIdx==(world->nCreatures-1))
-            {
-                batch->colorState = vec4(0,0,0,1);
-                PushOrientedRectangle2(batch, 
-                        pos,
-                        body->width+lineWidth,
-                        body->height+lineWidth,
-                        angle,
-                        squareRegion);
-            }
-
-            batch->colorState = vec4(shade*creatureColor.x, 
-                    shade*creatureColor.y, 
-                    shade*creatureColor.z, 
-                    alpha);
-            PushOrientedRectangle2(batch, 
-                    pos,
-                    body->width,
-                    body->height,
-                    angle,
-                    squareRegion);
         }
     }
 }

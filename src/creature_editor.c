@@ -163,7 +163,7 @@ UpdateCreatureEditorScreen(AppState *appState,
     DrawGrid(batch, camera, 50, 2.0, squareRegion);
 
     // Check intersection with bodyparts.
-    ui32 intersectId;
+    ui32 intersectId = 0;
     if(!CreatureEditorIsEditing(editor))
     {
         for(ui32 bodyPartIdx = 0; 

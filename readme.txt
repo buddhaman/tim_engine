@@ -18,16 +18,22 @@ TODO BEFORE DEMO LAUNCH:
 
 ------Game Engine-------
 
-- Edit time in fake world screen.
-- Click on creature and show bodypart params.
+- Show internal clock as actual clock + value.
+- Set internal clocks in editor.
+- Show X sensor. Clamp value.
+- Click on creature and show bodypart params, sensors and actuators visualized.
 - Visualize GRU.
 - Mouse input to move camera.
+- Only show angles in tooltip. Make interface less messy.
 
+- Visualize fitness in world for first creature.
 - Calculate fitness per second.
+- Set fitness function before starting the simulation.
 - Make nuklear graph.
 
-- Set training function.
-- Pause simulation, click bodyparts and show all info.
+- Anti aliasing.
+
+- Draw on bodyparts. Create a bit of overhang. Select single bodypart to draw on always.
 
 - Serialization: load the creature defs and play.
 - Save entire trained brains.
@@ -39,9 +45,7 @@ TODO BEFORE DEMO LAUNCH:
 - Graph in nuklear gui? or in own gui
 - Make function for visualizing constraint without gui to reuse.
 
-- set parameters before training.
 - 2D lighting.
-- Only recalculate body positions when dirty.
 
 - Add icons for all edit buttons.
 
@@ -52,6 +56,8 @@ TODO BEFORE DEMO LAUNCH:
 
 DONE:
 
+- set parameters before training.
+- Edit time in fake world screen.
 - Keep focus on bodypart after editing.
 - Tooltips with explanation of settings.
 - Increase training time in fakeworldscreen.

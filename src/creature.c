@@ -16,6 +16,36 @@ CreatureAddBodyPart(FakeWorld *world,
     return part;
 }
 
+internal inline b32
+BodyPartPoint2Intersect(BodyPart *part, Vec2 point)
+{
+    OrientedBox bodyBox = GetRigidBodyBox(part->body);
+    return OrientedBoxPoint2Intersect(bodyBox.pos, bodyBox.dims, bodyBox.angle, point);
+}
+
+BodyPart *
+GetCreatureBodyPartAt(Creature *creature, Vec2 point)
+{
+    BodyPart *intersect = NULL;
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < creature->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPart *part = creature->bodyParts+bodyPartIdx;
+        if(BodyPartPoint2Intersect(part, point))
+        {
+            intersect = part;
+        }
+    }
+    return intersect;
+}
+
+internal inline Vec2
+GetBodyPartPos(BodyPart *part)
+{
+    return GetBodyPos(part->body);
+}
+
 RotaryMuscle *
 CreatureAddRotaryMuscle(FakeWorld *world, 
         Creature *creature, 
@@ -100,6 +130,14 @@ BuildCreature(FakeWorld *world,
     }
 }
 
+// No sine
+r32
+GetInternalClockValue(Creature *creature, ui32 clockIdx)
+{
+    return creature->phases[clockIdx] + 
+        creature->frequencies[clockIdx]*creature->internalClock*M_PI*2;
+}
+
 Creature *
 AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUnit *brain)
 {
@@ -113,6 +151,16 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
 
     creature->nRotaryMuscles = 0;
     creature->rotaryMuscles = world->rotaryMuscles+world->nRotaryMuscles;
+
+    creature->nInternalClocks = 2;
+    creature->internalClock = 0;
+    for(ui32 clockIdx = 0;
+            clockIdx < creature->nInternalClocks;
+            clockIdx++)
+    {
+        creature->phases[clockIdx] = 0;
+        creature->frequencies[clockIdx] = 1.0/(clockIdx+1);
+    }
 
     //creature->physicsGroup = world->physicsGroupCounter++;
     creature->physicsGroup = 1;
@@ -226,10 +274,13 @@ void
 UpdateCreature(FakeWorld *world, Creature *creature)
 {
     MinimalGatedUnit *brain = creature->brain;
-    creature->internalClock+=1.0/60.0;
     r32 drag = 0.2;
-    r32 input0 = sinf(4*creature->internalClock);
-    r32 input1 = sinf(8*creature->internalClock);
+
+    creature->internalClock+=1.0/60.0;
+    //r32 input0 = sinf(4*creature->internalClock);
+    //r32 input1 = sinf(8*creature->internalClock);
+    r32 input0 = sinf(GetInternalClockValue(creature, 0));
+    r32 input1 = sinf(GetInternalClockValue(creature, 1));
 
     brain->x.v[0] = input0;
     brain->x.v[1] = input1;

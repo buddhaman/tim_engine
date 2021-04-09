@@ -7,5 +7,12 @@ typedef struct
     r32 offset;     // Counterclockwise direction on edge.
 } BoxEdgeLocation;
 
+typedef struct
+{
+    Vec2 pos;
+    Vec2 dims;
+    r32 angle;
+} OrientedBox;
+
 
 

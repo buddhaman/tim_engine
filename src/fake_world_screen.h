@@ -16,6 +16,10 @@ typedef struct
     r32 avgFitness;
 
     Camera2D *camera;
+    
+    BodyPart *hitBodyPart;
+    Creature *selectedCreature;
+    BodyPart *selectedBodyPart;
 } FakeWorldScreen;
 
 #endif

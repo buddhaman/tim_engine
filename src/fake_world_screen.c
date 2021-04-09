@@ -1,10 +1,140 @@
 
-
-void AdjustFakeWorldTimeScale(FakeWorldScreen *screen, int upOrDown)
+void 
+AdjustFakeWorldTimeScale(FakeWorldScreen *screen, int upOrDown)
 {
     Assert(upOrDown==-1 || upOrDown==1);
     if(upOrDown==-1 && screen->stepsPerFrame >= 2) screen->stepsPerFrame/=2;
     if(upOrDown==1 && screen->stepsPerFrame < 1024) screen->stepsPerFrame*=2;
+}
+
+void
+SetFakeWorldSelection(FakeWorldScreen *screen,
+        Creature *creature, 
+        BodyPart *part)
+{
+    screen->selectedCreature = creature;
+    screen->selectedBodyPart = part;
+}
+
+void
+DrawBodyPart(SpriteBatch *batch, 
+        BodyPart *part,
+        Vec3 creatureColor,
+        r32 alpha,
+        AtlasRegion *texture)
+{
+    RigidBody *body = part->body;
+    Vec2 pos = GetBodyPos(body);
+    r32 angle = GetBodyAngle(body);
+    r32 shade = 1.0-part->body->drag;
+
+    batch->colorState = vec4(shade*creatureColor.x, 
+            shade*creatureColor.y, 
+            shade*creatureColor.z, 
+            alpha);
+    PushOrientedRectangle2(batch, 
+            pos,
+            body->width,
+            body->height,
+            angle,
+            texture);
+}
+
+void
+DrawClock(SpriteBatch *batch, 
+        Vec2 pos, 
+        r32 radius,
+        r32 radians, 
+        AtlasRegion *squareTexture,
+        AtlasRegion *circleTexture)
+{
+    r32 lineWidth = 4;
+    r32 c = cosf(radians);
+    r32 s = sinf(radians);
+
+    batch->colorState = vec4(0,0,0,1);
+    PushCircle2(batch, pos, radius+lineWidth, circleTexture);
+    batch->colorState = vec4(1,1,1,1);
+    PushCircle2(batch, pos, radius, circleTexture);
+    batch->colorState = vec4(0,0,0,1);
+    PushLine2(batch, 
+            pos, 
+            v2_add(pos, vec2(c*radius, s*radius)), 
+            lineWidth, 
+            squareTexture->pos, 
+            squareTexture->size);
+}
+
+// For now assumes batch has already begun.
+void
+DrawFakeWorld(FakeWorldScreen *screen, 
+        SpriteBatch *batch, 
+        Camera2D *camera, 
+        TextureAtlas *atlas)
+{
+    FakeWorld *world = screen->world;
+    AtlasRegion *circleRegion = atlas->regions;
+    AtlasRegion *squareRegion = atlas->regions+1;
+    r32 lineWidth = 2;
+
+#if 0
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < world->nRigidBodies;
+            bodyPartIdx++)
+    {
+        RigidBody *body = world->rigidBodies+bodyPartIdx;
+        Vec2 pos = GetBodyPos(body);
+        r32 angle = GetBodyAngle(body);
+
+        batch->colorState = vec4(0.0, 0.0, 0.0, 1.0);
+        PushOrientedLineRectangle2(batch, 
+                pos,
+                body->width+lineWidth,
+                body->height+lineWidth,
+                angle,
+                2,
+                texture);
+    }
+#endif
+
+    DrawGrid(batch, camera, 10.0, 1.0, squareRegion);
+    DrawGrid(batch, camera, 50.0, 2.0, squareRegion);
+    batch->colorState = vec4(1,1,1, 0.5);
+    PushCircle2(batch, vec2(0, 0), 3, circleRegion);
+
+    Vec3 creatureColor = vec3(1.0, 0.8, 0.8);
+    for(ui32 creatureIdx = 1;
+            creatureIdx < world->nCreatures;
+            creatureIdx++)
+    {
+        Creature *creature = world->creatures+creatureIdx;
+        r32 alpha = 0.2;
+        for(ui32 bodyPartIdx = 0;
+                bodyPartIdx < creature->nBodyParts;
+                bodyPartIdx++)
+        {
+            BodyPart *part = creature->bodyParts+bodyPartIdx;
+            DrawBodyPart(batch, part, creatureColor, alpha, squareRegion);
+        }
+    }
+    Creature *creature = world->creatures+0;
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < creature->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPart *part = creature->bodyParts+bodyPartIdx;
+        RigidBody *body = part->body;
+        Vec2 pos = GetBodyPos(body);
+        r32 angle = GetBodyAngle(body);
+        batch->colorState = vec4(0,0,0,1);
+        PushOrientedRectangle2(batch, 
+                pos,
+                body->width+lineWidth,
+                body->height+lineWidth,
+                angle,
+                squareRegion);
+        DrawBodyPart(batch, part, creatureColor, 1.0, squareRegion);
+    }
 }
 
 void
@@ -34,6 +164,7 @@ UpdateFakeWorldScreen(AppState *appState,
     {
         AdjustFakeWorldTimeScale(screen, 1);
     }
+
     UpdateCameraInput(appState, camera);
 
     // Do evolution
@@ -64,8 +195,13 @@ UpdateFakeWorldScreen(AppState *appState,
         }
     }
     
-    // Render world
+    // Update camera
     UpdateCamera2D(camera, appState);
+
+    Vec2 mousePos = camera->mousePos;
+
+    // Calculate bodypart intersection of first creature
+    screen->hitBodyPart = GetCreatureBodyPartAt(world->creatures, mousePos);
 
     glUseProgram(spriteShader->program);
     glEnable(GL_BLEND);
@@ -77,7 +213,7 @@ UpdateFakeWorldScreen(AppState *appState,
 
     BeginSpritebatch(batch);
 
-    DrawFakeWorld(world, batch, camera, defaultAtlas);
+    DrawFakeWorld(screen, batch, camera, defaultAtlas);
 
     EndSpritebatch(batch);
 
@@ -103,6 +239,18 @@ UpdateFakeWorldScreen(AppState *appState,
             squareRegion->pos,
             squareRegion->size);
 
+    if(screen->selectedCreature)
+    {
+        Creature *creature = screen->selectedCreature;
+        for(ui32 clockIdx = 0;
+                clockIdx < creature->nInternalClocks;
+                clockIdx++)
+        {
+            r32 radians = GetInternalClockValue(creature, clockIdx);
+            DrawClock(batch, vec2(screenWidth-200+60*clockIdx, 200), 20, radians, squareRegion, circleRegion);
+        }
+    }
+
     EndSpritebatch(batch);
 
     // Only text from here
@@ -118,13 +266,31 @@ UpdateFakeWorldScreen(AppState *appState,
             screen->avgFitness);
     DrawString2D(batch, fontRenderer, vec2(20, screenHeight-bottomBarHeight/2+8), info);
 
+    if(IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT))
+    {
+        if(screen->hitBodyPart)
+        {
+            // Only select first creature always for now.
+            SetFakeWorldSelection(screen, world->creatures, screen->hitBodyPart);
+        }
+        else
+        {
+            SetFakeWorldSelection(screen, NULL, NULL);
+        }
+    }
+    if(screen->selectedCreature)
+    {
+        Vec2 bodyPartPos = CameraToScreenPos(camera, appState, GetBodyPartPos(screen->selectedBodyPart));
+        DrawString2D(batch, fontRenderer, bodyPartPos, "hit");
+    }
+
     EndSpritebatch(batch);
 
     // Begin UI
     if(nk_begin(ctx, "Simulation", nk_rect(50, 50, 280, 400),
             NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE))
     {
-        nk_layout_row_static(ctx, 30, 30, 4);
+        nk_layout_row_static(ctx, 30, 40, 4);
 
         // Edit time
         if(nk_button_label(ctx, "<<"))
@@ -150,12 +316,12 @@ UpdateFakeWorldScreen(AppState *appState,
         r32 parameterScale = 1000.0;
 
         r32 deviationScaled = parameterScale * world->strategies->dev;
-        NKEditFloatPropertyWithTooltip(ctx, "Dev", "How much is each creature mutated.", 
+        NKEditFloatPropertyWithTooltip(ctx, "Dev", "How much is each creature mutated", 
                 1.0, &deviationScaled, parameterScale, 1.0, 1.0);
         world->strategies->dev = deviationScaled/parameterScale;
 
         r32 learningRateScaled = parameterScale*world->strategies->learningRate;
-        NKEditFloatPropertyWithTooltip(ctx, "Learning Rate", "How fast will genes adapt.", 
+        NKEditFloatPropertyWithTooltip(ctx, "Learning Rate", "How fast will genes adapt", 
                 1.0, &learningRateScaled, parameterScale, 1.0, 1.0);
         world->strategies->learningRate = learningRateScaled/parameterScale;
 

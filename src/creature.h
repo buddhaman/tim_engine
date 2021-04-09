@@ -24,8 +24,12 @@ struct BodyPart
 
 typedef struct
 {
-    r32 internalClock;
     ui32 physicsGroup;
+
+    r32 internalClock;
+    ui32 nInternalClocks;
+    r32 phases[4];
+    r32 frequencies[4];
 
     int nBodyParts;
     BodyPart *bodyParts;
