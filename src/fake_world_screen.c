@@ -40,6 +40,28 @@ DrawBodyPart(SpriteBatch *batch,
             texture);
 }
 
+internal inline void
+DrawVecR32(SpriteBatch *batch,
+        VecR32 *vec,
+        Vec2 pos, 
+        r32 size,
+        Vec3 negativeColor,
+        Vec3 positiveColor,
+        r32 maxAbs,
+        int xDir,
+        int yDir,
+        AtlasRegion *texture)
+{
+    for(ui32 i = 0; i < vec->n; i++)
+    {
+        r32 v = fabsf(vec->v[i])/maxAbs;
+        batch->colorState = vec->v[i] < 0 ? vec4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
+            : vec4(positiveColor.x*v, positiveColor.y*v, positiveColor.z*v, 1.0);
+        PushRect2(batch, vec2(pos.x+i*xDir*size, pos.y+i*yDir*size), 
+                vec2(size, size), texture->pos, texture->size);
+    }
+}
+
 void
 DrawClock(SpriteBatch *batch, 
         Vec2 pos, 
@@ -54,7 +76,7 @@ DrawClock(SpriteBatch *batch,
 
     batch->colorState = vec4(0,0,0,1);
     PushCircle2(batch, pos, radius+lineWidth, circleTexture);
-    batch->colorState = vec4(1,1,1,1);
+    batch->colorState = vec4(0.5,0.5,0.5,1);
     PushCircle2(batch, pos, radius, circleTexture);
     batch->colorState = vec4(0,0,0,1);
     PushLine2(batch, 
@@ -248,6 +270,46 @@ UpdateFakeWorldScreen(AppState *appState,
         {
             r32 radians = GetInternalClockValue(creature, clockIdx);
             DrawClock(batch, vec2(screenWidth-200+60*clockIdx, 200), 20, radians, squareRegion, circleRegion);
+            DrawVecR32(batch,
+                    &creature->brain->x,
+                    vec2(screenWidth-200, 10),
+                    10,
+                    vec3(1, 0, 0),
+                    vec3(0, 1, 0),
+                    1.0,
+                    1, 
+                    0, 
+                    squareRegion);
+            DrawVecR32(batch,
+                    &creature->brain->h,
+                    vec2(screenWidth-200, 20),
+                    10,
+                    vec3(1, 0, 0),
+                    vec3(0, 1, 0),
+                    1.0,
+                    1, 
+                    0, 
+                    squareRegion);
+            DrawVecR32(batch,
+                    &creature->brain->f,
+                    vec2(screenWidth-200, 30),
+                    10,
+                    vec3(1, 0, 0),
+                    vec3(0, 1, 0),
+                    1.0,
+                    1, 
+                    0, 
+                    squareRegion);
+            DrawVecR32(batch,
+                    &creature->brain->hc,
+                    vec2(screenWidth-200, 40),
+                    10,
+                    vec3(1, 0, 0),
+                    vec3(0, 1, 0),
+                    1.0,
+                    1, 
+                    0, 
+                    squareRegion);
         }
     }
 
@@ -266,7 +328,7 @@ UpdateFakeWorldScreen(AppState *appState,
             screen->avgFitness);
     DrawString2D(batch, fontRenderer, vec2(20, screenHeight-bottomBarHeight/2+8), info);
 
-    if(IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT))
+    if(IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT) && !screen->isGuiInputCaptured)
     {
         if(screen->hitBodyPart)
         {
@@ -342,6 +404,7 @@ UpdateFakeWorldScreen(AppState *appState,
 
     }
     nk_end(ctx);
+    screen->isGuiInputCaptured = nk_window_is_any_hovered(ctx);
 }
 
 void 

@@ -539,60 +539,64 @@ UpdateCreatureEditorScreen(AppState *appState,
                 EditorRemoveBodyPart(editor, editor->selectedId);
             }
         }
-        if(editor->selectedId)
+        if(nk_tree_push(ctx, NK_TREE_TAB, "Bodypart Properties", NK_MAXIMIZED))
         {
-            BodyPartDefinition *part = GetBodyPartById(def, editor->selectedId);
-            b32 isEdited = 0;
-            b32 isBrainEdited = 0;
-
-            nk_labelf(ctx, NK_TEXT_LEFT, "BodyPart %d", part->id);
-
-            if(NKEditRadInDegProperty(ctx, "Angle", -M_PI, 
-                        part->connectionId ? &part->localAngle : &part->angle, 
-                        M_PI, 1.0, 1.0)) 
-                isEdited = 1;
-            if(NKEditFloatProperty(ctx, "Length", 1, &part->width, 10000, 1.0, 1.0)) 
-                isEdited = 1;
-            if(NKEditFloatProperty(ctx, "Width", 1, &part->height, 10000, 1.0, 1.0)) 
-                isEdited = 1;
-            if(NKEditRadInDegProperty(ctx, "Muscle min angle", -M_PI, &part->minAngle, M_PI, 1.0, 1.0)) 
-                isEdited = 1;
-            if(NKEditRadInDegProperty(ctx, "Muscle max angle", -M_PI, &part->maxAngle, M_PI, 1.0, 1.0)) 
-                isEdited = 1;
-            nk_labelf(ctx, NK_TEXT_LEFT, "Center: (%.2f %.2f)", part->pos.x, part->pos.y);
-
-            if(NKEditCreatureIO(ctx, "Abs X pos", 
-                        "This bodypart can sense how much it deviates from the y-axis",
-                        &part->hasAbsoluteXPositionInput, 
-                        part->absoluteXPositionInputIdx)) isBrainEdited = 1;
-            if(NKEditCreatureIO(ctx, "Abs Y pos", 
-                        "This bodypart can sense how much it deviates from the x-axis",
-                        &part->hasAbsoluteYPositionInput, 
-                        part->absoluteYPositionInputIdx)) isBrainEdited = 1;
-            if(NKEditCreatureIO(ctx, "Drag", 
-                        "This bodypart can adjust its friction",
-                        &part->hasDragOutput, 
-                        part->dragOutputIdx)) isBrainEdited = 1;
-
-            // Torso cannot have a rotary muscle.
-            if(part->connectionId)
+            if(editor->selectedId)
             {
-                if(NKEditCreatureIO(ctx, "Rotary Muscle", 
-                            "This bodypart can move",
-                            &part->hasRotaryMuscleOutput, 
-                            part->rotaryMuscleOutputIdx)) isBrainEdited = 1;
-            }
+                BodyPartDefinition *part = GetBodyPartById(def, editor->selectedId);
+                b32 isEdited = 0;
+                b32 isBrainEdited = 0;
 
-            nk_layout_row_dynamic(ctx, 30, 1);
+                nk_labelf(ctx, NK_TEXT_LEFT, "BodyPart %d", part->id);
 
-            if(isEdited)
-            {
-                RecalculateSubNodeBodyParts(def, def->bodyParts);
+                if(NKEditRadInDegProperty(ctx, "Angle", -M_PI, 
+                            part->connectionId ? &part->localAngle : &part->angle, 
+                            M_PI, 1.0, 1.0)) 
+                    isEdited = 1;
+                if(NKEditFloatProperty(ctx, "Length", 1, &part->width, 10000, 1.0, 1.0)) 
+                    isEdited = 1;
+                if(NKEditFloatProperty(ctx, "Width", 1, &part->height, 10000, 1.0, 1.0)) 
+                    isEdited = 1;
+                if(NKEditRadInDegProperty(ctx, "Muscle min angle", -M_PI, &part->minAngle, M_PI, 1.0, 1.0)) 
+                    isEdited = 1;
+                if(NKEditRadInDegProperty(ctx, "Muscle max angle", -M_PI, &part->maxAngle, M_PI, 1.0, 1.0)) 
+                    isEdited = 1;
+                nk_labelf(ctx, NK_TEXT_LEFT, "Center: (%.2f %.2f)", part->pos.x, part->pos.y);
+
+                if(NKEditCreatureIO(ctx, "Abs X pos", 
+                            "This bodypart can sense how much it deviates from the y-axis",
+                            &part->hasAbsoluteXPositionInput, 
+                            part->absoluteXPositionInputIdx)) isBrainEdited = 1;
+                if(NKEditCreatureIO(ctx, "Abs Y pos", 
+                            "This bodypart can sense how much it deviates from the x-axis",
+                            &part->hasAbsoluteYPositionInput, 
+                            part->absoluteYPositionInputIdx)) isBrainEdited = 1;
+                if(NKEditCreatureIO(ctx, "Drag", 
+                            "This bodypart can adjust its friction",
+                            &part->hasDragOutput, 
+                            part->dragOutputIdx)) isBrainEdited = 1;
+
+                // Torso cannot have a rotary muscle.
+                if(part->connectionId)
+                {
+                    if(NKEditCreatureIO(ctx, "Rotary Muscle", 
+                                "This bodypart can move",
+                                &part->hasRotaryMuscleOutput, 
+                                part->rotaryMuscleOutputIdx)) isBrainEdited = 1;
+                }
+
+                nk_layout_row_dynamic(ctx, 30, 1);
+
+                if(isEdited)
+                {
+                    RecalculateSubNodeBodyParts(def, def->bodyParts);
+                }
+                if(isBrainEdited)
+                {
+                    AssignBrainIO(def);
+                }
             }
-            if(isBrainEdited)
-            {
-                AssignBrainIO(def);
-            }
+            nk_tree_pop(ctx);
         }
         if(nk_tree_push(ctx, NK_TREE_TAB, "Brain Properties", NK_MINIMIZED))
         {

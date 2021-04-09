@@ -20,6 +20,9 @@ typedef struct
     BodyPart *hitBodyPart;
     Creature *selectedCreature;
     BodyPart *selectedBodyPart;
+
+    b32 isGuiInputCaptured;
+
 } FakeWorldScreen;
 
 #endif

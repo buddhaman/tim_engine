@@ -16,13 +16,16 @@ TODO BEFORE DEMO LAUNCH:
 - Visualize GRU,
 - Think about nice way to render creatures, or at least add googly eyes.
 
-------Game Engine-------
+------ Evolution Sim -------
 
-- Show internal clock as actual clock + value.
+- Draw vector with colors.
+- Draw matrix with colors.
+- Show matrix name on hover.
+- Show all inputs clearly and highlight in the world when you hover over it in the brain and vice versa
+  (when in brain vis mode).
+- Visualize GRU.
 - Set internal clocks in editor.
 - Show X sensor. Clamp value.
-- Click on creature and show bodypart params, sensors and actuators visualized.
-- Visualize GRU.
 - Mouse input to move camera.
 - Only show angles in tooltip. Make interface less messy.
 
@@ -47,6 +50,9 @@ TODO BEFORE DEMO LAUNCH:
 
 - 2D lighting.
 
+- Training mode: Get body close to ball. Implement with tournaments just like football simulation.
+- Training mode: Walk with gravity.
+
 - Add icons for all edit buttons.
 
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
@@ -56,6 +62,7 @@ TODO BEFORE DEMO LAUNCH:
 
 DONE:
 
+- Show internal clock as actual clock + value.
 - set parameters before training.
 - Edit time in fake world screen.
 - Keep focus on bodypart after editing.
