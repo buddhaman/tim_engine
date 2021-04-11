@@ -127,7 +127,7 @@ RecalculateSubNodeBodyParts(CreatureDefinition *def,
 void
 AssignBrainIO(CreatureDefinition *def)
 {
-    ui32 atInputIdx = 2;
+    ui32 atInputIdx = def->nInternalClocks;
     ui32 atOutputIdx = 0;
     for(ui32 bodyPartIdx = 0;
             bodyPartIdx < def->nBodyParts;

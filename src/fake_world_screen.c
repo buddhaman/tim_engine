@@ -62,6 +62,44 @@ DrawVecR32(SpriteBatch *batch,
     }
 }
 
+internal inline void
+DrawMatR32(SpriteBatch *batch,
+        MatR32 *mat,
+        Vec2 pos, 
+        r32 size,
+        Vec3 negativeColor,
+        Vec3 positiveColor,
+        r32 maxAbs,
+        AtlasRegion *texture)
+{
+    for(ui32 i = 0; i < mat->w; i++)
+    for(ui32 j = 0; j < mat->h; j++)
+    {
+        r32 m = mat->m[i+mat->w*j];
+        r32 v = fabsf(m)/maxAbs;
+        batch->colorState =  m < 0 ? vec4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
+            : vec4(positiveColor.x*v, positiveColor.y*v, positiveColor.z*v, 1.0);
+        PushRect2(batch, vec2(pos.x+i*size, pos.y+j*size), 
+                vec2(size, size), texture->pos, texture->size);
+    }
+}
+
+internal inline Vec2
+DrawBrainVector(SpriteBatch *batch, VecR32 *vec, Vec2 pos, r32 size, r32 maxAbs, int xDir, int yDir, AtlasRegion *texture)
+{
+    DrawVecR32(batch, vec, pos, size, vec3(1,0,0), vec3(0,1,0), maxAbs, xDir, yDir, texture);
+    r32 w = xDir!=0 ? vec->n*size*xDir : size;
+    r32 h = yDir!=0 ? vec->n*size*yDir : size;
+    return vec2(pos.x+w, pos.y+h);
+}
+
+internal inline Vec2
+DrawBrainMatrix(SpriteBatch *batch, MatR32 *mat, Vec2 pos, r32 size, r32 maxAbs, AtlasRegion *texture)
+{
+    DrawMatR32(batch, mat, pos, size, vec3(1,0,0), vec3(0,1,0), maxAbs, texture);
+    return vec2(pos.x+mat->w*size, pos.y+mat->h*size);
+}
+
 void
 DrawClock(SpriteBatch *batch, 
         Vec2 pos, 
@@ -173,9 +211,11 @@ UpdateFakeWorldScreen(AppState *appState,
     TextureAtlas *defaultAtlas = renderer->defaultAtlas;
     Shader *spriteShader = renderer->spriteShader;
 
+    char toolTip[512];
+    (void)toolTip;
+
     AtlasRegion *circleRegion = defaultAtlas->regions;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
-    (void)circleRegion;
 
     // Adjust timescale
     if(IsKeyActionJustDown(appState, ACTION_Q))
@@ -216,7 +256,6 @@ UpdateFakeWorldScreen(AppState *appState,
             }
         }
     }
-    
     // Update camera
     UpdateCamera2D(camera, appState);
 
@@ -264,53 +303,61 @@ UpdateFakeWorldScreen(AppState *appState,
     if(screen->selectedCreature)
     {
         Creature *creature = screen->selectedCreature;
+        MinimalGatedUnit *brain = creature->brain;
+
+        r32 size = 10.0;
+        r32 maxAbs = 1.0;
+        r32 pad = 3.0;
+        r32 totalBrainWidth = (brain->Wf.w+brain->Uf.w+1)*size+pad*2;
+        r32 leftX = screenWidth - totalBrainWidth - 10;
+        r32 atX = leftX;
+        r32 atY = 10;
+        r32 maxRowY = 0;
+        Vec2 lastPos;
+
+        lastPos = DrawBrainMatrix(batch, &brain->Wf, vec2(atX, atY), size, maxAbs, squareRegion);
+        atX = lastPos.x+pad;
+        maxRowY = Max(maxRowY, lastPos.y);
+
+        lastPos = DrawBrainMatrix(batch, &brain->Uf, vec2(atX, atY), size, maxAbs, squareRegion);
+        atX = lastPos.x+pad;
+        maxRowY = Max(maxRowY, lastPos.y);
+
+        lastPos = DrawBrainVector(batch, &brain->bf, vec2(atX, atY), size, maxAbs, 0, 1, squareRegion);
+        atX = leftX;
+        atY = maxRowY+pad;
+        maxRowY = 0;
+
+        lastPos = DrawBrainMatrix(batch, &brain->Wh, vec2(atX, atY), size, maxAbs, squareRegion);
+        atX = lastPos.x+pad;
+        maxRowY = Max(maxRowY, lastPos.y);
+
+        lastPos = DrawBrainMatrix(batch, &brain->Uh, vec2(atX, atY), size, maxAbs, squareRegion);
+        atX = lastPos.x+pad;
+        maxRowY = Max(maxRowY, lastPos.y);
+
+        lastPos = DrawBrainVector(batch, &brain->bh, vec2(atX, atY), size, maxAbs, 0, 1, squareRegion);
+        atX = leftX;
+        atY = maxRowY+pad;
+        maxRowY = 0;
+
+        DrawBrainVector(batch, &brain->x, vec2(atX, atY), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(batch, &brain->h, vec2(atX, atY+size), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(batch, &brain->hc, vec2(atX, atY+size*2), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(batch, &brain->f, vec2(atX, atY+size*3), size, 1.0, 1, 0, squareRegion);
+        atY+=size*4+pad*3;
+
+        // Draw clocks
         for(ui32 clockIdx = 0;
                 clockIdx < creature->nInternalClocks;
                 clockIdx++)
         {
             r32 radians = GetInternalClockValue(creature, clockIdx);
-            DrawClock(batch, vec2(screenWidth-200+60*clockIdx, 200), 20, radians, squareRegion, circleRegion);
-            DrawVecR32(batch,
-                    &creature->brain->x,
-                    vec2(screenWidth-200, 10),
-                    10,
-                    vec3(1, 0, 0),
-                    vec3(0, 1, 0),
-                    1.0,
-                    1, 
-                    0, 
-                    squareRegion);
-            DrawVecR32(batch,
-                    &creature->brain->h,
-                    vec2(screenWidth-200, 20),
-                    10,
-                    vec3(1, 0, 0),
-                    vec3(0, 1, 0),
-                    1.0,
-                    1, 
-                    0, 
-                    squareRegion);
-            DrawVecR32(batch,
-                    &creature->brain->f,
-                    vec2(screenWidth-200, 30),
-                    10,
-                    vec3(1, 0, 0),
-                    vec3(0, 1, 0),
-                    1.0,
-                    1, 
-                    0, 
-                    squareRegion);
-            DrawVecR32(batch,
-                    &creature->brain->hc,
-                    vec2(screenWidth-200, 40),
-                    10,
-                    vec3(1, 0, 0),
-                    vec3(0, 1, 0),
-                    1.0,
-                    1, 
-                    0, 
-                    squareRegion);
+            r32 radius = 20;
+            DrawClock(batch, vec2(atX+radius+radius*2*clockIdx+pad*2*clockIdx, atY+radius), 
+                    radius, radians, squareRegion, circleRegion);
         }
+
     }
 
     EndSpritebatch(batch);
@@ -327,6 +374,12 @@ UpdateFakeWorldScreen(AppState *appState,
             screen->ticksPerGeneration, 
             screen->avgFitness);
     DrawString2D(batch, fontRenderer, vec2(20, screenHeight-bottomBarHeight/2+8), info);
+
+    // Draw tooltip
+    if(toolTip[0])
+    {
+        DrawString2D(batch, fontRenderer, screenCamera->mousePos, toolTip);
+    }
 
     if(IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT) && !screen->isGuiInputCaptured)
     {

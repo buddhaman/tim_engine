@@ -123,14 +123,22 @@ UpdateCreatureEditorScreen(AppState *appState,
     SpriteBatch *batch = renderer->batch;
     FontRenderer *fontRenderer = renderer->fontRenderer;
     TextureAtlas *defaultAtlas = renderer->defaultAtlas;
+    TextureAtlas *creatureAtlas = renderer->creatureTextureAtlas;
     Shader *spriteShader = renderer->spriteShader;
     CreatureDefinition *def = editor->creatureDefinition;
     Gui *gui = editor->gui;
 
-    AtlasRegion *circleRegion = defaultAtlas->regions;
+    AtlasRegion *circleRegion = defaultAtlas->regions+0;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
 
-    Vec4 creatureColor = RGBAToVec4(0x7c4d35ff);
+    // Test. Draw on texture
+    DrawCircleOnTexture(creatureAtlas, vec2(RandomR32(0,1), RandomR32(0,1)), 0.05);
+    
+    // Different atlas
+    AtlasRegion *creatureRegion = creatureAtlas->regions+0;
+
+    //Vec4 creatureColor = RGBAToVec4(0x7c4d35ff);
+    Vec4 creatureColor = vec4(1.0, 1.0, 1.0, 1.0);
     
     // Key and mouse input
     editor->isInputCaptured = nk_window_is_any_hovered(ctx);
@@ -182,10 +190,6 @@ UpdateCreatureEditorScreen(AppState *appState,
     char info[256];
     memset(info, 0, 256);
 
-    char angleInfo[256];
-    memset(angleInfo, 0, 256);
-    Vec2 angleInfoPos = vec2(0,0);
-
     if(editor->editState==EDIT_ADD_BODYPART_FIND_EDGE)
     {
         if(EditorCanAddBodyPart(editor)) 
@@ -224,9 +228,16 @@ UpdateCreatureEditorScreen(AppState *appState,
                 sprintf(info, "offset = %.2f, (%d, %d)", minLocation.offset, minLocation.xEdge, minLocation.yEdge);
                 if(IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT))
                 {
-                    editor->bodyPartLocation = minLocation;
-                    editor->attachTo = attachTo;
-                    editor->editState=EDIT_ADD_BODYPART_PLACE;
+                    if(editor->isInputCaptured)
+                    {
+                        editor->editState = EDIT_CREATURE_NONE;
+                    }
+                    else
+                    {
+                        editor->bodyPartLocation = minLocation;
+                        editor->attachTo = attachTo;
+                        editor->editState=EDIT_ADD_BODYPART_PLACE;
+                    }
                 }
             }
         }
@@ -289,6 +300,11 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
 
+    // Flush and change to creature texture.
+    EndSpritebatch(batch);
+    BeginSpritebatch(batch);
+    glBindTexture(GL_TEXTURE_2D, renderer->creatureTextureAtlas->textureHandle);
+
     for(ui32 bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
@@ -301,8 +317,13 @@ UpdateCreatureEditorScreen(AppState *appState,
                 part->width,
                 part->height,
                 part->angle,
-                squareRegion);
+                creatureRegion);
     }
+
+    EndSpritebatch(batch);
+
+    BeginSpritebatch(batch);
+    glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
 
     for(ui32 bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts;
@@ -375,8 +396,6 @@ UpdateCreatureEditorScreen(AppState *appState,
             Vec2 to = v2_add(pivotPoint, v2_polar(absAngle, width));
             r32 edgeAngle = GetAbsoluteEdgeAngle(parent, part->xEdge, part->yEdge);
             Vec2 normalPoint = v2_add(pivotPoint, v2_polar(edgeAngle, 50));
-            sprintf(angleInfo, "%.1f deg", RadToDeg(part->localAngle));
-            angleInfoPos = v2_add(pivotPoint, vec2(10, 10));
 
             // Do length and rotation dragg button
             hitRotationAndLengthDragButton = DoAngleLengthButton(gui,
@@ -387,6 +406,10 @@ UpdateCreatureEditorScreen(AppState *appState,
                     editor->editState==EDIT_CREATURE_ROTATION_AND_LENGTH);
             part->width = SnapDim(editor, width);
             part->localAngle = SnapAngle(editor, GetLocalAngleFromAbsoluteAngle(def, part, absAngle));
+            if(hitRotationAndLengthDragButton)
+            {
+                sprintf(info, "%.1f deg", RadToDeg(part->localAngle));
+            }
 
             batch->colorState = vec4(1,1,1,1);
             PushLine2(batch, pivotPoint, to, 1, squareRegion->pos, squareRegion->size);
@@ -471,13 +494,6 @@ UpdateCreatureEditorScreen(AppState *appState,
     {
         DrawString2D(batch, fontRenderer, screenCamera->mousePos, info);
     }
-    if(angleInfo[0])
-    {
-        Vec2 pos = CameraToScreenPos(camera, appState, angleInfoPos);
-        DrawString2D(batch, fontRenderer, 
-                pos,
-                angleInfo);
-    }
 
     EndSpritebatch(batch);
 
@@ -561,8 +577,8 @@ UpdateCreatureEditorScreen(AppState *appState,
                     isEdited = 1;
                 if(NKEditRadInDegProperty(ctx, "Muscle max angle", -M_PI, &part->maxAngle, M_PI, 1.0, 1.0)) 
                     isEdited = 1;
-                nk_labelf(ctx, NK_TEXT_LEFT, "Center: (%.2f %.2f)", part->pos.x, part->pos.y);
 
+                nk_label(ctx, "Sensors", NK_TEXT_LEFT);
                 if(NKEditCreatureIO(ctx, "Abs X pos", 
                             "This bodypart can sense how much it deviates from the y-axis",
                             &part->hasAbsoluteXPositionInput, 
@@ -571,6 +587,10 @@ UpdateCreatureEditorScreen(AppState *appState,
                             "This bodypart can sense how much it deviates from the x-axis",
                             &part->hasAbsoluteYPositionInput, 
                             part->absoluteYPositionInputIdx)) isBrainEdited = 1;
+
+                nk_layout_row_dynamic(ctx, 30, 1);
+                nk_label(ctx, "Actuators", NK_TEXT_LEFT);
+
                 if(NKEditCreatureIO(ctx, "Drag", 
                             "This bodypart can adjust its friction",
                             &part->hasDragOutput, 
@@ -605,6 +625,12 @@ UpdateCreatureEditorScreen(AppState *appState,
             nk_labelf(ctx, NK_TEXT_LEFT, "Outputs : %u", def->nOutputs);
             nk_labelf(ctx, NK_TEXT_LEFT, "Hidden : %u", def->nHidden);
             nk_labelf(ctx, NK_TEXT_LEFT, "Gene Size : %u", def->geneSize);
+            int nInternalClocks = nk_propertyi(ctx, "Internal Clocks", 0, def->nInternalClocks, 4, 1, 1);
+            if(nInternalClocks != def->nInternalClocks)
+            {
+                def->nInternalClocks = nInternalClocks;
+                AssignBrainIO(def);
+            }
             nk_tree_pop(ctx);
         }
         if(nk_tree_push(ctx, NK_TREE_TAB, "Simulation Settings", NK_MAXIMIZED))
@@ -661,6 +687,7 @@ InitCreatureEditorScreen(AppState *appState,
     editor->learningRate = 0.03;
     editor->deviation = 0.003;
 
+    editor->creatureDefinition->nInternalClocks = 2;
     editor->idCounter = 1;
     BodyPartDefinition *torso = editor->creatureDefinition->bodyParts+editor->creatureDefinition->nBodyParts++;
     torso->id = editor->idCounter++;

@@ -18,16 +18,10 @@ TODO BEFORE DEMO LAUNCH:
 
 ------ Evolution Sim -------
 
-- Draw vector with colors.
-- Draw matrix with colors.
-- Show matrix name on hover.
-- Show all inputs clearly and highlight in the world when you hover over it in the brain and vice versa
-  (when in brain vis mode).
-- Visualize GRU.
-- Set internal clocks in editor.
-- Show X sensor. Clamp value.
+- Generate random texture and draw creature with random textures.
+- Let user draw on texture.
 - Mouse input to move camera.
-- Only show angles in tooltip. Make interface less messy.
+- Gray out buttons when action is not available.
 
 - Visualize fitness in world for first creature.
 - Calculate fitness per second.
@@ -44,7 +38,11 @@ TODO BEFORE DEMO LAUNCH:
 - Generate textures with noise.
 - Add googly eyes.
 - Serialization: Pull in json? library and save the creature defs.
+- Show all inputs clearly and highlight in the world when you hover over it in the brain and vice versa
+  (when in brain vis mode).
 
+- Make mouse tooltip.
+- Show matrix name on hover in mouse tooltip.
 - Graph in nuklear gui? or in own gui
 - Make function for visualizing constraint without gui to reuse.
 
@@ -62,6 +60,13 @@ TODO BEFORE DEMO LAUNCH:
 
 DONE:
 
+- Make difference between sensors and actuators more clear.
+- Set internal clocks in editor.
+- Only show angles in tooltip. Make interface less messy.
+- Fix bug that draws ghost limb when clicking in ui.
+- Visualize GRU.
+- Draw vector with colors.
+- Draw matrix with colors.
 - Show internal clock as actual clock + value.
 - set parameters before training.
 - Edit time in fake world screen.

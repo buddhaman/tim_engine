@@ -35,18 +35,45 @@ NormalizePositions(TextureAtlas *atlas, int totalWidth, int totalHeight)
         AtlasRegion *region = atlas->regions+atlasIdx;
         region->pos = vec2(region->x/((r32)totalWidth), region->y/((r32)totalHeight));
         region->size = vec2(region->width/((r32)totalWidth), region->height/((r32)totalHeight));
-#if 0
-        DebugOut("%d %d %d %d -> %f %f %f %f", 
-                region->x,
-                region->y,
-                region->width,
-                region->height,
-                region->pos.x,
-                region->pos.y,
-                region->size.x,
-                region->size.y);
-#endif
     }
+}
+
+// Assume square texture
+void
+DrawCircleOnTexture(TextureAtlas *atlas, Vec2 uvCenter, r32 radius)
+{
+    // First draw single red pixel
+    ui32 x = (ui32)(uvCenter.x*atlas->width);
+    ui32 y = (ui32)(uvCenter.y*atlas->height);
+    atlas->image[x+atlas->width*y] = 0xFF0000FF;
+    glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlas->width, atlas->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, atlas->image);
+}
+
+TextureAtlas *
+MakeRandomTextureAtlas(MemoryArena *arena)
+{
+    TextureAtlas *atlas = PushStruct(arena, TextureAtlas);
+    InitAtlas(arena, atlas, 2);
+    ui32 width = 128;
+    ui32 height = 128;
+    ui32 *image = PushAndZeroArray(arena, ui32, width*height);
+    atlas->image = image;
+    atlas->width = width;
+    atlas->height = height;
+    for(int y = 0; y < width; y++)
+    for(int x = 0; x < height; x++)
+    {
+        ui8 r = 255*(sinf(x*0.1)*0.5+0.5);
+        ui8 g = 255*(cosf(y*0.1)*0.5+0.5);
+        ui8 b = 255;
+        image[x+y*width] = r + (g << 8) + (b << 16) +(255U << 24);
+    }
+    glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+    AddAtlasRegion(atlas, 0, 0, width, height);
+    NormalizePositions(atlas, width, height);
+    return atlas;
 }
 
 TextureAtlas *

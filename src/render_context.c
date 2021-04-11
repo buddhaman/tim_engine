@@ -7,6 +7,7 @@ InitRenderContext(RenderContext *renderContext, MemoryArena *arena)
 
     // Init simple textureatlas
     renderContext->defaultAtlas = MakeDefaultTexture(arena, 256);
+    renderContext->creatureTextureAtlas = MakeRandomTextureAtlas(arena);
 
     renderContext->spriteShader = PushStruct(arena, Shader);
     InitShader(renderContext->spriteShader, "shaders/sprite.vert", "shaders/sprite.frag");

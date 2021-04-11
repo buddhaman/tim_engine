@@ -12,6 +12,12 @@ typedef struct
 
 typedef struct
 {
+    // Optional
+    ui32 width;
+    ui32 height;
+    ui32 *image;
+
+    // Not optional
     ui32 textureHandle;
     int maxRegions;
     int nRegions;

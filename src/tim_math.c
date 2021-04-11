@@ -6,6 +6,12 @@ RandomR32(r32 min, r32 max)
     return min + (max - min)*(random()%RAND_MAX)/RAND_MAX;
 }
 
+int
+RandomUI32(ui32 min, ui32 max)
+{
+    return min + (random()%(max-min));
+}
+
 r32
 Sign(r32 x)
 {

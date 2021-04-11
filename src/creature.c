@@ -152,7 +152,7 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
     creature->nRotaryMuscles = 0;
     creature->rotaryMuscles = world->rotaryMuscles+world->nRotaryMuscles;
 
-    creature->nInternalClocks = 2;
+    creature->nInternalClocks = def->nInternalClocks;
     creature->internalClock = 0;
     for(ui32 clockIdx = 0;
             clockIdx < creature->nInternalClocks;
@@ -263,7 +263,6 @@ FitnessStrictlyMoveRight(Creature *creature)
     return minX - maxY;
 }
 
-
 r32
 CreatureGetFitness(Creature *creature)
 {
@@ -279,11 +278,15 @@ UpdateCreature(FakeWorld *world, Creature *creature)
     creature->internalClock+=1.0/60.0;
     //r32 input0 = sinf(4*creature->internalClock);
     //r32 input1 = sinf(8*creature->internalClock);
-    r32 input0 = sinf(GetInternalClockValue(creature, 0));
-    r32 input1 = sinf(GetInternalClockValue(creature, 1));
+    //r32 input0 = sinf(GetInternalClockValue(creature, 0));
+    //r32 input1 = sinf(GetInternalClockValue(creature, 1));
 
-    brain->x.v[0] = input0;
-    brain->x.v[1] = input1;
+    for(ui32 internalClockIdx = 0;
+            internalClockIdx < creature->nInternalClocks;
+            internalClockIdx++)
+    {
+        brain->x.v[internalClockIdx] = sinf(GetInternalClockValue(creature, internalClockIdx));
+    }
 
     for(ui32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
