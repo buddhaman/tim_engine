@@ -79,22 +79,6 @@ GetSubNodeBodyParts(CreatureDefinition *def,
     return counter;
 }
 
-// Also removes all subnodes
-void
-RemoveBodyPart(CreatureDefinition *def, ui32 id)
-{
-    BodyPartDefinition *parent = GetBodyPartById(def, id);
-    ui32 parts[def->nBodyParts];
-    ui32 nParts = GetSubNodeBodyPartsById(def, parent, parts);
-    for(ui32 bodyPartIdx = 0;
-            bodyPartIdx < nParts;
-            bodyPartIdx++)
-    {
-        RemoveBodyPart(def, parts[bodyPartIdx]);
-    }
-    ArrayRemoveElement(def->bodyParts, sizeof(BodyPartDefinition), def->nBodyParts--, parent);
-}
-
 void
 RecalculateSubNodeBodyParts(CreatureDefinition *def,
         BodyPartDefinition *parent)
@@ -121,7 +105,6 @@ RecalculateSubNodeBodyParts(CreatureDefinition *def,
         subPart->angle = totalAngle;
         RecalculateSubNodeBodyParts(def, subPart);
     }
-    return;
 }
 
 void

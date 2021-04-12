@@ -85,6 +85,8 @@ InitSpriteBatch(SpriteBatch *batch, ui32 maxVertices, MemoryArena *arena)
 internal inline void
 BeginSpritebatch(SpriteBatch *batch)
 {
+    Assert(!batch->isDrawing);
+    batch->isDrawing = 1;
     batch->nVertices = 0;
     batch->nIndices = 0;
 }
@@ -92,6 +94,8 @@ BeginSpritebatch(SpriteBatch *batch)
 internal inline void
 EndSpritebatch(SpriteBatch *batch)
 {
+    Assert(batch->isDrawing);
+    batch->isDrawing = 0;
     glBindVertexArray(batch->vao);
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo);
     glBufferData(GL_ARRAY_BUFFER, batch->nVertices*batch->stride*sizeof(r32), 

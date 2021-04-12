@@ -23,6 +23,7 @@ typedef struct
     ui16 *indexBuffer;
 
     Vec4 colorState;
+    b32 isDrawing;
 } SpriteBatch;
 
 typedef struct

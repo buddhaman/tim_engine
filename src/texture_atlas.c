@@ -8,10 +8,7 @@ InitAtlas(MemoryArena *arena, TextureAtlas *atlas, int maxRegions)
 
     glGenTextures(1, &atlas->textureHandle);
     glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 }
 
 AtlasRegion *
@@ -40,23 +37,58 @@ NormalizePositions(TextureAtlas *atlas, int totalWidth, int totalHeight)
 
 // Assume square texture
 void
-DrawCircleOnTexture(TextureAtlas *atlas, Vec2 uvCenter, r32 radius)
+DrawCircleOnTexture(TextureAtlas *atlas, Vec2 uvCenter, r32 radius, ui32 color)
 {
-    // First draw single red pixel
-    ui32 x = (ui32)(uvCenter.x*atlas->width);
-    ui32 y = (ui32)(uvCenter.y*atlas->height);
-    atlas->image[x+atlas->width*y] = 0xFF0000FF;
+    r32 pxWidth = 1.0/atlas->width;
+    r32 pxHeight = 1.0/atlas->height;
+    int startX = round((uvCenter.x-radius)*atlas->width);
+    int startY = round((uvCenter.y-radius)*atlas->height);
+    startX = Clamp(0, startX, atlas->width);
+    startY = Clamp(0, startY, atlas->height);
+    int endX = round((uvCenter.x+radius)*atlas->width);
+    int endY = round((uvCenter.y+radius)*atlas->height);
+    endX = Clamp(0, endX, atlas->width);
+    endY = Clamp(0, endY, atlas->height);
+    int w = endX-startX;
+    int h = endY-startY;
+
+    if(w==0 || h==0) return;    // STOP EARLY
+
+    ui32 subImage[w*h];
+    memset(subImage, 0, sizeof(subImage));
+
+    for(ui32 y = startY; y < endY; y++)
+    for(ui32 x = startX; x < endX; x++)
+    {
+        r32 pxXDiff = pxWidth*(x+0.5) - uvCenter.x;
+        r32 pxYDiff = pxHeight*(y+0.5) - uvCenter.y;
+        r32 l2 = pxXDiff*pxXDiff + pxYDiff*pxYDiff;
+        if(l2 <= radius*radius)
+        {
+            subImage[x-startX + (y-startY)*w] = atlas->image[x+atlas->width*y] = color;
+        }
+        else
+        {
+            subImage[x-startX + (y-startY)*w] = atlas->image[x+atlas->width*y];
+        }
+    }
     glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlas->width, atlas->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, atlas->image);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, startX, startY, w, h, GL_RGBA, GL_UNSIGNED_BYTE, subImage);
 }
 
 TextureAtlas *
 MakeRandomTextureAtlas(MemoryArena *arena)
 {
     TextureAtlas *atlas = PushStruct(arena, TextureAtlas);
-    InitAtlas(arena, atlas, 2);
-    ui32 width = 128;
-    ui32 height = 128;
+    InitAtlas(arena, atlas, 16);    // Grid of 4x4. 
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    ui32 width = 2048;
+    ui32 height = 2048;
     ui32 *image = PushAndZeroArray(arena, ui32, width*height);
     atlas->image = image;
     atlas->width = width;
@@ -64,9 +96,16 @@ MakeRandomTextureAtlas(MemoryArena *arena)
     for(int y = 0; y < width; y++)
     for(int x = 0; x < height; x++)
     {
+#if 0
         ui8 r = 255*(sinf(x*0.1)*0.5+0.5);
         ui8 g = 255*(cosf(y*0.1)*0.5+0.5);
         ui8 b = 255;
+#else
+        ui8 r = RandomUI32(128, 255);
+        ui8 g = RandomUI32(128, 255);
+        ui8 b = RandomUI32(128, 255);
+
+#endif
         image[x+y*width] = r + (g << 8) + (b << 16) +(255U << 24);
     }
     glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
@@ -81,6 +120,11 @@ MakeDefaultTexture(MemoryArena *arena, int circleRadius)
 {
     TextureAtlas *atlas = PushStruct(arena, TextureAtlas);
     InitAtlas(arena, atlas, 2);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     int width = circleRadius*2 + 2;
     int height = circleRadius*2 + 2;

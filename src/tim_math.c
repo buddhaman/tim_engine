@@ -59,6 +59,18 @@ OrientedBoxPoint2Intersect(Vec2 pos, Vec2 dims, r32 angle, Vec2 point)
     return (fabsf(xProj) < dims.x/2 && fabsf(yProj) < dims.y/2);
 }
 
+internal inline Vec2
+GetCoordinateInBox(Vec2 pos, Vec2 dims, r32 angle, Vec2 point)
+{
+    r32 c = cosf(angle);
+    r32 s = sinf(angle);
+    r32 xDiff = point.x-pos.x;
+    r32 yDiff = point.y-pos.y;
+    r32 xProj = c*xDiff + s*yDiff;
+    r32 yProj = -s*xDiff + c*yDiff;
+    return vec2(xProj/dims.x+0.5, yProj/dims.y+0.5);
+}
+
 internal inline b32
 CirclePointIntersect(Vec2 pos, r32 radius, Vec2 point)
 {
@@ -155,6 +167,16 @@ RGBAToVec4(ui32 hex)
             (hex >> 16 & 255)/255.0f,
             (hex >> 8 & 255)/255.0f,
             (hex & 255)/255.0f);
+}
+
+internal inline ui32
+Vec4ToRGBA(Vec4 color)
+{
+    int r = (color.x*255);
+    int g = (color.y*255);
+    int b = (color.z*255);
+    int a = (color.w*255);
+    return (a << 24) + (b << 16) + (g << 8) + r;
 }
 
 internal inline r32

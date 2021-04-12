@@ -18,6 +18,7 @@
 
 #define Min(a, b) (a) < (b) ? (a) : (b)
 #define Max(a, b) (a) < (b) ? (b) : (a)
+#define Clamp(min, value, max) (value) < (min) ? (min) : ((value) > (max) ? (max) : (value))
 
 typedef unsigned char ui8;
 typedef unsigned short ui16;

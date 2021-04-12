@@ -10,6 +10,7 @@ typedef enum
     EDIT_CREATURE_MAX_ANGLE,
     EDIT_ADD_BODYPART_FIND_EDGE,
     EDIT_ADD_BODYPART_PLACE,
+    EDIT_CREATURE_DRAW,
 } EditCreatureState;
 
 typedef struct
@@ -39,5 +40,11 @@ typedef struct
     EditCreatureState prevEditState;        //TODO: Is this a hack? 
     BoxEdgeLocation bodyPartLocation;
     BodyPartDefinition *attachTo;
+
+    // Texture atlas
+    ui32 creatureTextureGridDivs;
+    b32 isTextureSquareOccupied[16];
+    struct nk_colorf brushColor;
+    r32 brushSize;
 } CreatureEditorScreen;
 

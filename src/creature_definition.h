@@ -2,7 +2,7 @@
 #ifndef CREATURE_DEFINITION_H
 #define CREATURE_DEFINITION_H
 
-#define MAX_BODYPARTS 32
+#define MAX_BODYPARTS 16
 
 typedef struct
 {
@@ -36,6 +36,12 @@ typedef struct
 
     r32 rotaryMuscleStrength;   //TODO: implement. Not used yet.
 
+    // Cosmetic
+    Vec2 uvPos;
+    Vec2 uvDims;
+    int texGridX;
+    int texGridY;
+    r32 texScale;
 } BodyPartDefinition;
 
 typedef struct

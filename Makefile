@@ -25,5 +25,5 @@ $(ODIR)/%.o : src_chipmunk/%.c
 
 .PHONY: clean
 clean:
-	rm -rf $(ODIR) chipmunk_lib.a
+	rm -rf $(ODIR) chipmunk_lib.a exe
 

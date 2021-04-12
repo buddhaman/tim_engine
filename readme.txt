@@ -18,8 +18,17 @@ TODO BEFORE DEMO LAUNCH:
 
 ------ Evolution Sim -------
 
-- Generate random texture and draw creature with random textures.
-- Let user draw on texture.
+- Draw on mousedown. 
+- Adjust brush size in editor and show with tooltip.
+- Smooth lines by interpolating.
+- Choose base color for every part.
+- Generate random texture.
+- Add googly eyes.
+- Always keep centers of bodypart aligned with centers of texGrid squares.
+- Move creature drawing to rendercontext and reuse in simulation.
+- Make videos: Create joker.
+
+- Create some overhang on the edges.
 - Mouse input to move camera.
 - Gray out buttons when action is not available.
 
@@ -30,6 +39,8 @@ TODO BEFORE DEMO LAUNCH:
 
 - Anti aliasing.
 
+- Use rect packing algorithm to assign uv coordinates to each bodypart. this needs to happen realtime.
+- Otherwise use different texture for each bodypart. If thats cheaper. Im not sure. They need to be resized often They need to be resized often.
 - Draw on bodyparts. Create a bit of overhang. Select single bodypart to draw on always.
 
 - Serialization: load the creature defs and play.
@@ -60,6 +71,13 @@ TODO BEFORE DEMO LAUNCH:
 
 DONE:
 
+- Add edit mode for drawing.
+- Choose color in editor.
+- Store scale in definition to always get the right brush size.
+- Draw on bodyparts.
+- Implement bodypart drawing without rectpacking. Just asign square and make best fit.
+- Generate random circles.
+- Generate random texture and draw creature with random textures.
 - Make difference between sensors and actuators more clear.
 - Set internal clocks in editor.
 - Only show angles in tooltip. Make interface less messy.
