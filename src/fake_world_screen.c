@@ -130,54 +130,46 @@ void
 DrawFakeWorld(FakeWorldScreen *screen, 
         SpriteBatch *batch, 
         Camera2D *camera, 
-        TextureAtlas *atlas)
+        TextureAtlas *defaultAtlas,
+        TextureAtlas *creatureTextureAtlas)
 {
+    BeginSpritebatch(batch);
     FakeWorld *world = screen->world;
-    AtlasRegion *circleRegion = atlas->regions;
-    AtlasRegion *squareRegion = atlas->regions+1;
-    r32 lineWidth = 2;
-
-#if 0
-    for(ui32 bodyPartIdx = 0;
-            bodyPartIdx < world->nRigidBodies;
-            bodyPartIdx++)
-    {
-        RigidBody *body = world->rigidBodies+bodyPartIdx;
-        Vec2 pos = GetBodyPos(body);
-        r32 angle = GetBodyAngle(body);
-
-        batch->colorState = vec4(0.0, 0.0, 0.0, 1.0);
-        PushOrientedLineRectangle2(batch, 
-                pos,
-                body->width+lineWidth,
-                body->height+lineWidth,
-                angle,
-                2,
-                texture);
-    }
-#endif
+    AtlasRegion *circleRegion = defaultAtlas->regions;
+    AtlasRegion *squareRegion = defaultAtlas->regions+1;
 
     DrawGrid(batch, camera, 10.0, 1.0, squareRegion);
     DrawGrid(batch, camera, 50.0, 2.0, squareRegion);
     batch->colorState = vec4(1,1,1, 0.5);
     PushCircle2(batch, vec2(0, 0), 3, circleRegion);
 
-    Vec3 creatureColor = vec3(1.0, 0.8, 0.8);
-    for(ui32 creatureIdx = 1;
-            creatureIdx < world->nCreatures;
-            creatureIdx++)
+    if(screen->isPopulationVisible)
     {
-        Creature *creature = world->creatures+creatureIdx;
-        r32 alpha = 0.2;
-        for(ui32 bodyPartIdx = 0;
-                bodyPartIdx < creature->nBodyParts;
-                bodyPartIdx++)
+        Vec3 creatureColor = vec3(1.0, 0.8, 0.8);
+        for(ui32 creatureIdx = 1;
+                creatureIdx < world->nCreatures;
+                creatureIdx++)
         {
-            BodyPart *part = creature->bodyParts+bodyPartIdx;
-            DrawBodyPart(batch, part, creatureColor, alpha, squareRegion);
+            Creature *creature = world->creatures+creatureIdx;
+            r32 alpha = 0.2;
+            for(ui32 bodyPartIdx = 0;
+                    bodyPartIdx < creature->nBodyParts;
+                    bodyPartIdx++)
+            {
+                BodyPart *part = creature->bodyParts+bodyPartIdx;
+                DrawBodyPart(batch, part, creatureColor, alpha, squareRegion);
+            }
         }
     }
+
+    // Only draw first creature with fancy texture
     Creature *creature = world->creatures+0;
+    batch->colorState = vec4(1,1,1,1);
+
+    EndSpritebatch(batch);
+
+    BeginSpritebatch(batch);
+    glBindTexture(GL_TEXTURE_2D, creatureTextureAtlas->textureHandle);
     for(ui32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
@@ -186,15 +178,9 @@ DrawFakeWorld(FakeWorldScreen *screen,
         RigidBody *body = part->body;
         Vec2 pos = GetBodyPos(body);
         r32 angle = GetBodyAngle(body);
-        batch->colorState = vec4(0,0,0,1);
-        PushOrientedRectangle2(batch, 
-                pos,
-                body->width+lineWidth,
-                body->height+lineWidth,
-                angle,
-                squareRegion);
-        DrawBodyPart(batch, part, creatureColor, 1.0, squareRegion);
+        DrawBodyPartWithTexture(batch, part->def, pos, angle, world->def.textureOverhang);
     }
+    EndSpritebatch(batch);
 }
 
 void
@@ -272,11 +258,7 @@ UpdateFakeWorldScreen(AppState *appState,
     int matLocation = glGetUniformLocation(spriteShader->program, "transform");
     glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
 
-    BeginSpritebatch(batch);
-
-    DrawFakeWorld(screen, batch, camera, defaultAtlas);
-
-    EndSpritebatch(batch);
+    DrawFakeWorld(screen, batch, camera, defaultAtlas, renderer->creatureTextureAtlas);
 
     // Render on screen
     BeginSpritebatch(batch);
@@ -450,6 +432,13 @@ UpdateFakeWorldScreen(AppState *appState,
             nk_tree_pop(ctx);
         }
 
+        if(nk_tree_push(ctx, NK_TREE_TAB, "Settings", NK_MINIMIZED))
+        {
+            screen->isPopulationVisible = nk_check_label(ctx, "Show entire population", screen->isPopulationVisible);
+            screen->isDragVisible = nk_check_label(ctx, "Show drag", screen->isDragVisible);
+            nk_tree_pop(ctx);
+        }
+
         if(nk_button_label(ctx, "Editor"))
         {
             appState->currentScreen = SCREEN_CREATURE_EDITOR;
@@ -475,6 +464,10 @@ InitFakeWorldScreen(AppState *appState,
     screen->tick = 0;
     screen->ticksPerGeneration = 60*15;    // 10 seconds
     screen->avgFitness = -100000.0;
+
+    // Settings
+    screen->isPopulationVisible = 0;
+    screen->isDragVisible = 0;
 
     // Camera
     screen->camera = PushStruct(arena, Camera2D);

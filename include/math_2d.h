@@ -53,6 +53,12 @@ static inline vec2_t v2_rotate(vec2_t v, float t)
     return vec2(c*v.x - s*v.y, s*v.x+c*v.y);
 }
 
+static inline vec2_t v2_lerp(vec2_t from, vec2_t to, float s)
+{
+    vec2_t diff = v2_sub(to, from);
+    return v2_add(from, v2_muls(diff, s));
+}
+
 mat3_t m3_translation(vec2_t translation)
 {
     return mat3(

@@ -102,6 +102,41 @@ EditorRemoveBodyPart(CreatureEditorScreen *editor, ui32 id)
     AssignBrainIO(def);
 }
 
+internal inline Vec4
+GetBrushColor(CreatureEditorScreen *editor)
+{
+    if(editor->isErasing)
+    {
+        return vec4(0,0,0,0);
+    }
+    else
+    {
+        return vec4( editor->brushColor.r, editor->brushColor.g, editor->brushColor.b, editor->brushColor.a);
+    }
+}
+
+void
+DoDrawAtPoint(CreatureEditorScreen *editor, TextureAtlas *creatureAtlas, Vec2 point)
+{
+    CreatureDefinition *def = editor->creatureDefinition;
+    r32 overhang = def->textureOverhang;
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < def->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPartDefinition *partDef = def->bodyParts+bodyPartIdx;
+        Vec2 texCoord = GetCoordinateInBox(partDef->pos, 
+                vec2(partDef->width+overhang*2, partDef->height+overhang*2), partDef->angle, point);
+        r32 radius = partDef->texScale*editor->brushSize;
+        ui32 color = Vec4ToRGBA(GetBrushColor(editor));
+        Vec2 creatureTexCoord = v2_add(partDef->uvPos, 
+                vec2(partDef->uvDims.x*texCoord.x, partDef->uvDims.y*texCoord.y));
+        DrawCircleOnTexture(creatureAtlas, 
+                partDef->uvPos, partDef->uvDims,
+                creatureTexCoord, radius, color);
+    }
+}
+
 b32 
 NKEditCreatureIO(struct nk_context *ctx,
         char *label,
@@ -163,14 +198,21 @@ AssignTextureToBodyPartDefinition(CreatureEditorScreen *editor, BodyPartDefiniti
 internal inline void
 RecalculateTextureDims(CreatureEditorScreen *editor)
 {
+    r32 divs = editor->creatureTextureGridDivs;
+    r32 overhang = editor->creatureDefinition->textureOverhang;
     for(ui32 partIdx = 0;
             partIdx < editor->creatureDefinition->nBodyParts;
             partIdx++)
     {
         BodyPartDefinition *part = editor->creatureDefinition->bodyParts+partIdx;
-        r32 maxDim = Max(part->width, part->height);
-        part->texScale = 1.0/(maxDim*editor->creatureTextureGridDivs);
-        part->uvDims = vec2(part->texScale*part->width, part->texScale*part->height);
+        r32 w = part->width+overhang*2;
+        r32 h = part->height+overhang*2;
+        r32 maxDim = Max(w, h);    
+        part->texScale = 1.0/(maxDim*divs);
+        part->uvDims = vec2(part->texScale*w, part->texScale*h);
+        r32 cx = (part->texGridX+0.5)/divs;
+        r32 cy = (part->texGridY+0.5)/divs;
+        part->uvPos = vec2(cx-part->uvDims.x/2.0, cy-part->uvDims.y/2.0);
     }
 }
 
@@ -192,15 +234,10 @@ UpdateCreatureEditorScreen(AppState *appState,
 
     AtlasRegion *circleRegion = defaultAtlas->regions+0;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
-    
-    // Different atlas
-    AtlasRegion *creatureRegion = creatureAtlas->regions+0;
 
     // TODO: DELETE! dont recalcualte every frame
     RecalculateTextureDims(editor);
-
-    //Vec4 creatureColor = RGBAToVec4(0x7c4d35ff);
-    Vec4 creatureColor = vec4(1.0, 1.0, 1.0, 1.0);
+    b32 hasLastBrushStroke = 0;
     
     // Key and mouse input
     editor->isInputCaptured = nk_window_is_any_hovered(ctx);
@@ -365,33 +402,31 @@ UpdateCreatureEditorScreen(AppState *appState,
     } 
     else if(editor->editState==EDIT_CREATURE_DRAW)
     {
-        PushCircle2(batch, mousePos, editor->brushSize, circleRegion);
         if(EditorIsMousePressed(appState, editor))
         {
+            hasLastBrushStroke = 1;
             EndSpritebatch(batch);
-            for(ui32 bodyPartIdx = 0;
-                    bodyPartIdx < def->nBodyParts;
-                    bodyPartIdx++)
+            if(editor->hasLastBrushStroke)
             {
-                BodyPartDefinition *partDef = def->bodyParts+bodyPartIdx;
-                Vec2 texCoord = GetCoordinateInBox(partDef->pos, 
-                        vec2(partDef->width, partDef->height), partDef->angle, mousePos);
-                if(texCoord.x > 0 && texCoord.y > 0
-                        && texCoord.x < 1 && texCoord.y < 1)
+                ui32 maxPoints = 15;
+                // Draw line. TODO: Make actual line rendering algorithm. This is expensive.
+                for(ui32 pointIdx = 0;
+                        pointIdx < maxPoints; 
+                        pointIdx++)
                 {
-                    ui32 color = Vec4ToRGBA(vec4(
-                                editor->brushColor.r,
-                                editor->brushColor.g,
-                                editor->brushColor.b,
-                                editor->brushColor.a));
-                    Vec2 creatureTexCoord = v2_add(partDef->uvPos, 
-                            vec2(partDef->uvDims.x*texCoord.x, partDef->uvDims.y*texCoord.y));
-                    r32 radius = partDef->texScale*editor->brushSize;
-                    DrawCircleOnTexture(creatureAtlas, creatureTexCoord, radius, color);
+                    r32 factor = ((r32)pointIdx)/(maxPoints-1);
+                    Vec2 point = v2_lerp(editor->lastBrushStroke, mousePos, factor);
+                    DoDrawAtPoint(editor, creatureAtlas, point);
                 }
             }
+            else
+            {
+                DoDrawAtPoint(editor, creatureAtlas, mousePos);
+            }
+            editor->lastBrushStroke = mousePos;
         }
     }
+    editor->hasLastBrushStroke = hasLastBrushStroke;
 
     // Flush if still drawing with different texture
     if(batch->isDrawing)
@@ -401,21 +436,13 @@ UpdateCreatureEditorScreen(AppState *appState,
     BeginSpritebatch(batch);
     glBindTexture(GL_TEXTURE_2D, renderer->creatureTextureAtlas->textureHandle);
 
+    batch->colorState = vec4(1,1,1,1);
     for(ui32 bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
         BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
-        if(editor->selectedId==part->id) batch->colorState = vec4(1, 0, 0, 1);
-        else batch->colorState = creatureColor;
-        creatureRegion->pos = part->uvPos;
-        creatureRegion->size = part->uvDims;
-        PushOrientedRectangle2(batch,
-                part->pos,
-                part->width,
-                part->height,
-                part->angle,
-                creatureRegion);
+        DrawBodyPartWithTexture(batch, part, part->pos, part->angle, def->textureOverhang);
     }
     EndSpritebatch(batch);
 
@@ -428,6 +455,7 @@ UpdateCreatureEditorScreen(AppState *appState,
     {
         BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
         if(intersectId==part->id) batch->colorState = vec4(1, 0, 1, 1);
+        else if(editor->selectedId==part->id) batch->colorState = vec4(1, 0, 0, 1);
         else batch->colorState = vec4(0, 0, 0, 1);
         PushOrientedLineRectangle2(batch,
                 part->pos,
@@ -577,6 +605,18 @@ UpdateCreatureEditorScreen(AppState *appState,
         
         RecalculateSubNodeBodyParts(def, def->bodyParts);
 
+    }
+
+    if(editor->editState==EDIT_CREATURE_DRAW)
+    {
+        batch->colorState = GetBrushColor(editor);
+        PushCircle2(batch, mousePos, editor->brushSize, circleRegion);
+    }
+    if(editor->drawBrushInScreenCenter)
+    {
+        batch->colorState = GetBrushColor(editor);
+        PushCircle2(batch, camera->pos, editor->brushSize, circleRegion);
+        editor->drawBrushInScreenCenter = 0;
     }
 
     EndSpritebatch(batch);
@@ -730,6 +770,39 @@ UpdateCreatureEditorScreen(AppState *appState,
             }
             nk_tree_pop(ctx);
         }
+        if(nk_tree_push(ctx, NK_TREE_TAB, "Draw", NK_MAXIMIZED))
+        {
+            nk_layout_row_dynamic(ctx, 30, 3);
+            if(nk_button_label(ctx, "Brush"))
+            {
+                editor->editState = EDIT_CREATURE_DRAW;
+                editor->isErasing = 0;
+            }
+            if(nk_button_label(ctx, "Erase"))
+            {
+                editor->editState = EDIT_CREATURE_DRAW;
+                editor->isErasing = 1;
+                //editor->brushColor = (struct nk_colorf){0};
+            }
+            nk_button_color(ctx, (struct nk_color){
+                    (ui8)(editor->brushColor.r*255),
+                    (ui8)(editor->brushColor.g*255),
+                    (ui8)(editor->brushColor.b*255),
+                    (ui8)(editor->brushColor.a*255)});
+
+            nk_layout_row_dynamic(ctx, 30, 1);
+            if(nk_widget_has_mouse_click_down(ctx, NK_BUTTON_LEFT, 1))
+            {
+                editor->drawBrushInScreenCenter = 1;
+            }
+            NKEditFloatProperty(ctx, "Brush Size", 1.0, &editor->brushSize, 20.0, 0.5, 0.5);
+            
+            nk_layout_row_dynamic(ctx, 300, 1);
+            nk_color_pick(ctx, &editor->brushColor, NK_RGB);
+            nk_layout_row_dynamic(ctx, 30, 1);
+
+            nk_tree_pop(ctx);
+        }
         if(nk_tree_push(ctx, NK_TREE_TAB, "Simulation Settings", NK_MAXIMIZED))
         {
             nk_layout_row_dynamic(ctx, 30, 1);
@@ -743,31 +816,6 @@ UpdateCreatureEditorScreen(AppState *appState,
             }
             nk_tree_pop(ctx);
         }
-        if(nk_tree_push(ctx, NK_TREE_TAB, "Draw", NK_MAXIMIZED))
-        {
-            nk_layout_row_dynamic(ctx, 30, 2);
-            if(nk_button_label(ctx, "Brush"))
-            {
-                editor->editState = EDIT_CREATURE_DRAW;
-            }
-
-            nk_button_color(ctx, (struct nk_color){
-                    (ui8)(editor->brushColor.r*255),
-                    (ui8)(editor->brushColor.g*255),
-                    (ui8)(editor->brushColor.b*255),
-                    (ui8)(editor->brushColor.a*255)});
-            nk_layout_row_dynamic(ctx, 30, 1);
-            if(NKEditFloatProperty(ctx, "Brush Size", 1.0, &editor->brushSize, 20.0, 0.5, 0.5))
-            {
-            }
-            
-            nk_layout_row_dynamic(ctx, 300, 1);
-            nk_color_pick(ctx, &editor->brushColor, NK_RGB);
-            nk_layout_row_dynamic(ctx, 30, 1);
-
-            nk_tree_pop(ctx);
-        }
-
     }
     nk_end(ctx);
 
@@ -815,6 +863,7 @@ InitCreatureEditorScreen(AppState *appState,
     editor->brushSize = 1.0;
     editor->brushColor = (struct nk_colorf){1.0, 0.0, 0.0, 1.0};
 
+    editor->creatureDefinition->textureOverhang = 5;
     editor->creatureDefinition->nInternalClocks = 2;
     editor->idCounter = 1;
     BodyPartDefinition *torso = editor->creatureDefinition->bodyParts+editor->creatureDefinition->nBodyParts++;

@@ -3,6 +3,7 @@
 #define CREATURE_DEFINITION_H
 
 #define MAX_BODYPARTS 16
+#define CREATURE_TEX_SIZE 2048
 
 typedef struct
 {
@@ -53,6 +54,8 @@ typedef struct
     ui32 nHidden;
     ui32 geneSize;
     ui32 nInternalClocks;
+    r32 textureOverhang;
 } CreatureDefinition;
 
 #endif
+

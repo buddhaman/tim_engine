@@ -45,6 +45,10 @@ typedef struct
     ui32 creatureTextureGridDivs;
     b32 isTextureSquareOccupied[16];
     struct nk_colorf brushColor;
+    b32 isErasing;
     r32 brushSize;
+    b32 drawBrushInScreenCenter;
+    b32 hasLastBrushStroke;
+    Vec2 lastBrushStroke;
 } CreatureEditorScreen;
 

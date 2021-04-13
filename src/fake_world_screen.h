@@ -23,6 +23,9 @@ typedef struct
 
     b32 isGuiInputCaptured;
 
+    b32 isPopulationVisible;
+    b32 isDragVisible;
+
 } FakeWorldScreen;
 
 #endif

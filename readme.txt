@@ -13,22 +13,27 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 TODO BEFORE DEMO LAUNCH:
 
 - Save creatures.
-- Visualize GRU,
+- Visualize GRU,        V
 - Think about nice way to render creatures, or at least add googly eyes.
 
 ------ Evolution Sim -------
 
-- Draw on mousedown. 
-- Adjust brush size in editor and show with tooltip.
-- Smooth lines by interpolating.
-- Choose base color for every part.
-- Generate random texture.
-- Add googly eyes.
-- Always keep centers of bodypart aligned with centers of texGrid squares.
-- Move creature drawing to rendercontext and reuse in simulation.
-- Make videos: Create joker.
+- Fix texture bleeding.
+- Only draw on single texture or determine size of overhang.
 
-- Create some overhang on the edges.
+- Another option: Show activation as overlay.
+- Color picker on creature to select color.
+
+- Solve bug: Minimum size during bodypart placement.
+- Add multiple views. See edges, see actual result, same in fakeworld.
+- Generate random texture.
+- Make videos: Create joker.
+- Keep tools in single tab with deselect button. Current situation is confusing.
+- Give clear feedback about the current tool
+- Choose base color for every part.
+- Add googly eyes.
+
+- Create some overhang on the edges of a bodypart.
 - Mouse input to move camera.
 - Gray out buttons when action is not available.
 
@@ -71,6 +76,14 @@ TODO BEFORE DEMO LAUNCH:
 
 DONE:
 
+- Create a bit of overhang on each bodypart for the texture.
+- Make sure you only draw in the correct range when drawing on texture.
+- Add eraser.
+- Move creature drawing to rendercontext and reuse in simulation.
+- Visualization options: show lines, show texture, show ghosts.
+- Smooth lines by interpolating.
+- Draw on mousedown. 
+- Adjust brush size in editor and show with tooltip.
 - Add edit mode for drawing.
 - Choose color in editor.
 - Store scale in definition to always get the right brush size.

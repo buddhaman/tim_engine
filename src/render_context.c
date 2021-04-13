@@ -17,6 +17,20 @@ InitRenderContext(RenderContext *renderContext, MemoryArena *arena)
     InitFontRenderer(renderContext->fontRenderer, "DejaVuSansMono.ttf");
 }
 
+internal inline void
+DrawBodyPartWithTexture(SpriteBatch *batch, BodyPartDefinition *part, Vec2 pos, r32 angle, r32 textureOverhang)
+{
+    AtlasRegion region;
+    region.pos = part->uvPos;
+    region.size = part->uvDims;
+    PushOrientedRectangle2(batch,
+            pos,
+            part->width+textureOverhang*2,
+            part->height+textureOverhang*2,
+            angle,
+            &region);
+}
+
 void
 DrawGrid(SpriteBatch *batch, 
         Camera2D *camera, 

@@ -37,22 +37,26 @@ NormalizePositions(TextureAtlas *atlas, int totalWidth, int totalHeight)
 
 // Assume square texture
 void
-DrawCircleOnTexture(TextureAtlas *atlas, Vec2 uvCenter, r32 radius, ui32 color)
+DrawCircleOnTexture(TextureAtlas *atlas, Vec2 rangePos, Vec2 rangeSize, Vec2 uvCenter, r32 radius, ui32 color)
 {
     r32 pxWidth = 1.0/atlas->width;
     r32 pxHeight = 1.0/atlas->height;
-    int startX = round((uvCenter.x-radius)*atlas->width);
-    int startY = round((uvCenter.y-radius)*atlas->height);
+    r32 minTexX = Max(rangePos.x, uvCenter.x-radius);
+    r32 minTexY = Max(rangePos.y, uvCenter.y-radius);
+    r32 maxTexX = Min(rangePos.x+rangeSize.x, uvCenter.x+radius);
+    r32 maxTexY = Min(rangePos.y+rangeSize.y, uvCenter.y+radius);
+    int startX = round(minTexX*atlas->width);
+    int startY = round(minTexY*atlas->height);
     startX = Clamp(0, startX, atlas->width);
     startY = Clamp(0, startY, atlas->height);
-    int endX = round((uvCenter.x+radius)*atlas->width);
-    int endY = round((uvCenter.y+radius)*atlas->height);
+    int endX = round(maxTexX*atlas->width);
+    int endY = round(maxTexY*atlas->height);
     endX = Clamp(0, endX, atlas->width);
     endY = Clamp(0, endY, atlas->height);
     int w = endX-startX;
     int h = endY-startY;
 
-    if(w==0 || h==0) return;    // STOP EARLY
+    if(w<=0 || h<=0) return;    // STOP EARLY
 
     ui32 subImage[w*h];
     memset(subImage, 0, sizeof(subImage));
