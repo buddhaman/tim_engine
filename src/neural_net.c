@@ -95,25 +95,8 @@ SizeOfMinimalGatedUnit(int inputLayerSize,
         int outputLayerSize,
         int hiddenLayerSize)
 {
-    return sizeof(MinimalGatedUnit) + GetMinimalGatedUnitStateSize(inputLayerSize, 
-            outputLayerSize, 
-            hiddenLayerSize)*sizeof(r32);
-}
-
-internal inline VecR32 *
-CreateMinimalGatedUnitGene(MemoryArena *arena, 
-        int inputLayerSize,
-        int outputLayerSize,
-        int hiddenLayerSize)
-{
-    ui32 size = GetMinimalGatedUnitGeneSize(inputLayerSize, outputLayerSize, hiddenLayerSize);
-    void *memory = PushAndZeroMemory_(arena, SizeOfVecR32(size));
-    VecR32 *vec = CreateVecR32(size, memory);
-    for(int i = 0; i < size; i++)
-    {
-        vec->v[i] = RandomR32(-4, 4);
-    }
-    return vec;
+    return sizeof(MinimalGatedUnit) + 
+        GetMinimalGatedUnitStateSize(inputLayerSize, outputLayerSize, hiddenLayerSize)*sizeof(r32);
 }
 
 MinimalGatedUnit*

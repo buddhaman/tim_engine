@@ -128,7 +128,6 @@ AssignBrainIO(CreatureDefinition *def)
     
     def->nInputs = atInputIdx;
     def->nOutputs = atOutputIdx;
-    def->nHidden = 1;
     def->geneSize = GetMinimalGatedUnitGeneSize(def->nInputs, def->nOutputs, def->nHidden);
 }
 

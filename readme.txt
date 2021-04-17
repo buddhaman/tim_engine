@@ -18,13 +18,21 @@ TODO BEFORE DEMO LAUNCH:
 
 ------ Evolution Sim -------
 
-- Fix texture bleeding.
-- Only draw on single texture or determine size of overhang.
-
+- Set default background and make it deletable. Set default texture to 0x00000000.
 - Another option: Show activation as overlay.
+- Solve bug: Minimum size during bodypart placement.
+- Set number of hidden neurons in editor.
+
+- Serialization.
+
+- Radial menu on right click to draw on single bodypart, delete, or other features.
+
 - Color picker on creature to select color.
 
-- Solve bug: Minimum size during bodypart placement.
+- Ui needs to be waayyyy better. 
+- Give very clear feedback for current tool.
+- When selecting bodypart switch to selection. No need to cancel inbetween.
+
 - Add multiple views. See edges, see actual result, same in fakeworld.
 - Generate random texture.
 - Make videos: Create joker.
@@ -44,7 +52,6 @@ TODO BEFORE DEMO LAUNCH:
 
 - Anti aliasing.
 
-- Use rect packing algorithm to assign uv coordinates to each bodypart. this needs to happen realtime.
 - Otherwise use different texture for each bodypart. If thats cheaper. Im not sure. They need to be resized often They need to be resized often.
 - Draw on bodyparts. Create a bit of overhang. Select single bodypart to draw on always.
 
@@ -76,6 +83,9 @@ TODO BEFORE DEMO LAUNCH:
 
 DONE:
 
+- Solve texture switching bug.
+- Make attachment point visible again. Its hidden behind the texture now.
+- Fix texture bleeding.
 - Create a bit of overhang on each bodypart for the texture.
 - Make sure you only draw in the correct range when drawing on texture.
 - Add eraser.
@@ -280,4 +290,10 @@ FUN:
     Make everything wiggly. Including mouse cursor. Pay attention to details.
 
     Make gun creature for video.
+
+    Make videos and make the interface SUUPER clear. Put a lot of effort into it.
+    Make it understandable. Polish is important.
+    
+    Also make a competition and give a reward of 150 dollars to someone who makes the
+    most creative creature.
  

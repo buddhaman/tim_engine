@@ -41,10 +41,10 @@ DrawCircleOnTexture(TextureAtlas *atlas, Vec2 rangePos, Vec2 rangeSize, Vec2 uvC
 {
     r32 pxWidth = 1.0/atlas->width;
     r32 pxHeight = 1.0/atlas->height;
-    r32 minTexX = Max(rangePos.x, uvCenter.x-radius);
-    r32 minTexY = Max(rangePos.y, uvCenter.y-radius);
-    r32 maxTexX = Min(rangePos.x+rangeSize.x, uvCenter.x+radius);
-    r32 maxTexY = Min(rangePos.y+rangeSize.y, uvCenter.y+radius);
+    r32 minTexX = Max(rangePos.x-pxWidth, uvCenter.x-radius);
+    r32 minTexY = Max(rangePos.y-pxHeight, uvCenter.y-radius);
+    r32 maxTexX = Min(rangePos.x+rangeSize.x+pxWidth, uvCenter.x+radius);
+    r32 maxTexY = Min(rangePos.y+rangeSize.y+pxHeight, uvCenter.y+radius);
     int startX = round(minTexX*atlas->width);
     int startY = round(minTexY*atlas->height);
     startX = Clamp(0, startX, atlas->width);
@@ -100,9 +100,9 @@ MakeRandomTextureAtlas(MemoryArena *arena)
     for(int y = 0; y < width; y++)
     for(int x = 0; x < height; x++)
     {
-#if 0
-        ui8 r = 255*(sinf(x*0.1)*0.5+0.5);
-        ui8 g = 255*(cosf(y*0.1)*0.5+0.5);
+#if 1
+        ui8 r = 255;
+        ui8 g = 155;
         ui8 b = 255;
 #else
         ui8 r = RandomUI32(128, 255);

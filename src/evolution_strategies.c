@@ -27,8 +27,11 @@ ESCreate(MemoryArena *arena, ui32 geneSize, ui32 nGenes, r32 dev, r32 learningRa
         InitVecR32(strategies->epsilons+geneIdx, geneSize, PushMemory_(arena, geneArraySize));
     }
 
+    // Strategies solution. Initialize with something random.
     strategies->solution = PushStruct(arena, VecR32);
     InitVecR32(strategies->solution, geneSize, PushAndZeroMemory_(arena, geneArraySize));
+    r32 invSquare = 10.0/sqrtf(geneSize);
+    VecR32SetNormal(strategies->solution, invSquare);
 
     strategies->fitness = PushStruct(arena, VecR32);
     InitVecR32(strategies->fitness, nGenes, PushAndZeroMemory_(arena, fitnessArraySize));

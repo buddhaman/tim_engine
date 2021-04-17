@@ -196,8 +196,9 @@ AssignTextureToBodyPartDefinition(CreatureEditorScreen *editor, BodyPartDefiniti
 }
 
 internal inline void
-RecalculateTextureDims(CreatureEditorScreen *editor)
+RecalculateTextureDims(CreatureEditorScreen *editor, r32 totalTextureSize)
 {
+    r32 pix = 1.0/totalTextureSize;
     r32 divs = editor->creatureTextureGridDivs;
     r32 overhang = editor->creatureDefinition->textureOverhang;
     for(ui32 partIdx = 0;
@@ -209,7 +210,7 @@ RecalculateTextureDims(CreatureEditorScreen *editor)
         r32 h = part->height+overhang*2;
         r32 maxDim = Max(w, h);    
         part->texScale = 1.0/(maxDim*divs);
-        part->uvDims = vec2(part->texScale*w, part->texScale*h);
+        part->uvDims = vec2(part->texScale*w-pix*4, part->texScale*h-pix*4);    //-4 pixels to prevent bleeding.
         r32 cx = (part->texGridX+0.5)/divs;
         r32 cy = (part->texGridY+0.5)/divs;
         part->uvPos = vec2(cx-part->uvDims.x/2.0, cy-part->uvDims.y/2.0);
@@ -235,8 +236,8 @@ UpdateCreatureEditorScreen(AppState *appState,
     AtlasRegion *circleRegion = defaultAtlas->regions+0;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
 
-    // TODO: DELETE! dont recalcualte every frame
-    RecalculateTextureDims(editor);
+    // TODO: DELETE! dont recalcualte every frame. Assumes width=height.
+    RecalculateTextureDims(editor, creatureAtlas->width);
     b32 hasLastBrushStroke = 0;
     
     // Key and mouse input
@@ -267,8 +268,25 @@ UpdateCreatureEditorScreen(AppState *appState,
             vec2(20, 20),
             circleRegion->pos,
             circleRegion->size);
-
     DrawGrid(batch, camera, 50, 2.0, squareRegion);
+
+    EndSpritebatch(batch);
+
+    BeginSpritebatch(batch);
+    glBindTexture(GL_TEXTURE_2D, renderer->creatureTextureAtlas->textureHandle);
+
+    batch->colorState = vec4(1,1,1,1);
+    for(ui32 bodyPartIdx = 0; 
+            bodyPartIdx < def->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
+        DrawBodyPartWithTexture(batch, part, part->pos, part->angle, def->textureOverhang);
+    }
+    EndSpritebatch(batch);
+
+    BeginSpritebatch(batch);
+    glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
 
     // Check intersection with bodyparts.
     ui32 intersectId = 0;
@@ -405,10 +423,9 @@ UpdateCreatureEditorScreen(AppState *appState,
         if(EditorIsMousePressed(appState, editor))
         {
             hasLastBrushStroke = 1;
-            EndSpritebatch(batch);
             if(editor->hasLastBrushStroke)
             {
-                ui32 maxPoints = 15;
+                ui32 maxPoints = 8;
                 // Draw line. TODO: Make actual line rendering algorithm. This is expensive.
                 for(ui32 pointIdx = 0;
                         pointIdx < maxPoints; 
@@ -416,6 +433,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                 {
                     r32 factor = ((r32)pointIdx)/(maxPoints-1);
                     Vec2 point = v2_lerp(editor->lastBrushStroke, mousePos, factor);
+                    // Sets active texture. Dont forget to switch back.
                     DoDrawAtPoint(editor, creatureAtlas, point);
                 }
             }
@@ -424,30 +442,10 @@ UpdateCreatureEditorScreen(AppState *appState,
                 DoDrawAtPoint(editor, creatureAtlas, mousePos);
             }
             editor->lastBrushStroke = mousePos;
+            glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
         }
     }
     editor->hasLastBrushStroke = hasLastBrushStroke;
-
-    // Flush if still drawing with different texture
-    if(batch->isDrawing)
-    {
-        EndSpritebatch(batch);
-    }
-    BeginSpritebatch(batch);
-    glBindTexture(GL_TEXTURE_2D, renderer->creatureTextureAtlas->textureHandle);
-
-    batch->colorState = vec4(1,1,1,1);
-    for(ui32 bodyPartIdx = 0; 
-            bodyPartIdx < def->nBodyParts;
-            bodyPartIdx++)
-    {
-        BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
-        DrawBodyPartWithTexture(batch, part, part->pos, part->angle, def->textureOverhang);
-    }
-    EndSpritebatch(batch);
-
-    BeginSpritebatch(batch);
-    glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
 
     for(ui32 bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts;
@@ -760,7 +758,12 @@ UpdateCreatureEditorScreen(AppState *appState,
             nk_layout_row_dynamic(ctx, 30, 1);
             nk_labelf(ctx, NK_TEXT_LEFT, "Inputs : %u", def->nInputs);
             nk_labelf(ctx, NK_TEXT_LEFT, "Outputs : %u", def->nOutputs);
-            nk_labelf(ctx, NK_TEXT_LEFT, "Hidden : %u", def->nHidden);
+            int nHidden = nk_propertyi(ctx, "Hidden Neurons", 0, def->nHidden, 16, 1, 1);
+            if(nHidden!=def->nHidden)
+            {
+                def->nHidden = nHidden;
+                AssignBrainIO(def);
+            }
             nk_labelf(ctx, NK_TEXT_LEFT, "Gene Size : %u", def->geneSize);
             int nInternalClocks = nk_propertyi(ctx, "Internal Clocks", 0, def->nInternalClocks, 4, 1, 1);
             if(nInternalClocks != def->nInternalClocks)
@@ -860,9 +863,10 @@ InitCreatureEditorScreen(AppState *appState,
     // Texture
     editor->creatureTextureGridDivs = 4;
     memset(editor->isTextureSquareOccupied, 0, sizeof(editor->isTextureSquareOccupied));
-    editor->brushSize = 1.0;
+    editor->brushSize = 3.0;
     editor->brushColor = (struct nk_colorf){1.0, 0.0, 0.0, 1.0};
 
+    editor->creatureDefinition->nHidden = 2;
     editor->creatureDefinition->textureOverhang = 5;
     editor->creatureDefinition->nInternalClocks = 2;
     editor->idCounter = 1;
