@@ -104,6 +104,10 @@ UpdateFakeWorld(FakeWorld *world)
             cpVect vel = cpBodyGetVelocity(body->body);
             vel = cpvmult(vel, 1.0-body->drag);
             cpBodySetVelocity(body->body, vel);
+            cpFloat angVel = cpBodyGetAngularVelocity(body->body);
+            // Angular friction is 20% of normal friction.
+            angVel = (1.0-body->drag*0.2)*angVel;
+            cpBodySetAngularVelocity(body->body, angVel);
         }
     }
 }

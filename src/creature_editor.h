@@ -8,10 +8,15 @@ typedef enum
     EDIT_CREATURE_ROTATION_AND_LENGTH,
     EDIT_CREATURE_MIN_ANGLE,
     EDIT_CREATURE_MAX_ANGLE,
-    EDIT_ADD_BODYPART_FIND_EDGE,
     EDIT_ADD_BODYPART_PLACE,
     EDIT_CREATURE_DRAW,
 } EditCreatureState;
+
+typedef enum
+{
+    CREATURE_TOOL_SELECT,
+    CREATURE_TOOL_BRUSH,
+} EditCreatureTool;
 
 typedef struct
 {
@@ -41,10 +46,21 @@ typedef struct
     BoxEdgeLocation bodyPartLocation;
     BodyPartDefinition *attachTo;
 
+    b32 isCreatureColorPickerVisible;
+
     // Texture atlas
     ui32 creatureTextureGridDivs;
     b32 isTextureSquareOccupied[16];
+
+    struct nk_colorf creatureSolidColor;
+    b32 isSolidColorPickerVisible;
+
     struct nk_colorf brushColor;
+    b32 isBrushColorPickerVisible;
+
+    b32 canMoveCameraWithMouse;
+    b32 isDraggingCamera;
+
     b32 isErasing;
     r32 brushSize;
     b32 drawBrushInScreenCenter;

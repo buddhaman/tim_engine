@@ -14,6 +14,7 @@ typedef struct
     ui32 tick;
     ui32 ticksPerGeneration;
     r32 avgFitness;
+    r32 *fitnessGraph;
 
     Camera2D *camera;
     

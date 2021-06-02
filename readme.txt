@@ -10,39 +10,49 @@ Pivot: Make alife creatures 2. Use physics engine and limbs with revolute joints
 
 Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
+Nice: Do competition. 150 dollars for best creature. 
+
 TODO BEFORE DEMO LAUNCH:
 
-- Save creatures.
-- Visualize GRU,        V
-- Think about nice way to render creatures, or at least add googly eyes.
+- Draw on single bodypart :     
+    - Implement right click.
+    - Radial menu ? no probobly options.
+    - Select draw on bodypart. Show outline of texture reach.
+
+- Add tutorial.
+- Serialization.
+- Set training target and add multiple.
+- Make at least one devlog.
+- Setup website, newsletter or written devlog.
+
+STRETCH GOALS: 
+- Add ingame tutorial.
+- Try to compile to windows and send some versions to people to test. 
+
+- Figure out way to create graphs. Probably create own graphing. Base on own ui library.
+- Combobox for training method and setup training method. 
+- Edit video. Publish to youtube.
+- Figure out one more way to promote game.
 
 ------ Evolution Sim -------
 
-- Set default background and make it deletable. Set default texture to 0x00000000.
-- Another option: Show activation as overlay.
-- Solve bug: Minimum size during bodypart placement.
-- Set number of hidden neurons in editor.
+- Fix mouse. Make nice animated cursor for every tool.
+- Add tutorial.
+- Draw on single bodypart.
 
-- Serialization.
+- Radial menu on right click to draw on single bodypart, delete, or other features. (Idea)
 
-- Radial menu on right click to draw on single bodypart, delete, or other features.
-
-- Color picker on creature to select color.
-
-- Ui needs to be waayyyy better. 
 - Give very clear feedback for current tool.
 - When selecting bodypart switch to selection. No need to cancel inbetween.
+- Ui needs to be waayyyy better. 
 
 - Add multiple views. See edges, see actual result, same in fakeworld.
 - Generate random texture.
 - Make videos: Create joker.
-- Keep tools in single tab with deselect button. Current situation is confusing.
 - Give clear feedback about the current tool
 - Choose base color for every part.
 - Add googly eyes.
 
-- Create some overhang on the edges of a bodypart.
-- Mouse input to move camera.
 - Gray out buttons when action is not available.
 
 - Visualize fitness in world for first creature.
@@ -51,9 +61,7 @@ TODO BEFORE DEMO LAUNCH:
 - Make nuklear graph.
 
 - Anti aliasing.
-
-- Otherwise use different texture for each bodypart. If thats cheaper. Im not sure. They need to be resized often They need to be resized often.
-- Draw on bodyparts. Create a bit of overhang. Select single bodypart to draw on always.
+- Idea: Make texture pill shaped ? 
 
 - Serialization: load the creature defs and play.
 - Save entire trained brains.
@@ -83,6 +91,19 @@ TODO BEFORE DEMO LAUNCH:
 
 DONE:
 
+- Keep tools in single tab with deselect button. Current situation is confusing.
+- Mouse controll camera.
+- Create some overhang on the edges of a bodypart.
+- Add images.
+- Toolbar on the side. Very small.
+- Color picker on creature to select base color.
+- Create tool select buttons.
+- Create separate tool settings window.
+- Solve bug: Minimum size during bodypart placement.
+- Another option: Show activation as overlay.
+- Set number of hidden neurons in editor.
+- Make better order of drawing textures. Top-Bottom : Central bodypart-Outward. Also implement in simulation.
+- Set default background and make it deletable. Set default texture to 0x00000000.
 - Solve texture switching bug.
 - Make attachment point visible again. Its hidden behind the texture now.
 - Fix texture bleeding.
@@ -91,7 +112,7 @@ DONE:
 - Add eraser.
 - Move creature drawing to rendercontext and reuse in simulation.
 - Visualization options: show lines, show texture, show ghosts.
-- Smooth lines by interpolating.
+- Smooth lines instead of circles per tick by interpolating.
 - Draw on mousedown. 
 - Adjust brush size in editor and show with tooltip.
 - Add edit mode for drawing.
@@ -296,4 +317,7 @@ FUN:
     
     Also make a competition and give a reward of 150 dollars to someone who makes the
     most creative creature.
+
+    IDEA: Export creature texture as image. Tag bodyparts (manualy in editor). put your own body on it in gimp.
+    IDEA: @ Lex Fridman in mijn volgende tweets. En @openai over hun ES paper. Denk groots
  

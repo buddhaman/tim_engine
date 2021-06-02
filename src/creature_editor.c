@@ -99,7 +99,21 @@ EditorRemoveBodyPart(CreatureEditorScreen *editor, ui32 id)
     }
     ArrayRemoveElement(def->bodyParts, sizeof(BodyPartDefinition), def->nBodyParts--, parent);
 
+    RecalculateSubNodeBodyParts(def, def->bodyParts);
+    RecalculateBodyPartDrawOrder(def);
     AssignBrainIO(def);
+}
+
+internal inline Vec3
+NuklearColorFToVec3(struct nk_colorf color)
+{
+    return vec3(color.r, color.g, color.b);
+}
+
+internal inline Vec4
+NuklearColorFToVec4(struct nk_colorf color)
+{
+    return vec4(color.r, color.g, color.b, color.a);
 }
 
 internal inline Vec4
@@ -111,7 +125,7 @@ GetBrushColor(CreatureEditorScreen *editor)
     }
     else
     {
-        return vec4( editor->brushColor.r, editor->brushColor.g, editor->brushColor.b, editor->brushColor.a);
+        return NuklearColorFToVec4(editor->brushColor);
     }
 }
 
@@ -217,6 +231,177 @@ RecalculateTextureDims(CreatureEditorScreen *editor, r32 totalTextureSize)
     }
 }
 
+internal inline EditCreatureTool
+GetCreatureTool(CreatureEditorScreen *editor)
+{
+    switch(editor->editState)
+    {
+
+    case EDIT_CREATURE_DRAW:
+    {
+        return CREATURE_TOOL_BRUSH;
+    } break;
+
+    default:
+    {
+        return CREATURE_TOOL_SELECT;
+    } break;
+
+    }
+}
+
+internal inline char *
+GetToolName(CreatureEditorScreen *editor)
+{
+    EditCreatureTool tool = GetCreatureTool(editor);
+    switch(tool)
+    {
+    case CREATURE_TOOL_BRUSH:
+    {
+        return "Brush";
+    } break;
+
+    case CREATURE_TOOL_SELECT:
+    {
+        return "Select";
+    } break;
+
+    }
+    return CREATURE_TOOL_SELECT;
+}
+
+internal inline b32
+DoColorPickerButton(struct nk_context *ctx, struct nk_colorf *color, b32 *isColorPickerVisible)
+{
+    b32 isJustPressed = 0;
+    b32 result = 0;
+    if(nk_button_color(ctx, (struct nk_color){
+            (ui8)(color->r*255),
+            (ui8)(color->g*255),
+            (ui8)(color->b*255),
+            (ui8)(color->a*255)}))
+    {
+        *isColorPickerVisible = 1;
+        isJustPressed = 1;
+    }
+    if(*isColorPickerVisible)
+    {
+        result = 1;
+        struct nk_rect colorPickerBounds = nk_rect(0, 0, 300, 300);
+        nk_popup_begin(ctx, NK_POPUP_STATIC, "Pick Creature Color", NK_WINDOW_NO_SCROLLBAR, colorPickerBounds);
+        nk_layout_row_dynamic(ctx, 300, 1);
+
+        struct nk_rect bounds = nk_widget_bounds(ctx);
+        bounds.x-=20;bounds.y-=20;bounds.w+=40;bounds.h+=40;
+        nk_color_pick(ctx, color, NK_RGB);
+        b32 isInsideColorPicker = nk_input_is_mouse_hovering_rect(&ctx->input, bounds);
+        if(!isInsideColorPicker && !isJustPressed)
+        {
+            nk_popup_close(ctx);
+            *isColorPickerVisible = 0;
+        }
+
+        nk_popup_end(ctx);
+    }
+    return result;
+}
+
+void
+DoToolWindow(AppState *appState, CreatureEditorScreen *editor, struct nk_context *ctx)
+{
+    CreatureDefinition *def = editor->creatureDefinition;
+    if(nk_begin(ctx, "Tool", nk_rect(5, 610, 300, 300), 
+                NK_WINDOW_TITLE | 
+                NK_WINDOW_BORDER | 
+                NK_WINDOW_MOVABLE | 
+                NK_WINDOW_SCALABLE ))
+    {
+        nk_layout_row_dynamic(ctx, 30, 1);
+        nk_label(ctx, GetToolName(editor), NK_TEXT_LEFT);
+        EditCreatureTool tool = GetCreatureTool(editor);
+
+        switch(tool)
+        {
+        case CREATURE_TOOL_SELECT:
+        {
+            nk_layout_row_dynamic(ctx, 30, 2);
+            nk_checkbox_label(ctx, "Snap Dims", &editor->isDimSnapEnabled);
+            if(editor->isDimSnapEnabled)
+            {
+                NKEditFloatProperty(ctx, "Dim Res", 1, &editor->dimSnapResolution, 100, 1.0, 1.0);
+            }
+            else
+            {
+                nk_spacing(ctx, 1);
+            }
+
+            nk_checkbox_label(ctx, "Snap Angles", &editor->isAngleSnapEnabled);
+            if(editor->isAngleSnapEnabled)
+            {
+                r32 res = RadToDeg(editor->angleSnapResolution);
+                NKEditFloatProperty(ctx, "Angle Res", 1, &res, 100, 1.0, 1.0);
+                editor->angleSnapResolution = DegToRad(res);
+            }
+            else
+            {
+                nk_spacing(ctx, 1);
+            }
+
+            nk_checkbox_label(ctx, "Snap Edges", &editor->isEdgeSnapEnabled);
+            if(editor->isEdgeSnapEnabled)
+            {
+                editor->edgeSnapDivisions = nk_propertyi(ctx, "Divs", 2, editor->edgeSnapDivisions, 16, 1, 1);
+            }
+            else
+            {
+                nk_spacing(ctx, 1);
+            }
+            
+            if(editor->selectedId > 1)
+            {
+                if(nk_button_label(ctx, "Delete bodypart"))
+                {
+                    nk_layout_row_dynamic(ctx, 30, 1);
+                    EditorRemoveBodyPart(editor, editor->selectedId);
+                }
+            }
+        } break;
+
+        case CREATURE_TOOL_BRUSH:
+        {
+            nk_layout_row_dynamic(ctx, 30, 2);
+
+            nk_label(ctx, "Brush Color", NK_TEXT_LEFT);
+            DoColorPickerButton(ctx, &editor->brushColor, &editor->isBrushColorPickerVisible);
+
+            nk_layout_row_dynamic(ctx, 30, 1);
+            if(nk_widget_has_mouse_click_down(ctx, NK_BUTTON_LEFT, 1))
+            {
+                editor->drawBrushInScreenCenter = 1;
+            }
+            NKEditFloatProperty(ctx, "Brush Size", 1.0, &editor->brushSize, 20.0, 0.5, 0.5);
+            nk_layout_row_dynamic(ctx, 30, 2);
+            nk_checkbox_label(ctx, "Background", &def->drawSolidColor);
+            if(def->drawSolidColor)
+            {
+                if(DoColorPickerButton(ctx, &editor->creatureSolidColor, 
+                            &editor->isCreatureColorPickerVisible))
+                {
+                    def->solidColor = NuklearColorFToVec3(editor->creatureSolidColor);
+                }
+            }
+        } break;
+
+        default:
+        {
+        }break;
+        }
+
+
+    }
+    nk_end(ctx);
+}
+
 void
 UpdateCreatureEditorScreen(AppState *appState, 
         CreatureEditorScreen *editor, 
@@ -236,15 +421,23 @@ UpdateCreatureEditorScreen(AppState *appState,
     AtlasRegion *circleRegion = defaultAtlas->regions+0;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
 
-    // TODO: DELETE! dont recalcualte every frame. Assumes width=height.
+    // TODO: DELETE! dont recalculate every frame. Assumes width=height.
     RecalculateTextureDims(editor, creatureAtlas->width);
     b32 hasLastBrushStroke = 0;
     
     // Key and mouse input
     editor->isInputCaptured = nk_window_is_any_hovered(ctx);
+    editor->canMoveCameraWithMouse = editor->editState==EDIT_CREATURE_NONE;
     if(IsKeyActionJustDown(appState, ACTION_ESCAPE))
     {
         editor->editState = EDIT_CREATURE_NONE;
+    }
+    if(IsKeyActionJustDown(appState, ACTION_DELETE))
+    {
+        if(editor->selectedId > 1)
+        {
+            EditorRemoveBodyPart(editor, editor->selectedId);
+        }
     }
 
     UpdateCameraInput(appState, camera);
@@ -270,6 +463,23 @@ UpdateCreatureEditorScreen(AppState *appState,
             circleRegion->size);
     DrawGrid(batch, camera, 50, 2.0, squareRegion);
 
+    if(def->drawSolidColor)
+    {
+        batch->colorState = vec4(def->solidColor.x, def->solidColor.y, def->solidColor.z, 1.0);
+        for(ui32 bodyPartIdx = 0; 
+                bodyPartIdx < def->nBodyParts;
+                bodyPartIdx++)
+        {
+            BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
+            PushOrientedRectangle2(batch,
+                    part->pos,
+                    part->width,
+                    part->height,
+                    part->angle,
+                    squareRegion);
+        }
+    }
+
     EndSpritebatch(batch);
 
     BeginSpritebatch(batch);
@@ -280,7 +490,7 @@ UpdateCreatureEditorScreen(AppState *appState,
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
-        BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
+        BodyPartDefinition *part = def->drawOrder[bodyPartIdx];
         DrawBodyPartWithTexture(batch, part, part->pos, part->angle, def->textureOverhang);
     }
     EndSpritebatch(batch);
@@ -304,149 +514,6 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
 
-    // TODO: collect in editor and display at the same time. Just like spritebatch.
-    char info[256];
-    memset(info, 0, 256);
-
-    if(editor->editState==EDIT_ADD_BODYPART_FIND_EDGE)
-    {
-        if(EditorCanAddBodyPart(editor)) 
-        {
-            r32 minDist = 10000000.0;
-            BoxEdgeLocation location = {};
-            BoxEdgeLocation minLocation = {};
-            b32 hasLocation = 0;
-            BodyPartDefinition *attachTo = NULL;
-            for(ui32 bodyPartIdx = 0;
-                    bodyPartIdx < def->nBodyParts;
-                    bodyPartIdx++)
-            {
-                BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
-                r32 dist = GetNearestBoxEdgeLocation(part->pos, vec2(part->width, part->height), part->angle, mousePos, &location);
-                if(dist > 0 && dist < minDist)
-                {
-                    minDist = dist;
-                    minLocation = location;
-                    hasLocation = 1;
-                    attachTo = part;
-                }
-            }
-            if(hasLocation)
-            {
-                minLocation.offset = SnapEdge(editor, minLocation.offset);
-                minLocation.pos = GetBoxEdgePosition(attachTo->pos, 
-                        vec2(attachTo->width, attachTo->height), 
-                        attachTo->angle, 
-                        minLocation.xEdge, 
-                        minLocation.yEdge, 
-                        minLocation.offset);
-                batch->colorState = vec4(0, 1.0, 0.0, 1.0);
-                PushCircle2(batch, minLocation.pos, 3, circleRegion);
-                sprintf(info, "offset = %.2f, (%d, %d)", minLocation.offset, minLocation.xEdge, minLocation.yEdge);
-                if(IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT))
-                {
-                    if(editor->isInputCaptured)
-                    {
-                        editor->editState = EDIT_CREATURE_NONE;
-                    }
-                    else
-                    {
-                        editor->bodyPartLocation = minLocation;
-                        editor->attachTo = attachTo;
-                        editor->editState=EDIT_ADD_BODYPART_PLACE;
-                    }
-                }
-            }
-        }
-        else
-        {
-            editor->editState=EDIT_CREATURE_NONE;
-        }
-    } else if(editor->editState==EDIT_ADD_BODYPART_PLACE)
-    {
-        BodyPartDefinition *part = editor->attachTo;
-        BoxEdgeLocation *location = &editor->bodyPartLocation;
-        Vec2 from = editor->bodyPartLocation.pos;
-        Vec2 to = mousePos;
-        r32 angle = atan2f(to.y-from.y, to.x-from.x);
-        r32 dist = SnapDim(editor, v2_dist(from, to));
-        r32 edgeAngle = atan2f(location->yEdge, location->xEdge);
-        r32 localAngle = angle-part->angle - edgeAngle;
-        localAngle = SnapAngle(editor, NormalizeAngle(localAngle));
-        angle = NormalizeAngle(edgeAngle+part->angle)+localAngle;
-        Vec2 center = v2_add(from, v2_polar(angle, dist/2));
-
-        sprintf(info, "%.1f deg", RadToDeg(localAngle));
-        batch->colorState = vec4(1.0, 1.0, 1.0, 0.4);
-        PushOrientedRectangle2(batch,
-                center,
-                dist,
-                20,
-                angle,
-                squareRegion);
-        if(EditorIsMouseJustReleased(appState, editor))
-        {
-            if(editor->isInputCaptured)
-            {
-                editor->editState=EDIT_CREATURE_NONE;
-            }
-            else
-            {
-                BodyPartDefinition *newPart = def->bodyParts+def->nBodyParts++;
-                
-                newPart->id = editor->idCounter++;
-                newPart->pos = center;
-                newPart->width = dist;
-                newPart->height = 20;
-                newPart->angle = angle;
-                newPart->localAngle = localAngle;
-                newPart->connectionId = part->id;
-                newPart->offset = location->offset;
-                newPart->xEdge = location->xEdge;
-                newPart->yEdge = location->yEdge;
-                newPart->pivotPoint = location->pos;
-                newPart->minAngle = -1;
-                newPart->maxAngle = 1;
-                
-                newPart->hasDragOutput = 1;
-                newPart->hasRotaryMuscleOutput = 1;
-
-                AssignTextureToBodyPartDefinition(editor, newPart);
-
-                AssignBrainIO(def);
-                editor->editState=EDIT_ADD_BODYPART_FIND_EDGE;
-            }
-        }
-    } 
-    else if(editor->editState==EDIT_CREATURE_DRAW)
-    {
-        if(EditorIsMousePressed(appState, editor))
-        {
-            hasLastBrushStroke = 1;
-            if(editor->hasLastBrushStroke)
-            {
-                ui32 maxPoints = 8;
-                // Draw line. TODO: Make actual line rendering algorithm. This is expensive.
-                for(ui32 pointIdx = 0;
-                        pointIdx < maxPoints; 
-                        pointIdx++)
-                {
-                    r32 factor = ((r32)pointIdx)/(maxPoints-1);
-                    Vec2 point = v2_lerp(editor->lastBrushStroke, mousePos, factor);
-                    // Sets active texture. Dont forget to switch back.
-                    DoDrawAtPoint(editor, creatureAtlas, point);
-                }
-            }
-            else
-            {
-                DoDrawAtPoint(editor, creatureAtlas, mousePos);
-            }
-            editor->lastBrushStroke = mousePos;
-            glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
-        }
-    }
-    editor->hasLastBrushStroke = hasLastBrushStroke;
-
     for(ui32 bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
@@ -463,6 +530,10 @@ UpdateCreatureEditorScreen(AppState *appState,
                 1.0,
                 squareRegion);
     }
+
+    // TODO: collect in editor and display at the same time. Just like spritebatch.
+    char info[256];
+    memset(info, 0, 256);
 
     if(editor->selectedId)
     {
@@ -528,6 +599,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                     5,
                     editor->editState==EDIT_CREATURE_ROTATION_AND_LENGTH);
             part->width = SnapDim(editor, width);
+            part->width = Max(5, part->width);
             part->localAngle = SnapAngle(editor, GetLocalAngleFromAbsoluteAngle(def, part, absAngle));
             if(hitRotationAndLengthDragButton)
             {
@@ -602,26 +674,192 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
         
         RecalculateSubNodeBodyParts(def, def->bodyParts);
-
     }
 
-    if(editor->editState==EDIT_CREATURE_DRAW)
+    if(editor->editState==EDIT_CREATURE_NONE)
     {
-        batch->colorState = GetBrushColor(editor);
-        PushCircle2(batch, mousePos, editor->brushSize, circleRegion);
+        if(EditorCanAddBodyPart(editor)) 
+        {
+            r32 minPlaceDistance = 20.0;
+            r32 minDist = 10000000.0;
+            BoxEdgeLocation location = {};
+            BoxEdgeLocation minLocation = {};
+            b32 hasLocation = 0;
+            BodyPartDefinition *attachTo = NULL;
+            for(ui32 bodyPartIdx = 0;
+                    bodyPartIdx < def->nBodyParts;
+                    bodyPartIdx++)
+            {
+                BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
+                r32 dist = GetNearestBoxEdgeLocation(part->pos, 
+                        vec2(part->width, part->height), part->angle, mousePos, &location);
+                if(dist > 0 && dist < minDist)
+                {
+                    minDist = dist;
+                    minLocation = location;
+                    hasLocation = 1;
+                    attachTo = part;
+                }
+            }
+            if(hasLocation
+                    && minDist < minPlaceDistance 
+                    && !intersectId)
+            {
+                minLocation.offset = SnapEdge(editor, minLocation.offset);
+                minLocation.pos = GetBoxEdgePosition(attachTo->pos, 
+                        vec2(attachTo->width, attachTo->height), 
+                        attachTo->angle, 
+                        minLocation.xEdge, 
+                        minLocation.yEdge, 
+                        minLocation.offset);
+                batch->colorState = vec4(0, 1.0, 0.0, 1.0);
+                PushCircle2(batch, minLocation.pos, 3, circleRegion);
+                sprintf(info, "place on edge %.2f.", minLocation.offset);
+                if(IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT))
+                {
+                    if(editor->isInputCaptured)
+                    {
+                        editor->editState = EDIT_CREATURE_NONE;
+                    }
+                    else
+                    {
+                        editor->bodyPartLocation = minLocation;
+                        editor->attachTo = attachTo;
+                        editor->editState=EDIT_ADD_BODYPART_PLACE;
+                    }
+                }
+            }
+        }
+        else
+        {
+            editor->editState=EDIT_CREATURE_NONE;
+        }
+    } else if(editor->editState==EDIT_ADD_BODYPART_PLACE)
+    {
+        BodyPartDefinition *part = editor->attachTo;
+        BoxEdgeLocation *location = &editor->bodyPartLocation;
+        Vec2 from = editor->bodyPartLocation.pos;
+        Vec2 to = mousePos;
+        r32 angle = atan2f(to.y-from.y, to.x-from.x);
+        r32 dist = SnapDim(editor, v2_dist(from, to));
+        dist = fmaxf(dist, 5.0);
+        r32 edgeAngle = atan2f(location->yEdge, location->xEdge);
+        r32 localAngle = angle-part->angle - edgeAngle;
+        localAngle = SnapAngle(editor, NormalizeAngle(localAngle));
+        angle = NormalizeAngle(edgeAngle+part->angle)+localAngle;
+        Vec2 center = v2_add(from, v2_polar(angle, dist/2));
+
+        sprintf(info, "%.1f deg", RadToDeg(localAngle));
+        batch->colorState = vec4(1.0, 1.0, 1.0, 0.4);
+        PushOrientedRectangle2(batch,
+                center,
+                dist,
+                20,
+                angle,
+                squareRegion);
+        if(EditorIsMouseJustReleased(appState, editor))
+        {
+            if(editor->isInputCaptured)
+            {
+                editor->editState=EDIT_CREATURE_NONE;
+            }
+            else
+            {
+                BodyPartDefinition *newPart = def->bodyParts+def->nBodyParts++;
+                
+                newPart->id = editor->idCounter++;
+                newPart->pos = center;
+                newPart->width = dist;
+                newPart->height = 20;
+                newPart->angle = angle;
+                newPart->localAngle = localAngle;
+                newPart->connectionId = part->id;
+                newPart->offset = location->offset;
+                newPart->xEdge = location->xEdge;
+                newPart->yEdge = location->yEdge;
+                newPart->pivotPoint = location->pos;
+                newPart->minAngle = -1;
+                newPart->maxAngle = 1;
+                
+                newPart->hasDragOutput = 1;
+                newPart->hasRotaryMuscleOutput = 1;
+
+                AssignTextureToBodyPartDefinition(editor, newPart);
+
+                RecalculateSubNodeBodyParts(def, def->bodyParts);
+                RecalculateBodyPartDrawOrder(def);
+                AssignBrainIO(def);
+                
+                editor->selectedId = newPart->id;
+                editor->editState=EDIT_CREATURE_NONE;
+            }
+        }
+    } 
+    else if(editor->editState==EDIT_CREATURE_DRAW)
+    {
+        if(EditorIsMousePressed(appState, editor))
+        {
+            hasLastBrushStroke = 1;
+            if(editor->hasLastBrushStroke)
+            {
+                ui32 maxPoints = 8;
+                // Draw line. TODO: Make actual line rendering algorithm. This is expensive.
+                for(ui32 pointIdx = 0;
+                        pointIdx < maxPoints; 
+                        pointIdx++)
+                {
+                    r32 factor = ((r32)pointIdx)/(maxPoints-1);
+                    Vec2 point = v2_lerp(editor->lastBrushStroke, mousePos, factor);
+                    // Sets active texture. Dont forget to switch back.
+                    DoDrawAtPoint(editor, creatureAtlas, point);
+                }
+            }
+            else
+            {
+                DoDrawAtPoint(editor, creatureAtlas, mousePos);
+            }
+            editor->lastBrushStroke = mousePos;
+            glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
+        }
     }
+    editor->hasLastBrushStroke = hasLastBrushStroke;
+
     if(editor->drawBrushInScreenCenter)
     {
         batch->colorState = GetBrushColor(editor);
-        PushCircle2(batch, camera->pos, editor->brushSize, circleRegion);
+        PushCircle2(batch, camera->pos, editor->brushSize*camera->scale, circleRegion);
         editor->drawBrushInScreenCenter = 0;
     }
 
     EndSpritebatch(batch);
 
-    // Only text from here
+    // Do own interface here.
     BeginSpritebatch(batch);
     glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&screenCamera->transform);
+    if(editor->editState==EDIT_CREATURE_DRAW 
+            && !editor->isInputCaptured)
+    {
+        SDL_ShowCursor(SDL_DISABLE);
+        r32 brushSize = editor->brushSize/camera->scale;
+        if(editor->isErasing)
+        {
+            batch->colorState = vec4(1.0, 1.0, 1.0, 1.0);
+            PushLineCircle2(batch, screenCamera->mousePos, brushSize, 2.0, 32, squareRegion);
+        }
+        else
+        {
+            batch->colorState = GetBrushColor(editor);
+            PushCircle2(batch, screenCamera->mousePos, brushSize, circleRegion);
+        }
+    }
+    else 
+    {
+        SDL_ShowCursor(SDL_ENABLE);
+    }
+    EndSpritebatch(batch);
+
+    // Only text from here
+    BeginSpritebatch(batch);
     glBindTexture(GL_TEXTURE_2D, fontRenderer->font12Texture);
 
     batch->colorState=vec4(1,1,1,1);
@@ -631,6 +869,26 @@ UpdateCreatureEditorScreen(AppState *appState,
     }
 
     EndSpritebatch(batch);
+
+    // Do camera handling
+    if(editor->isDraggingCamera)
+    {
+        if(!IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT)
+                || !editor->canMoveCameraWithMouse)
+        {
+            editor->isDraggingCamera = 0;
+        }
+        else
+        {
+            camera->pos.x-=appState->dx*camera->scale;
+            camera->pos.y+=appState->dy*camera->scale;
+        }
+    }
+    else if(editor->canMoveCameraWithMouse 
+            && EditorIsMouseJustPressed(appState, editor))
+    {
+        editor->isDraggingCamera = 1;
+    }
 
     // Begin UI
     if(nk_begin(ctx, "Editor", nk_rect(5, 5, 300, 600), 
@@ -643,52 +901,39 @@ UpdateCreatureEditorScreen(AppState *appState,
         b32 canAddBodyPart = EditorCanAddBodyPart(editor);
         struct nk_color bodyPartTextColor = 
             canAddBodyPart ? nk_rgb(255, 255, 255) : nk_rgb(255, 0, 0);
-        nk_labelf_colored(ctx, NK_TEXT_LEFT, bodyPartTextColor, "%u / %u Bodyparts", def->nBodyParts, MAX_BODYPARTS);
-        nk_spacing(ctx, 1);
-        nk_checkbox_label(ctx, "Snap Dims", &editor->isDimSnapEnabled);
-        if(editor->isDimSnapEnabled)
-        {
-            NKEditFloatProperty(ctx, "Dim Res", 1, &editor->dimSnapResolution, 100, 1.0, 1.0);
-        }
-        else
-        {
-            nk_spacing(ctx, 1);
-        }
+        nk_labelf_colored(ctx, NK_TEXT_LEFT, bodyPartTextColor, 
+                "%u / %u Bodyparts", def->nBodyParts, MAX_BODYPARTS);
 
-        nk_checkbox_label(ctx, "Snap Angles", &editor->isAngleSnapEnabled);
-        if(editor->isAngleSnapEnabled)
+        EditCreatureTool tool = GetCreatureTool(editor);
+        nk_layout_row_static(ctx, 50, 50, 3);
+        if(nk_widget_is_hovered(ctx))
         {
-            r32 res = RadToDeg(editor->angleSnapResolution);
-            NKEditFloatProperty(ctx, "Angle Res", 1, &res, 100, 1.0, 1.0);
-            editor->angleSnapResolution = DegToRad(res);
+            nk_tooltip(ctx, "Select and edit creature.");
         }
-        else
-        {
-            nk_spacing(ctx, 1);
-        }
-
-        nk_checkbox_label(ctx, "Snap Edges", &editor->isEdgeSnapEnabled);
-        if(editor->isEdgeSnapEnabled)
-        {
-            editor->edgeSnapDivisions = nk_propertyi(ctx, "Divs", 2, editor->edgeSnapDivisions, 16, 1, 1);
-        }
-
-        //nk_layout_row_static(ctx, 30, 250, 1);
-        nk_layout_row_dynamic(ctx, 30, 1);
-        if(nk_button_label(ctx, "Add Bodypart"))
-        {
-            editor->editState = EDIT_ADD_BODYPART_FIND_EDGE;
-        }
-        if(nk_button_label(ctx, "Cancel"))
+        if(nk_button_image(ctx, tool==CREATURE_TOOL_SELECT ? 
+                    nuklearMedia.select_check : nuklearMedia.select))
         {
             editor->editState = EDIT_CREATURE_NONE;
         }
-        if(nk_button_label(ctx, "Delete"))
+        if(nk_widget_is_hovered(ctx))
         {
-            if(editor->selectedId > 1)
-            {
-                EditorRemoveBodyPart(editor, editor->selectedId);
-            }
+            nk_tooltip(ctx, "Draw.");
+        }
+        if(nk_button_image(ctx, tool==CREATURE_TOOL_BRUSH && !editor->isErasing ? 
+                    nuklearMedia.brush_check : nuklearMedia.brush))
+        {
+            editor->editState = EDIT_CREATURE_DRAW;
+            editor->isErasing = 0;
+        }
+        if(nk_widget_is_hovered(ctx))
+        {
+            nk_tooltip(ctx, "Erase.");
+        }
+        if(nk_button_image(ctx, tool==CREATURE_TOOL_BRUSH && editor->isErasing ? 
+                    nuklearMedia.erase_check : nuklearMedia.erase))
+        {
+            editor->editState = EDIT_CREATURE_DRAW;
+            editor->isErasing = 1;
         }
         if(nk_tree_push(ctx, NK_TREE_TAB, "Bodypart Properties", NK_MAXIMIZED))
         {
@@ -698,7 +943,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                 b32 isEdited = 0;
                 b32 isBrainEdited = 0;
 
-                nk_labelf(ctx, NK_TEXT_LEFT, "BodyPart %d", part->id);
+                nk_labelf(ctx, NK_TEXT_LEFT, "BodyPart %u %u", part->id, part->degree);
 
                 if(NKEditRadInDegProperty(ctx, "Angle", -M_PI, 
                             part->connectionId ? &part->localAngle : &part->angle, 
@@ -773,39 +1018,6 @@ UpdateCreatureEditorScreen(AppState *appState,
             }
             nk_tree_pop(ctx);
         }
-        if(nk_tree_push(ctx, NK_TREE_TAB, "Draw", NK_MAXIMIZED))
-        {
-            nk_layout_row_dynamic(ctx, 30, 3);
-            if(nk_button_label(ctx, "Brush"))
-            {
-                editor->editState = EDIT_CREATURE_DRAW;
-                editor->isErasing = 0;
-            }
-            if(nk_button_label(ctx, "Erase"))
-            {
-                editor->editState = EDIT_CREATURE_DRAW;
-                editor->isErasing = 1;
-                //editor->brushColor = (struct nk_colorf){0};
-            }
-            nk_button_color(ctx, (struct nk_color){
-                    (ui8)(editor->brushColor.r*255),
-                    (ui8)(editor->brushColor.g*255),
-                    (ui8)(editor->brushColor.b*255),
-                    (ui8)(editor->brushColor.a*255)});
-
-            nk_layout_row_dynamic(ctx, 30, 1);
-            if(nk_widget_has_mouse_click_down(ctx, NK_BUTTON_LEFT, 1))
-            {
-                editor->drawBrushInScreenCenter = 1;
-            }
-            NKEditFloatProperty(ctx, "Brush Size", 1.0, &editor->brushSize, 20.0, 0.5, 0.5);
-            
-            nk_layout_row_dynamic(ctx, 300, 1);
-            nk_color_pick(ctx, &editor->brushColor, NK_RGB);
-            nk_layout_row_dynamic(ctx, 30, 1);
-
-            nk_tree_pop(ctx);
-        }
         if(nk_tree_push(ctx, NK_TREE_TAB, "Simulation Settings", NK_MAXIMIZED))
         {
             nk_layout_row_dynamic(ctx, 30, 1);
@@ -821,6 +1033,8 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
     nk_end(ctx);
+
+    DoToolWindow(appState, editor, ctx);
 
     if(!CreatureEditorIsEditing(editor) 
             && !CreatureEditorWasEditing(editor)
@@ -865,13 +1079,17 @@ InitCreatureEditorScreen(AppState *appState,
     memset(editor->isTextureSquareOccupied, 0, sizeof(editor->isTextureSquareOccupied));
     editor->brushSize = 3.0;
     editor->brushColor = (struct nk_colorf){1.0, 0.0, 0.0, 1.0};
+    editor->creatureSolidColor = (struct nk_colorf){0.8, 0.8, 0.8, 1.0};
 
-    editor->creatureDefinition->nHidden = 2;
+    editor->creatureDefinition->nHidden = 6;
     editor->creatureDefinition->textureOverhang = 5;
     editor->creatureDefinition->nInternalClocks = 2;
+    editor->creatureDefinition->drawSolidColor = 1;
+    editor->creatureDefinition->solidColor = NuklearColorFToVec3(editor->creatureSolidColor);
     editor->idCounter = 1;
     BodyPartDefinition *torso = editor->creatureDefinition->bodyParts+editor->creatureDefinition->nBodyParts++;
     torso->id = editor->idCounter++;
+    torso->degree = 0U;
     torso->pos = vec2(0,0);
     torso->width = 50;
     torso->height = 50;
@@ -879,6 +1097,6 @@ InitCreatureEditorScreen(AppState *appState,
     torso->hasRotaryMuscleOutput = 0;
     AssignTextureToBodyPartDefinition(editor, torso);
     AssignBrainIO(editor->creatureDefinition);
-
+    RecalculateBodyPartDrawOrder(editor->creatureDefinition);
 }
 

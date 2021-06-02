@@ -180,6 +180,48 @@ PushSemiCircle2(SpriteBatch *batch,
 }
 
 void
+PushLineCircle2(SpriteBatch *batch,
+        Vec2 center,
+        r32 radius,
+        r32 lineWidth,
+        int nPoints,
+        AtlasRegion *tex)
+{
+    ui16 lastIdx = batch->nVertices;
+    r32 innerRadius = radius-lineWidth/2.0;
+    r32 outerRadius = radius+lineWidth/2.0;
+    r32 dAngle = 2*M_PI/nPoints;
+
+    for(int atPoint = 0;
+            atPoint < nPoints;
+            atPoint++)
+    {
+        r32 angle = atPoint * dAngle;
+        r32 c = cosf(angle);
+        r32 s = sinf(angle);
+        PushVertex2(batch, 
+                vec2(center.x+c*innerRadius, center.y+s*innerRadius),
+                tex->pos, 
+                batch->colorState);
+        PushVertex2(batch, 
+                vec2(center.x+c*outerRadius, center.y+s*outerRadius),
+                tex->pos, 
+                batch->colorState);
+    }
+    for(int atPoint = 0;
+            atPoint < nPoints-1;
+            atPoint++)
+    {
+        PushIndex(batch, lastIdx+atPoint*2);
+        PushIndex(batch, lastIdx+atPoint*2+1);
+        PushIndex(batch, lastIdx+atPoint*2+2);
+        PushIndex(batch, lastIdx+atPoint*2+2);
+        PushIndex(batch, lastIdx+atPoint*2+3);
+        PushIndex(batch, lastIdx+atPoint*2);
+    }
+}
+
+void
 PushRect2(SpriteBatch *batch, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
 {
     PushQuad2(batch, 

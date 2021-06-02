@@ -8,6 +8,7 @@
 typedef struct
 {
     ui32 id;
+    ui16 degree;
     Vec2 pos;
     r32 width;
     r32 height;
@@ -48,13 +49,16 @@ typedef struct
 typedef struct
 {
     ui32 nBodyParts;
-    BodyPartDefinition bodyParts[MAX_BODYPARTS];
     ui32 nInputs;
     ui32 nOutputs;
     ui32 nHidden;
     ui32 geneSize;
     ui32 nInternalClocks;
     r32 textureOverhang;
+    b32 drawSolidColor;
+    Vec3 solidColor;
+    BodyPartDefinition bodyParts[MAX_BODYPARTS];
+    BodyPartDefinition *drawOrder[MAX_BODYPARTS];
 } CreatureDefinition;
 
 #endif

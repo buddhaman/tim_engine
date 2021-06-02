@@ -101,16 +101,14 @@ MakeRandomTextureAtlas(MemoryArena *arena)
     for(int x = 0; x < height; x++)
     {
 #if 1
-        ui8 r = 255;
-        ui8 g = 155;
-        ui8 b = 255;
+        image[x+y*width] = 0;
 #else
         ui8 r = RandomUI32(128, 255);
         ui8 g = RandomUI32(128, 255);
         ui8 b = RandomUI32(128, 255);
 
-#endif
         image[x+y*width] = r + (g << 8) + (b << 16) +(255U << 24);
+#endif
     }
     glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);

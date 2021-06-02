@@ -16,17 +16,24 @@ SetFakeWorldSelection(FakeWorldScreen *screen,
     screen->selectedBodyPart = part;
 }
 
+internal inline r32
+GetBodyPartShade(BodyPart *part, r32 dragColorIntensity)
+{
+    return 1.0-part->body->drag*dragColorIntensity;
+}
+
 void
 DrawBodyPart(SpriteBatch *batch, 
         BodyPart *part,
         Vec3 creatureColor,
         r32 alpha,
+        r32 dragColorIntensity,
         AtlasRegion *texture)
 {
     RigidBody *body = part->body;
     Vec2 pos = GetBodyPos(body);
     r32 angle = GetBodyAngle(body);
-    r32 shade = 1.0-part->body->drag;
+    r32 shade = GetBodyPartShade(part, dragColorIntensity);
 
     batch->colorState = vec4(shade*creatureColor.x, 
             shade*creatureColor.y, 
@@ -145,39 +152,56 @@ DrawFakeWorld(FakeWorldScreen *screen,
 
     if(screen->isPopulationVisible)
     {
-        Vec3 creatureColor = vec3(1.0, 0.8, 0.8);
         for(ui32 creatureIdx = 1;
                 creatureIdx < world->nCreatures;
                 creatureIdx++)
         {
             Creature *creature = world->creatures+creatureIdx;
+            Vec3 creatureColor = creature->solidColor;
             r32 alpha = 0.2;
             for(ui32 bodyPartIdx = 0;
                     bodyPartIdx < creature->nBodyParts;
                     bodyPartIdx++)
             {
                 BodyPart *part = creature->bodyParts+bodyPartIdx;
-                DrawBodyPart(batch, part, creatureColor, alpha, squareRegion);
+                DrawBodyPart(batch, part, creatureColor, alpha, 1.0, squareRegion);
             }
         }
     }
 
-    // Only draw first creature with fancy texture
+    // Draw first creature
     Creature *creature = world->creatures+0;
-    batch->colorState = vec4(1,1,1,1);
+    if(creature->drawSolidColor)
+    {
+        Vec3 creatureColor = creature->solidColor;
+        batch->colorState = vec4(1,1,1,1);
+        for(int bodyPartIdx = creature->nBodyParts-1;
+                bodyPartIdx >= 0;
+                bodyPartIdx--)
+        {
+            BodyPart *part = creature->bodyParts+bodyPartIdx;
+            r32 dragFactor = screen->isDragVisible ? 1.0 :  0.0;
+            DrawBodyPart(batch, part, creatureColor, 1.0, dragFactor, squareRegion);
+        }
+    }
 
     EndSpritebatch(batch);
 
     BeginSpritebatch(batch);
     glBindTexture(GL_TEXTURE_2D, creatureTextureAtlas->textureHandle);
-    for(ui32 bodyPartIdx = 0;
-            bodyPartIdx < creature->nBodyParts;
-            bodyPartIdx++)
+    // Only draw first creature with fancy texture
+    // Draw in reverse order. Should draw in reverse order of degree. 
+    batch->colorState = vec4(1,1,1,1);
+    for(int bodyPartIdx = creature->nBodyParts-1;
+            bodyPartIdx >= 0;
+            bodyPartIdx--)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         RigidBody *body = part->body;
         Vec2 pos = GetBodyPos(body);
         r32 angle = GetBodyAngle(body);
+        r32 shade = screen->isDragVisible ? GetBodyPartShade(part, 1.0) : 1.0;
+        batch->colorState = vec4(shade, shade, shade, 1.0);
         DrawBodyPartWithTexture(batch, part->def, pos, angle, world->def.textureOverhang);
     }
     EndSpritebatch(batch);
@@ -226,8 +250,7 @@ UpdateFakeWorldScreen(AppState *appState,
             screen->tick++;
             if(screen->tick >= screen->ticksPerGeneration)
             {
-                screen->tick = 0;
-                screen->generation++;
+                // Next Generation
                 for(ui32 geneIdx = 0;
                         geneIdx < world->nGenes;
                         geneIdx++)
@@ -235,6 +258,11 @@ UpdateFakeWorldScreen(AppState *appState,
                     world->strategies->fitness->v[geneIdx] = CreatureGetFitness(world->creatures+geneIdx);
                 }
                 screen->avgFitness = VecR32Average(world->strategies->fitness);
+                screen->fitnessGraph[screen->generation] = screen->avgFitness;
+                screen->generation++;
+                screen->tick = 0;
+
+                // Setup new gene and restart world.
                 ESNextSolution(world->strategies);
                 ESGenerateGenes(world->strategies);
                 DestroyFakeWorld(world);
@@ -367,7 +395,7 @@ UpdateFakeWorldScreen(AppState *appState,
     {
         if(screen->hitBodyPart)
         {
-            // Only select first creature always for now.
+            // Only select from first creature always for now.
             SetFakeWorldSelection(screen, world->creatures, screen->hitBodyPart);
         }
         else
@@ -446,6 +474,20 @@ UpdateFakeWorldScreen(AppState *appState,
 
     }
     nk_end(ctx);
+
+#if 0
+    // Begin UI
+    if(nk_begin(ctx, "Graph", nk_rect(50, 400, 280, 400),
+            NK_WINDOW_BORDER | NK_WINDOW_TITLE | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE))
+    {
+        nk_layout_row_dynamic(ctx, 30,1);
+        nk_label(ctx, "llksdjf", NK_TEXT_LEFT);
+        nk_layout_row_dynamic(ctx, 400, 1);
+        nk_plot(ctx, NK_CHART_LINES, screen->fitnessGraph, screen->generation, 0);
+    }
+    nk_end(ctx);
+#endif
+
     screen->isGuiInputCaptured = nk_window_is_any_hovered(ctx);
 }
 
@@ -464,6 +506,7 @@ InitFakeWorldScreen(AppState *appState,
     screen->tick = 0;
     screen->ticksPerGeneration = 60*15;    // 10 seconds
     screen->avgFitness = -100000.0;
+    screen->fitnessGraph = PushAndZeroArray(arena, r32, 10000);
 
     // Settings
     screen->isPopulationVisible = 0;

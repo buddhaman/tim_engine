@@ -18,6 +18,8 @@ MapKeyCodeToAction(SDL_Keycode code)
         case SDLK_LEFT: { return ACTION_LEFT; } break;
         case SDLK_RIGHT: { return ACTION_RIGHT; } break;
         case SDLK_ESCAPE: { return ACTION_ESCAPE; } break;
+        case SDLK_BACKSPACE: { return ACTION_DELETE; } break;
+        case SDLK_DELETE: { return ACTION_DELETE; } break;
         default: { return ACTION_UNKNOWN; } break;
     }
 }
@@ -31,6 +33,7 @@ RegisterKeyAction(AppState *appState, KeyAction action, b32 down)
 void
 ResetKeyActions(AppState *appState)
 {
+    appState->mouseScrollY = 0;
     memcpy(appState->wasActionDown, appState->isActionDown, sizeof(appState->isActionDown));
 }
 
@@ -64,6 +67,11 @@ UpdateCameraInput(AppState *appState, Camera2D *camera)
     if(IsKeyActionDown(appState, ACTION_DOWN)) { camera->pos.y-=camSpeed; }
     if(IsKeyActionDown(appState, ACTION_LEFT)) { camera->pos.x-=camSpeed; }
     if(IsKeyActionDown(appState, ACTION_RIGHT)) { camera->pos.x+=camSpeed; }
+    if(appState->mouseScrollY)
+    {
+        r32 zoomFactor = pow(0.95, appState->mouseScrollY);
+        camera->scale*=zoomFactor;
+    }
 }
 
 void

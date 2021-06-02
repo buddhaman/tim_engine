@@ -48,6 +48,42 @@ ReadEntireFile(const char *path)
     }
 }
 
+typedef struct {
+    int textureHandle;
+    struct nk_image select;
+    struct nk_image brush;
+    struct nk_image erase;
+    struct nk_image select_check;
+    struct nk_image brush_check;
+    struct nk_image erase_check;
+    
+    struct nk_image check;
+} NuklearMedia;
+global_variable NuklearMedia nuklearMedia;
+
+ui32
+LoadImage(char *path)
+{
+    int x, y, n;
+    ui32 tex;
+    ui8 *data = stbi_load(path, &x, &y, &n, 4);
+    if(!data)
+    {
+        DebugOut("Cannot load image at %s.", path);
+        return 0;
+    }
+
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    stbi_image_free(data);
+    return tex;
+}
+
 // Own files
 #include "cool_memory.h"
 #include "tim_math.h"
@@ -139,7 +175,6 @@ main(int argc, char**argv)
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
 
-
     SDL_GL_SetSwapInterval(1);
     
     b32 err = gl3wInit() != 0;
@@ -158,11 +193,37 @@ main(int argc, char**argv)
     struct nk_context *ctx;
     ctx = nk_sdl_init(window);
 
+    // Nuklear font
     struct nk_font_atlas *nkFontAtlas;
     nk_sdl_font_stash_begin(&nkFontAtlas);
     struct nk_font *font = nk_font_atlas_add_from_file(nkFontAtlas, "DejaVuSansMono.ttf", 16.0, 0);
     nk_sdl_font_stash_end();
     nk_style_set_font(ctx, &font->handle);
+
+    // Load nuklear images and set style.
+    ui32 textureSize = 512;
+    nuklearMedia.textureHandle = LoadImage("creature_ui.png");
+
+    nuklearMedia.select = nk_subimage_id(nuklearMedia.textureHandle, 
+            textureSize, textureSize, nk_rect(0, 0, 128, 128));
+    nuklearMedia.brush = nk_subimage_id(nuklearMedia.textureHandle, 
+            textureSize, textureSize, nk_rect(128, 0, 128, 128));
+    nuklearMedia.erase = nk_subimage_id(nuklearMedia.textureHandle, 
+            textureSize, textureSize, nk_rect(256, 0, 128, 128));
+
+    nuklearMedia.select_check = nk_subimage_id(nuklearMedia.textureHandle, 
+            textureSize, textureSize, nk_rect(0, 128, 128, 128));
+    nuklearMedia.brush_check = nk_subimage_id(nuklearMedia.textureHandle, 
+            textureSize, textureSize, nk_rect(128, 128, 128, 128));
+    nuklearMedia.erase_check = nk_subimage_id(nuklearMedia.textureHandle, 
+            textureSize, textureSize, nk_rect(256, 128, 128, 128));
+
+    nuklearMedia.check = nk_subimage_id(nuklearMedia.textureHandle, 
+            textureSize, textureSize, nk_rect(384, 0, 128, 128));
+
+    struct nk_style_toggle *toggle = &ctx->style.checkbox;
+    toggle->cursor_normal = nk_style_item_image(nuklearMedia.check);
+    toggle->cursor_hover = nk_style_item_image(nuklearMedia.check);
 
     // MemoryArena
     MemoryArena *gameArena = CreateMemoryArena(128*1000*1000);
@@ -173,6 +234,7 @@ main(int argc, char**argv)
     appState->fakeWorldArena = CreateMemoryArena(128L*1000L*1000L);
     appState->clearColor = RGBAToVec4(0x35637cff);
     appState->currentScreen = SCREEN_CREATURE_EDITOR;
+
     // Font/Gui Camera
     appState->screenCamera = PushStruct(gameArena, Camera2D);
     InitCamera2D(appState->screenCamera);
@@ -218,6 +280,11 @@ main(int argc, char**argv)
                 RegisterKeyAction(appState, ACTION_MOUSE_BUTTON_LEFT, 1);
             } break;
 
+            case SDL_MOUSEWHEEL:
+            {
+                appState->mouseScrollY += event.wheel.y;
+            } break;
+
             case SDL_KEYUP:
             {
                 RegisterKeyAction(appState, MapKeyCodeToAction(event.key.keysym.sym), 0);
@@ -250,9 +317,14 @@ main(int argc, char**argv)
 
         SDL_GetWindowSize(window, &appState->screenWidth, &appState->screenHeight);
         appState->ratio = (r32)appState->screenHeight / ((r32)appState->screenWidth);
-        SDL_GetMouseState(&appState->mx, &appState->my);
-        appState->normalizedMX = 2*((r32)appState->mx)/appState->screenWidth - 1.0;
-        appState->normalizedMY = -2*((r32)appState->my)/appState->screenHeight + 1.0;
+        i32 mx, my;
+        SDL_GetMouseState(&mx, &my);
+        appState->dx = mx-appState->mx;
+        appState->dy = my-appState->my;
+        appState->mx = mx;
+        appState->my = my;
+        appState->normalizedMX = 2*((r32)mx)/appState->screenWidth - 1.0;
+        appState->normalizedMY = -2*((r32)my)/appState->screenHeight + 1.0;
 
         FitCamera2DToScreen(appState->screenCamera, appState);
         UpdateCamera2D(appState->screenCamera, appState);

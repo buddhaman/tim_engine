@@ -13,6 +13,7 @@ typedef enum
     ACTION_R,
     ACTION_P, 
     ACTION_ESCAPE,
+    ACTION_DELETE,
     NUM_KEY_ACTIONS
 } KeyAction;
 
@@ -34,6 +35,9 @@ struct AppState
     r32 ratio;
     i32 mx;
     i32 my;
+    i32 dx;
+    i32 dy;
+    i32 mouseScrollY;
     r32 normalizedMX;
     r32 normalizedMY;
     Vec4 clearColor;

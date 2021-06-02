@@ -26,6 +26,9 @@ typedef struct
 {
     ui32 physicsGroup;
 
+    b32 drawSolidColor;
+    Vec3 solidColor;
+
     r32 internalClock;
     ui32 nInternalClocks;
     r32 phases[4];

@@ -152,6 +152,9 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
     creature->nRotaryMuscles = 0;
     creature->rotaryMuscles = world->rotaryMuscles+world->nRotaryMuscles;
 
+    creature->solidColor = vec3(def->solidColor.x, def->solidColor.y, def->solidColor.z);
+    creature->drawSolidColor = def->drawSolidColor;
+
     creature->nInternalClocks = def->nInternalClocks;
     creature->internalClock = 0;
     for(ui32 clockIdx = 0;
