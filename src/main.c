@@ -272,12 +272,26 @@ main(int argc, char**argv)
 
             case SDL_MOUSEBUTTONUP:
             {
-                RegisterKeyAction(appState, ACTION_MOUSE_BUTTON_LEFT, 0);
+                if(event.button.button==SDL_BUTTON_LEFT)
+                {
+                    RegisterKeyAction(appState, ACTION_MOUSE_BUTTON_LEFT, 0);
+                }
+                else if(event.button.button==SDL_BUTTON_RIGHT)
+                {
+                    RegisterKeyAction(appState, ACTION_MOUSE_BUTTON_RIGHT, 0);
+                }
             } break;
 
             case SDL_MOUSEBUTTONDOWN:
             {
-                RegisterKeyAction(appState, ACTION_MOUSE_BUTTON_LEFT, 1);
+                if(event.button.button==SDL_BUTTON_LEFT)
+                {
+                    RegisterKeyAction(appState, ACTION_MOUSE_BUTTON_LEFT, 1);
+                }
+                else if(event.button.button==SDL_BUTTON_RIGHT)
+                {
+                    RegisterKeyAction(appState, ACTION_MOUSE_BUTTON_RIGHT, 1);
+                }
             } break;
 
             case SDL_MOUSEWHEEL:

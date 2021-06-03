@@ -167,7 +167,7 @@ PushSemiCircle2(SpriteBatch *batch,
     {
         r32 angle = minAngle+angDiff*atPoint;
         Vec2 point = v2_add(pos, v2_polar(angle, radius));
-        PushVertex2(batch, point, tex->pos, batch->colorState); // hope this tex position works. 0-dimensional.
+        PushVertex2(batch, point, tex->pos, batch->colorState); 
     }
     for(int atPoint = 0;
             atPoint < nPoints-1;

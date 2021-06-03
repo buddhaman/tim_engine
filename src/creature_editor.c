@@ -306,6 +306,158 @@ DoColorPickerButton(struct nk_context *ctx, struct nk_colorf *color, b32 *isColo
     return result;
 }
 
+void 
+EditBodypartDefinition(CreatureEditorScreen *editor, 
+        RenderContext *renderContext, 
+        BodyPartDefinition *part, 
+        char *info)
+{
+    Gui *gui = editor->gui;
+    CreatureDefinition *def = editor->creatureDefinition;
+    SpriteBatch *batch = renderContext->batch;
+    //AtlasRegion *circleRegion = renderContext->defaultAtlas->regions+0;
+    AtlasRegion *squareRegion = renderContext->defaultAtlas->regions+1;
+    Camera2D *camera = editor->camera;
+    r32 lineWidth = 2.0*camera->scale;
+    r32 buttonRadius = 10*camera->scale;
+
+    b32 hitWidthDragButton = 0;
+    b32 hitHeightDragButton = 0;
+    b32 hitRotationDragButton = 0;
+    b32 hitRotationAndLengthDragButton = 0;
+    b32 hitMinAngleDragButton = 0;
+    b32 hitMaxAngleDragButton = 0;
+
+    r32 halfWidth = part->width/2;
+    r32 halfHeight = part->height/2;
+    r32 angleButtonLength = sqrtf(halfWidth*halfWidth+halfHeight*halfHeight);
+    r32 angleButtonAngle = part->angle+atan2(-halfHeight, -halfWidth);
+
+    hitHeightDragButton = DoDragButtonAlongAxis(gui, 
+                part->pos, 
+                v2_polar(part->angle+M_PI/2, 1.0),
+                &halfHeight,
+                buttonRadius,
+                editor->editState==EDIT_CREATURE_HEIGHT);
+    part->height = Max(1.0, SnapDim(editor, halfHeight*2));
+
+    if(!part->connectionId)
+    {
+        hitWidthDragButton = DoDragButtonAlongAxis(gui, 
+                    part->pos, 
+                    v2_polar(part->angle, 1.0),
+                    &halfWidth,
+                    buttonRadius,
+                    editor->editState==EDIT_CREATURE_WIDTH);
+        part->width = Max(1, SnapDim(editor, halfWidth*2));
+
+        r32 newAngle = angleButtonAngle;
+        hitRotationDragButton = DoRotationDragButton(gui, 
+                part->pos,
+            &newAngle, 
+            angleButtonLength, 
+            buttonRadius,
+            editor->editState==EDIT_CREATURE_ROTATION);
+        part->angle+=newAngle-angleButtonAngle;
+        part->angle=SnapAngle(editor, part->angle);
+    }
+    else
+    {
+        BodyPartDefinition *parent = GetBodyPartById(def, part->connectionId);
+        Vec2 pivotPoint = part->pivotPoint;
+        r32 absAngle = part->angle;
+        r32 width = part->width;
+
+        // Draw nice angle thing
+        Vec2 to = v2_add(pivotPoint, v2_polar(absAngle, width));
+        r32 edgeAngle = GetAbsoluteEdgeAngle(parent, part->xEdge, part->yEdge);
+        Vec2 normalPoint = v2_add(pivotPoint, v2_polar(edgeAngle, 50));
+
+        // Do length and rotation dragg button
+        PushLine2(batch, pivotPoint, to, lineWidth, squareRegion->pos, squareRegion->size);
+        PushLine2(batch, pivotPoint, normalPoint, lineWidth, squareRegion->pos, squareRegion->size);
+        hitRotationAndLengthDragButton = DoAngleLengthButton(gui,
+                pivotPoint, 
+                &absAngle,
+                &width,
+                buttonRadius,
+                editor->editState==EDIT_CREATURE_ROTATION_AND_LENGTH);
+        part->width = SnapDim(editor, width);
+        part->width = Max(5, part->width);
+        part->localAngle = SnapAngle(editor, GetLocalAngleFromAbsoluteAngle(def, part, absAngle));
+        if(hitRotationAndLengthDragButton)
+        {
+            sprintf(info, "%.1f deg", RadToDeg(part->localAngle));
+        }
+
+        batch->colorState = vec4(1,1,1,1);
+        batch->colorState = vec4(1,1,1,0.5);
+        // Turn this into a function
+        r32 angDiff = GetNormalizedAngDiff(absAngle, edgeAngle);
+        PushSemiCircle2(batch, pivotPoint, 20, edgeAngle, edgeAngle+angDiff, 20, squareRegion);
+
+        r32 minAngle = edgeAngle+part->minAngle;
+        to = v2_add(pivotPoint, v2_polar(minAngle, 40));
+        hitMinAngleDragButton = hitRotationDragButton = DoRotationDragButton(gui, 
+                pivotPoint,
+                &minAngle, 
+                40,
+                buttonRadius,
+                editor->editState==EDIT_CREATURE_MIN_ANGLE);
+        batch->colorState = vec4(0.8, 0.3, 0.3, 1.0);
+        PushLine2(batch, pivotPoint, to, lineWidth, squareRegion->pos, squareRegion->size);
+        part->minAngle = SnapAngle(editor,
+                ClampF(-M_PI+0.1, part->maxAngle-0.1, GetNormalizedAngDiff(minAngle, edgeAngle)));
+
+        r32 maxAngle = edgeAngle+part->maxAngle;
+        to = v2_add(pivotPoint, v2_polar(maxAngle, 40));
+        hitMaxAngleDragButton = DoRotationDragButton(gui, 
+                pivotPoint,
+                &maxAngle, 
+                40,
+                buttonRadius,
+                editor->editState==EDIT_CREATURE_MAX_ANGLE);
+        batch->colorState = vec4(0.3, 0.8, 0.3, 1.0);
+        PushLine2(batch, pivotPoint, to, lineWidth, squareRegion->pos, squareRegion->size);
+        part->maxAngle = SnapAngle(editor, 
+                ClampF(part->minAngle+0.1, M_PI-0.1, GetNormalizedAngDiff(maxAngle, edgeAngle)));
+        if(hitMinAngleDragButton || hitMaxAngleDragButton)
+        {
+            sprintf(info, "%.1f deg", 
+                    hitMinAngleDragButton ? RadToDeg(part->minAngle) : RadToDeg(part->maxAngle));
+        }
+
+        batch->colorState = vec4(0.3, 0.3, 0.8, 0.5);
+        PushSemiCircle2(batch, pivotPoint, 20, edgeAngle+part->minAngle, 
+                edgeAngle+part->maxAngle, 20, squareRegion);
+    }
+
+    if(editor->editState==EDIT_CREATURE_HEIGHT &&
+        !hitHeightDragButton) editor->editState = EDIT_CREATURE_NONE;
+    if(editor->editState==EDIT_CREATURE_WIDTH 
+            && !hitWidthDragButton) editor->editState = EDIT_CREATURE_NONE;
+    if(editor->editState==EDIT_CREATURE_ROTATION
+            && !hitRotationDragButton) editor->editState = EDIT_CREATURE_NONE;
+    if(editor->editState==EDIT_CREATURE_ROTATION_AND_LENGTH
+            && !hitRotationAndLengthDragButton) editor->editState = EDIT_CREATURE_NONE;
+    if(editor->editState==EDIT_CREATURE_MIN_ANGLE
+            && !hitMinAngleDragButton) editor->editState = EDIT_CREATURE_NONE;
+    if(editor->editState==EDIT_CREATURE_MAX_ANGLE
+            && !hitMaxAngleDragButton) editor->editState = EDIT_CREATURE_NONE;
+
+    if(!CreatureEditorIsEditing(editor))
+    {
+        if(hitWidthDragButton) editor->editState = EDIT_CREATURE_WIDTH; 
+        if(hitHeightDragButton) editor->editState = EDIT_CREATURE_HEIGHT;
+        if(hitRotationDragButton) editor->editState = EDIT_CREATURE_ROTATION;
+        if(hitRotationAndLengthDragButton) editor->editState = EDIT_CREATURE_ROTATION_AND_LENGTH;
+        if(hitMinAngleDragButton) editor->editState = EDIT_CREATURE_MIN_ANGLE;
+        if(hitMaxAngleDragButton) editor->editState = EDIT_CREATURE_MAX_ANGLE;
+    }
+    
+    RecalculateSubNodeBodyParts(def, def->bodyParts);
+}
+
 void
 DoToolWindow(AppState *appState, CreatureEditorScreen *editor, struct nk_context *ctx)
 {
@@ -416,7 +568,6 @@ UpdateCreatureEditorScreen(AppState *appState,
     TextureAtlas *creatureAtlas = renderer->creatureTextureAtlas;
     Shader *spriteShader = renderer->spriteShader;
     CreatureDefinition *def = editor->creatureDefinition;
-    Gui *gui = editor->gui;
 
     AtlasRegion *circleRegion = defaultAtlas->regions+0;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
@@ -514,6 +665,9 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
 
+    r32 outlineSize = 2.0 * camera->scale;
+
+    // Draw creature outline
     for(ui32 bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
@@ -527,7 +681,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                 part->width,
                 part->height,
                 part->angle,
-                1.0,
+                outlineSize,
                 squareRegion);
     }
 
@@ -538,142 +692,7 @@ UpdateCreatureEditorScreen(AppState *appState,
     if(editor->selectedId)
     {
         BodyPartDefinition *part = GetBodyPartById(def, editor->selectedId);
-
-        b32 hitWidthDragButton = 0;
-        b32 hitHeightDragButton = 0;
-        b32 hitRotationDragButton = 0;
-        b32 hitRotationAndLengthDragButton = 0;
-        b32 hitMinAngleDragButton = 0;
-        b32 hitMaxAngleDragButton = 0;
-
-        r32 halfWidth = part->width/2;
-        r32 halfHeight = part->height/2;
-        r32 angleButtonLength = sqrtf(halfWidth*halfWidth+halfHeight*halfHeight);
-        r32 angleButtonAngle = part->angle+atan2(-halfHeight, -halfWidth);
-
-        hitHeightDragButton = DoDragButtonAlongAxis(gui, 
-                    part->pos, 
-                    v2_polar(part->angle+M_PI/2, 1.0),
-                    &halfHeight,
-                    5, 
-                    editor->editState==EDIT_CREATURE_HEIGHT);
-        part->height = Max(1.0, SnapDim(editor, halfHeight*2));
-
-        if(!part->connectionId)
-        {
-            hitWidthDragButton = DoDragButtonAlongAxis(gui, 
-                        part->pos, 
-                        v2_polar(part->angle, 1.0),
-                        &halfWidth,
-                        5, 
-                        editor->editState==EDIT_CREATURE_WIDTH);
-            part->width = Max(1, SnapDim(editor, halfWidth*2));
-
-            r32 newAngle = angleButtonAngle;
-            hitRotationDragButton = DoRotationDragButton(gui, 
-                    part->pos,
-                &newAngle, 
-                angleButtonLength, 
-                5, 
-                editor->editState==EDIT_CREATURE_ROTATION);
-            part->angle+=newAngle-angleButtonAngle;
-            part->angle=SnapAngle(editor, part->angle);
-        }
-        else
-        {
-            BodyPartDefinition *parent = GetBodyPartById(def, part->connectionId);
-            Vec2 pivotPoint = part->pivotPoint;
-            r32 absAngle = part->angle;
-            r32 width = part->width;
-
-            // Draw nice angle thing
-            Vec2 to = v2_add(pivotPoint, v2_polar(absAngle, width));
-            r32 edgeAngle = GetAbsoluteEdgeAngle(parent, part->xEdge, part->yEdge);
-            Vec2 normalPoint = v2_add(pivotPoint, v2_polar(edgeAngle, 50));
-
-            // Do length and rotation dragg button
-            hitRotationAndLengthDragButton = DoAngleLengthButton(gui,
-                    pivotPoint, 
-                    &absAngle,
-                    &width,
-                    5,
-                    editor->editState==EDIT_CREATURE_ROTATION_AND_LENGTH);
-            part->width = SnapDim(editor, width);
-            part->width = Max(5, part->width);
-            part->localAngle = SnapAngle(editor, GetLocalAngleFromAbsoluteAngle(def, part, absAngle));
-            if(hitRotationAndLengthDragButton)
-            {
-                sprintf(info, "%.1f deg", RadToDeg(part->localAngle));
-            }
-
-            batch->colorState = vec4(1,1,1,1);
-            PushLine2(batch, pivotPoint, to, 1, squareRegion->pos, squareRegion->size);
-            PushLine2(batch, pivotPoint, normalPoint, 1, squareRegion->pos, squareRegion->size);
-            batch->colorState = vec4(1,1,1,0.5);
-            // Turn this into a function
-            r32 angDiff = GetNormalizedAngDiff(absAngle, edgeAngle);
-            PushSemiCircle2(batch, pivotPoint, 20, edgeAngle, edgeAngle+angDiff, 20, squareRegion);
-
-            r32 minAngle = edgeAngle+part->minAngle;
-            to = v2_add(pivotPoint, v2_polar(minAngle, 40));
-            hitMinAngleDragButton = hitRotationDragButton = DoRotationDragButton(gui, 
-                    pivotPoint,
-                    &minAngle, 
-                    40,
-                    5, 
-                    editor->editState==EDIT_CREATURE_MIN_ANGLE);
-            batch->colorState = vec4(0.8, 0.3, 0.3, 1.0);
-            PushLine2(batch, pivotPoint, to, 1, squareRegion->pos, squareRegion->size);
-            part->minAngle = SnapAngle(editor,
-                    ClampF(-M_PI+0.1, part->maxAngle-0.1, GetNormalizedAngDiff(minAngle, edgeAngle)));
-
-            r32 maxAngle = edgeAngle+part->maxAngle;
-            to = v2_add(pivotPoint, v2_polar(maxAngle, 40));
-            hitMaxAngleDragButton = DoRotationDragButton(gui, 
-                    pivotPoint,
-                    &maxAngle, 
-                    40,
-                    5, 
-                    editor->editState==EDIT_CREATURE_MAX_ANGLE);
-            batch->colorState = vec4(0.3, 0.8, 0.3, 1.0);
-            PushLine2(batch, pivotPoint, to, 1, squareRegion->pos, squareRegion->size);
-            part->maxAngle = SnapAngle(editor, 
-                    ClampF(part->minAngle+0.1, M_PI-0.1, GetNormalizedAngDiff(maxAngle, edgeAngle)));
-            if(hitMinAngleDragButton || hitMaxAngleDragButton)
-            {
-                sprintf(info, "%.1f deg", 
-                        hitMinAngleDragButton ? RadToDeg(part->minAngle) : RadToDeg(part->maxAngle));
-            }
-
-            batch->colorState = vec4(0.3, 0.3, 0.8, 0.5);
-            PushSemiCircle2(batch, pivotPoint, 20, edgeAngle+part->minAngle, 
-                    edgeAngle+part->maxAngle, 20, squareRegion);
-        }
-
-        if(editor->editState==EDIT_CREATURE_HEIGHT &&
-            !hitHeightDragButton) editor->editState = EDIT_CREATURE_NONE;
-        if(editor->editState==EDIT_CREATURE_WIDTH 
-                && !hitWidthDragButton) editor->editState = EDIT_CREATURE_NONE;
-        if(editor->editState==EDIT_CREATURE_ROTATION
-                && !hitRotationDragButton) editor->editState = EDIT_CREATURE_NONE;
-        if(editor->editState==EDIT_CREATURE_ROTATION_AND_LENGTH
-                && !hitRotationAndLengthDragButton) editor->editState = EDIT_CREATURE_NONE;
-        if(editor->editState==EDIT_CREATURE_MIN_ANGLE
-                && !hitMinAngleDragButton) editor->editState = EDIT_CREATURE_NONE;
-        if(editor->editState==EDIT_CREATURE_MAX_ANGLE
-                && !hitMaxAngleDragButton) editor->editState = EDIT_CREATURE_NONE;
-
-        if(!CreatureEditorIsEditing(editor))
-        {
-            if(hitWidthDragButton) editor->editState = EDIT_CREATURE_WIDTH; 
-            if(hitHeightDragButton) editor->editState = EDIT_CREATURE_HEIGHT;
-            if(hitRotationDragButton) editor->editState = EDIT_CREATURE_ROTATION;
-            if(hitRotationAndLengthDragButton) editor->editState = EDIT_CREATURE_ROTATION_AND_LENGTH;
-            if(hitMinAngleDragButton) editor->editState = EDIT_CREATURE_MIN_ANGLE;
-            if(hitMaxAngleDragButton) editor->editState = EDIT_CREATURE_MAX_ANGLE;
-        }
-        
-        RecalculateSubNodeBodyParts(def, def->bodyParts);
+        EditBodypartDefinition(editor, renderer, part, info);
     }
 
     if(editor->editState==EDIT_CREATURE_NONE)
@@ -856,7 +875,16 @@ UpdateCreatureEditorScreen(AppState *appState,
     {
         SDL_ShowCursor(SDL_ENABLE);
     }
+
     EndSpritebatch(batch);
+
+    b32 showRadialMenu = IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_RIGHT);
+    int selectedFromRadialMenu = DoRadialMenu(editor->gui, screenCamera->mousePos, showRadialMenu, 
+            3, "Draw On Bodypart", "Select", "Delete");
+    if(selectedFromRadialMenu >= 0)
+    {
+        DebugOut("Selected = %d", selectedFromRadialMenu);
+    }
 
     // Only text from here
     BeginSpritebatch(batch);
@@ -867,6 +895,8 @@ UpdateCreatureEditorScreen(AppState *appState,
     {
         DrawString2D(batch, fontRenderer, screenCamera->mousePos, info);
     }
+
+    GuiUpdate(editor->gui);
 
     EndSpritebatch(batch);
 
@@ -1059,7 +1089,7 @@ InitCreatureEditorScreen(AppState *appState,
     *editor->creatureDefinition = (CreatureDefinition){};
     
     editor->gui = PushStruct(arena, Gui);
-    InitGui(editor->gui, appState, editor->camera, renderContext);
+    InitGui(editor->gui, arena, appState, editor->camera, renderContext);
 
     editor->dimSnapResolution = 10;
     editor->isDimSnapEnabled = 1;

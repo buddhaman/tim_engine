@@ -36,11 +36,14 @@ STRETCH GOALS:
 
 ------ Evolution Sim -------
 
-- Fix mouse. Make nice animated cursor for every tool.
+- Implement right click.   V
+- Timer in gui to animate radial menu.
+- Radial menu on right click to draw on single bodypart, delete, or other features. (Idea).
+- Make items selectable.
+- Show drawable surface by drawing dashed lines.
+
 - Add tutorial.
 - Draw on single bodypart.
-
-- Radial menu on right click to draw on single bodypart, delete, or other features. (Idea)
 
 - Give very clear feedback for current tool.
 - When selecting bodypart switch to selection. No need to cancel inbetween.

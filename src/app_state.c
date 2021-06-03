@@ -69,7 +69,7 @@ UpdateCameraInput(AppState *appState, Camera2D *camera)
     if(IsKeyActionDown(appState, ACTION_RIGHT)) { camera->pos.x+=camSpeed; }
     if(appState->mouseScrollY)
     {
-        r32 zoomFactor = pow(0.95, appState->mouseScrollY);
+        r32 zoomFactor = pow(0.9, appState->mouseScrollY);
         camera->scale*=zoomFactor;
     }
 }
