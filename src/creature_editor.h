@@ -27,6 +27,7 @@ typedef struct
 
     ui32 idCounter;
     ui32 selectedId;
+    ui32 rightSelectedId;
 
     b32 isDimSnapEnabled;
     r32 dimSnapResolution;

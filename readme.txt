@@ -16,8 +16,9 @@ TODO BEFORE DEMO LAUNCH:
 
 - Draw on single bodypart :     
     - Implement right click.
-    - Radial menu ? no probobly options.
-    - Select draw on bodypart. Show outline of texture reach.
+    - Radial menu ?  Yes V
+    - Select draw on bodypart. Show outline of texture reach. V
+    - Use masking.  V  
 
 - Add tutorial.
 - Serialization.
@@ -26,6 +27,9 @@ TODO BEFORE DEMO LAUNCH:
 - Setup website, newsletter or written devlog.
 
 STRETCH GOALS: 
+
+- Drag camera in fakeworld.
+- Drag camera when drawing if outside drawable area.
 - Add ingame tutorial.
 - Try to compile to windows and send some versions to people to test. 
 
@@ -37,9 +41,9 @@ STRETCH GOALS:
 ------ Evolution Sim -------
 
 - Implement right click.   V
-- Timer in gui to animate radial menu.
+- Timer in gui to animate radial menu. V
+- Make items selectable. V
 - Radial menu on right click to draw on single bodypart, delete, or other features. (Idea).
-- Make items selectable.
 - Show drawable surface by drawing dashed lines.
 
 - Add tutorial.
@@ -48,6 +52,7 @@ STRETCH GOALS:
 - Give very clear feedback for current tool.
 - When selecting bodypart switch to selection. No need to cancel inbetween.
 - Ui needs to be waayyyy better. 
+- Clear texture on bodypart option in radial menu.
 
 - Add multiple views. See edges, see actual result, same in fakeworld.
 - Generate random texture.

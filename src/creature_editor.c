@@ -18,15 +18,15 @@ EditorCanAddBodyPart(CreatureEditorScreen *editor)
 }
 
 b32
-EditorIsMouseJustPressed(AppState *appState, CreatureEditorScreen *editor)
+EditorIsJustPressed(AppState *appState, CreatureEditorScreen *editor, KeyAction action)
 {
-    return !editor->isInputCaptured && IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT);
+    return !editor->isInputCaptured && IsKeyActionJustDown(appState, action);
 }
 
 b32
-EditorIsMouseJustReleased(AppState *appState, CreatureEditorScreen *editor)
+EditorIsJustReleased(AppState *appState, CreatureEditorScreen *editor, KeyAction action)
 {
-    return !editor->isInputCaptured && IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT);
+    return !editor->isInputCaptured && IsKeyActionJustReleased(appState, action);
 }
 
 b32
@@ -129,25 +129,43 @@ GetBrushColor(CreatureEditorScreen *editor)
     }
 }
 
-void
-DoDrawAtPoint(CreatureEditorScreen *editor, TextureAtlas *creatureAtlas, Vec2 point)
+internal inline void
+DoDrawAtPointForBodyPart(CreatureEditorScreen *editor, 
+        TextureAtlas *creatureAtlas, 
+        Vec2 point, 
+        BodyPartDefinition *partDef)
 {
     CreatureDefinition *def = editor->creatureDefinition;
     r32 overhang = def->textureOverhang;
-    for(ui32 bodyPartIdx = 0;
-            bodyPartIdx < def->nBodyParts;
-            bodyPartIdx++)
+    Vec2 texCoord = GetCoordinateInBox(partDef->pos, 
+            vec2(partDef->width+overhang*2, partDef->height+overhang*2), partDef->angle, point);
+    r32 radius = partDef->texScale*editor->brushSize;
+    ui32 color = Vec4ToRGBA(GetBrushColor(editor));
+    Vec2 creatureTexCoord = v2_add(partDef->uvPos, 
+            vec2(partDef->uvDims.x*texCoord.x, partDef->uvDims.y*texCoord.y));
+    DrawCircleOnTexture(creatureAtlas, 
+            partDef->uvPos, partDef->uvDims,
+            creatureTexCoord, radius, color);
+}
+
+internal void
+DoDrawAtPoint(CreatureEditorScreen *editor, TextureAtlas *creatureAtlas, Vec2 point)
+{
+    CreatureDefinition *def = editor->creatureDefinition;
+    if(editor->selectedId)
     {
-        BodyPartDefinition *partDef = def->bodyParts+bodyPartIdx;
-        Vec2 texCoord = GetCoordinateInBox(partDef->pos, 
-                vec2(partDef->width+overhang*2, partDef->height+overhang*2), partDef->angle, point);
-        r32 radius = partDef->texScale*editor->brushSize;
-        ui32 color = Vec4ToRGBA(GetBrushColor(editor));
-        Vec2 creatureTexCoord = v2_add(partDef->uvPos, 
-                vec2(partDef->uvDims.x*texCoord.x, partDef->uvDims.y*texCoord.y));
-        DrawCircleOnTexture(creatureAtlas, 
-                partDef->uvPos, partDef->uvDims,
-                creatureTexCoord, radius, color);
+        BodyPartDefinition *partDef = GetBodyPartById(def, editor->selectedId);
+        DoDrawAtPointForBodyPart(editor, creatureAtlas, point, partDef);
+    }
+    else
+    {
+        for(ui32 bodyPartIdx = 0;
+                bodyPartIdx < def->nBodyParts;
+                bodyPartIdx++)
+        {
+            BodyPartDefinition *partDef = def->bodyParts+bodyPartIdx;
+            DoDrawAtPointForBodyPart(editor, creatureAtlas, point, partDef);
+        }
     }
 }
 
@@ -270,6 +288,18 @@ GetToolName(CreatureEditorScreen *editor)
     return CREATURE_TOOL_SELECT;
 }
 
+internal inline void
+SetDrawState(CreatureEditorScreen *editor, b32 isErasing, b32 keepSelection)
+{
+    // If already drawing, keep selection, otherwise clear.
+    if(!keepSelection)
+    {
+        editor->selectedId = 0;
+    }
+    editor->editState = EDIT_CREATURE_DRAW;
+    editor->isErasing = isErasing;
+}
+
 internal inline b32
 DoColorPickerButton(struct nk_context *ctx, struct nk_colorf *color, b32 *isColorPickerVisible)
 {
@@ -374,6 +404,7 @@ EditBodypartDefinition(CreatureEditorScreen *editor,
         Vec2 normalPoint = v2_add(pivotPoint, v2_polar(edgeAngle, 50));
 
         // Do length and rotation dragg button
+        batch->colorState = vec4(1,1,1,1);
         PushLine2(batch, pivotPoint, to, lineWidth, squareRegion->pos, squareRegion->size);
         PushLine2(batch, pivotPoint, normalPoint, lineWidth, squareRegion->pos, squareRegion->size);
         hitRotationAndLengthDragButton = DoAngleLengthButton(gui,
@@ -554,6 +585,20 @@ DoToolWindow(AppState *appState, CreatureEditorScreen *editor, struct nk_context
     nk_end(ctx);
 }
 
+internal inline void 
+DrawBodyPartWithOverhang(SpriteBatch *batch, 
+        BodyPartDefinition *def, 
+        r32 overhang,
+        AtlasRegion *tex)
+{
+    PushOrientedRectangle2(batch, 
+            def->pos,
+            def->width+overhang*2,
+            def->height+overhang*2,
+            def->angle,
+            tex);
+}
+
 void
 UpdateCreatureEditorScreen(AppState *appState, 
         CreatureEditorScreen *editor, 
@@ -591,11 +636,15 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
 
-    UpdateCameraInput(appState, camera);
+    if(!editor->isInputCaptured)
+    {
+        UpdateCameraInput(appState, camera);
+    }
     UpdateCamera2D(camera, appState);
     Vec2 mousePos = camera->mousePos;
 
     glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glUseProgram(spriteShader->program);
@@ -603,8 +652,9 @@ UpdateCreatureEditorScreen(AppState *appState,
     int matLocation = glGetUniformLocation(spriteShader->program, "transform");
     glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
 
-    BeginSpritebatch(batch);
     glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
+
+    BeginSpritebatch(batch);
 
     batch->colorState = vec4(1,1,1,0.1);
     PushRect2(batch, 
@@ -637,13 +687,23 @@ UpdateCreatureEditorScreen(AppState *appState,
     glBindTexture(GL_TEXTURE_2D, renderer->creatureTextureAtlas->textureHandle);
 
     batch->colorState = vec4(1,1,1,1);
+    b32 hasFocusedBodyPart = editor->editState==EDIT_CREATURE_DRAW && editor->selectedId;
     for(ui32 bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
         BodyPartDefinition *part = def->drawOrder[bodyPartIdx];
+        r32 alpha = hasFocusedBodyPart ? (part->id==editor->selectedId ? 1.0 : 0.3) : 1.0;
+        batch->colorState = vec4(1,1,1, alpha);
         DrawBodyPartWithTexture(batch, part, part->pos, part->angle, def->textureOverhang);
     }
+    // If drawing and has selected: Draw on top.
+    if(hasFocusedBodyPart)
+    {
+        BodyPartDefinition *part = GetBodyPartById(def, editor->selectedId);
+        DrawBodyPartWithTexture(batch, part, part->pos, part->angle, def->textureOverhang);
+    }
+
     EndSpritebatch(batch);
 
     BeginSpritebatch(batch);
@@ -689,7 +749,7 @@ UpdateCreatureEditorScreen(AppState *appState,
     char info[256];
     memset(info, 0, 256);
 
-    if(editor->selectedId)
+    if(editor->selectedId && editor->editState!=EDIT_CREATURE_DRAW)
     {
         BodyPartDefinition *part = GetBodyPartById(def, editor->selectedId);
         EditBodypartDefinition(editor, renderer, part, info);
@@ -732,7 +792,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                         minLocation.yEdge, 
                         minLocation.offset);
                 batch->colorState = vec4(0, 1.0, 0.0, 1.0);
-                PushCircle2(batch, minLocation.pos, 3, circleRegion);
+                PushCircle2(batch, minLocation.pos, 5.0*camera->scale, circleRegion);
                 sprintf(info, "place on edge %.2f.", minLocation.offset);
                 if(IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT))
                 {
@@ -776,7 +836,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                 20,
                 angle,
                 squareRegion);
-        if(EditorIsMouseJustReleased(appState, editor))
+        if(EditorIsJustReleased(appState, editor, ACTION_MOUSE_BUTTON_LEFT))
         {
             if(editor->isInputCaptured)
             {
@@ -840,13 +900,54 @@ UpdateCreatureEditorScreen(AppState *appState,
             editor->lastBrushStroke = mousePos;
             glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
         }
+
+        EndSpritebatch(batch);
+        // Render drawable surface
+        glEnable(GL_STENCIL_TEST);
+
+
+        BeginStencilShape();
+
+        BeginSpritebatch(batch);
+        if(editor->selectedId)
+        {
+            BodyPartDefinition *part = def->bodyParts+GetIndexOfBodyPart(def, editor->selectedId);
+            DrawBodyPartWithOverhang(batch, part, def->textureOverhang, squareRegion);
+        }
+        else
+        {
+            for(ui32 bodyPartIdx = 0;
+                    bodyPartIdx < def->nBodyParts;
+                    bodyPartIdx++)
+            {
+                BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
+                DrawBodyPartWithOverhang(batch, part, def->textureOverhang, squareRegion);
+            }
+        }
+        EndSpritebatch(batch);
+        EndStencilShape();
+
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+
+        BeginSpritebatch(batch);
+        batch->colorState = vec4(1,1,1,0.3);
+        PushRect2(batch,
+                vec2(camera->pos.x-camera->size.x/2.0, camera->pos.y-camera->size.y/2.0),
+                camera->size,
+                squareRegion->pos,
+                squareRegion->size);
+        EndSpritebatch(batch);
+
+        glDisable(GL_STENCIL_TEST);
+
+        BeginSpritebatch(batch);
     }
     editor->hasLastBrushStroke = hasLastBrushStroke;
 
     if(editor->drawBrushInScreenCenter)
     {
         batch->colorState = GetBrushColor(editor);
-        PushCircle2(batch, camera->pos, editor->brushSize*camera->scale, circleRegion);
+        PushCircle2(batch, camera->pos, editor->brushSize, circleRegion);
         editor->drawBrushInScreenCenter = 0;
     }
 
@@ -858,8 +959,8 @@ UpdateCreatureEditorScreen(AppState *appState,
     if(editor->editState==EDIT_CREATURE_DRAW 
             && !editor->isInputCaptured)
     {
-        SDL_ShowCursor(SDL_DISABLE);
         r32 brushSize = editor->brushSize/camera->scale;
+        SDL_ShowCursor(SDL_DISABLE);
         if(editor->isErasing)
         {
             batch->colorState = vec4(1.0, 1.0, 1.0, 1.0);
@@ -867,6 +968,8 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
         else
         {
+            batch->colorState = vec4(0,0,0,0.5);
+            PushCircle2(batch, screenCamera->mousePos, brushSize+2, circleRegion);
             batch->colorState = GetBrushColor(editor);
             PushCircle2(batch, screenCamera->mousePos, brushSize, circleRegion);
         }
@@ -878,12 +981,18 @@ UpdateCreatureEditorScreen(AppState *appState,
 
     EndSpritebatch(batch);
 
-    b32 showRadialMenu = IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_RIGHT);
+    b32 isRightButtonDown = IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_RIGHT);
+    b32 showRadialMenu = editor->rightSelectedId && isRightButtonDown;
     int selectedFromRadialMenu = DoRadialMenu(editor->gui, screenCamera->mousePos, showRadialMenu, 
             3, "Draw On Bodypart", "Select", "Delete");
     if(selectedFromRadialMenu >= 0)
     {
-        DebugOut("Selected = %d", selectedFromRadialMenu);
+        if(selectedFromRadialMenu==0)
+        {
+            editor->selectedId = editor->rightSelectedId;
+            editor->rightSelectedId = 0;
+            SetDrawState(editor, 0, 1);
+        }
     }
 
     // Only text from here
@@ -915,7 +1024,7 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
     else if(editor->canMoveCameraWithMouse 
-            && EditorIsMouseJustPressed(appState, editor))
+            && EditorIsJustPressed(appState, editor, ACTION_MOUSE_BUTTON_LEFT))
     {
         editor->isDraggingCamera = 1;
     }
@@ -952,8 +1061,7 @@ UpdateCreatureEditorScreen(AppState *appState,
         if(nk_button_image(ctx, tool==CREATURE_TOOL_BRUSH && !editor->isErasing ? 
                     nuklearMedia.brush_check : nuklearMedia.brush))
         {
-            editor->editState = EDIT_CREATURE_DRAW;
-            editor->isErasing = 0;
+            SetDrawState(editor, 0, editor->editState==EDIT_CREATURE_DRAW);
         }
         if(nk_widget_is_hovered(ctx))
         {
@@ -962,8 +1070,7 @@ UpdateCreatureEditorScreen(AppState *appState,
         if(nk_button_image(ctx, tool==CREATURE_TOOL_BRUSH && editor->isErasing ? 
                     nuklearMedia.erase_check : nuklearMedia.erase))
         {
-            editor->editState = EDIT_CREATURE_DRAW;
-            editor->isErasing = 1;
+            SetDrawState(editor, 1, editor->editState==EDIT_CREATURE_DRAW);
         }
         if(nk_tree_push(ctx, NK_TREE_TAB, "Bodypart Properties", NK_MAXIMIZED))
         {
@@ -1057,6 +1164,13 @@ UpdateCreatureEditorScreen(AppState *appState,
             NKEditFloatProperty(ctx, "Deviation", 0.001, &editor->deviation, 10, 0.01, 0.01);
             if(nk_button_label(ctx, "Start Simulation"))
             {
+                // Save image for fun
+                stbi_write_png("last_creature_texture.png", 
+                        creatureAtlas->width,
+                        creatureAtlas->height,
+                        4,
+                        creatureAtlas->image,
+                        creatureAtlas->width*4);
                 StartFakeWorld(appState, def, editor->nGenes, editor->deviation, editor->learningRate);
             }
             nk_tree_pop(ctx);
@@ -1067,10 +1181,16 @@ UpdateCreatureEditorScreen(AppState *appState,
     DoToolWindow(appState, editor, ctx);
 
     if(!CreatureEditorIsEditing(editor) 
-            && !CreatureEditorWasEditing(editor)
-            && EditorIsMouseJustReleased(appState, editor))
+            && !CreatureEditorWasEditing(editor))
     {
-        editor->selectedId = intersectId;
+        if(EditorIsJustReleased(appState, editor, ACTION_MOUSE_BUTTON_LEFT)) 
+        {
+            editor->selectedId = intersectId;
+        }
+        if(EditorIsJustPressed(appState, editor, ACTION_MOUSE_BUTTON_RIGHT)) 
+        {
+            editor->rightSelectedId = intersectId;
+        }
     }
     editor->prevEditState = editor->editState;
 }

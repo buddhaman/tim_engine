@@ -14,6 +14,7 @@
 
 #include "stb_ds.h"
 #include "stb_image.h"
+#include "stb_image_write.h"
 #include "stb_truetype.h"
 
 #include "chipmunk/chipmunk_structs.h"

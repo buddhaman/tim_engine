@@ -311,6 +311,38 @@ Lerp2(Vec2 from, Vec2 to, r32 lambda)
     return v2_add(v2_muls(from, 1.0-lambda), v2_muls(to, lambda));
 }
 
+// Stencil Buffer Uitls
+
+// Dont forget to enable stencil testing.
+void
+BeginStencilShape()
+{
+    glStencilMask(0xFF);
+    glClearStencil(0);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glDepthMask(GL_FALSE);
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+}
+
+void 
+EndStencilShape()
+{
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glStencilMask(0x00);
+}
+
+void
+BeginDrawStenciled()
+{
+}
+
+void
+EndDrawStenciled()
+{
+}
+
 Vec2
 GetStringSize(FontRenderer *fontRenderer, char *sequence)
 {
