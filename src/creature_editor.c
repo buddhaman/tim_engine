@@ -1063,8 +1063,7 @@ UpdateCreatureEditorScreen(AppState *appState,
         {
             SetDrawState(editor, 0, editor->editState==EDIT_CREATURE_DRAW);
         }
-        if(nk_widget_is_hovered(ctx))
-        {
+        if(nk_widget_is_hovered(ctx)) {
             nk_tooltip(ctx, "Erase.");
         }
         if(nk_button_image(ctx, tool==CREATURE_TOOL_BRUSH && editor->isErasing ? 
@@ -1162,15 +1161,69 @@ UpdateCreatureEditorScreen(AppState *appState,
             //TODO: Make logarithmic ?  Or multiply by a thousand 
             NKEditFloatProperty(ctx, "LearningRate", 0.0001, &editor->learningRate, 1, 0.001, 0.001);
             NKEditFloatProperty(ctx, "Deviation", 0.001, &editor->deviation, 10, 0.01, 0.01);
-            if(nk_button_label(ctx, "Start Simulation"))
+            if(nk_button_label(ctx, "Save"))
             {
-                // Save image for fun
-                stbi_write_png("last_creature_texture.png", 
+                char dataPath[256];
+                char texturePath[256];
+                GeneratePathNames(def, dataPath, texturePath);
+
+                DebugOut("Saving to %s and %s.", dataPath, texturePath);
+                Serializer serializer;
+                BeginSerializing(&serializer, dataPath, 1);
+                SerializeCreatureDefinition(&serializer, def);
+                EndSerializing(&serializer);
+
+                // Save texture image as png
+                stbi_write_png(texturePath, 
                         creatureAtlas->width,
                         creatureAtlas->height,
                         4,
                         creatureAtlas->image,
                         creatureAtlas->width*4);
+                DebugOut("done saving");
+            }
+            if(nk_button_label(ctx, "Load"))
+            {
+
+                char dataPath[256];
+                char texturePath[256];
+                GeneratePathNames(def, dataPath, texturePath);
+                DebugOut("Loading from %s and %s.", dataPath, texturePath);
+
+                Serializer serializer;
+                BeginSerializing(&serializer, dataPath, 0);
+                SerializeCreatureDefinition(&serializer, def);
+                EndSerializing(&serializer);
+                RecalculateSubNodeBodyParts(def, def->bodyParts);
+                RecalculateBodyPartDrawOrder(def);
+                int x, y, n;
+                unsigned char *data = stbi_load(texturePath, &x, &y, &n, 4);
+                DebugOut("loaded creature texture %dx%d with %d components per pixel", 
+                        x, y, n);
+                if(x==CREATURE_TEX_SIZE && n==4)
+                {
+                    SetTextureAtlasImageData(creatureAtlas, data);
+                }
+                else
+                {
+                    DebugOut("Incorrect texture format, should be 2048x2048 png with 4 components per pixel (rgba).");
+                }
+                stbi_image_free(data);
+
+                editor->idCounter = 1;
+                for(ui32 partDefIdx = 0;
+                        partDefIdx < def->nBodyParts;
+                        partDefIdx++)
+                {
+                    BodyPartDefinition *partDef = def->bodyParts+partDefIdx;
+                    editor->idCounter = Max(editor->idCounter, partDef->id+1);
+                }
+                editor->selectedId = 0;
+                editor->rightSelectedId = 0;
+                DebugOut("done loading");
+            }
+            if(nk_button_label(ctx, "Start Simulation"))
+            {
                 StartFakeWorld(appState, def, editor->nGenes, editor->deviation, editor->learningRate);
             }
             nk_tree_pop(ctx);
@@ -1193,36 +1246,6 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
     editor->prevEditState = editor->editState;
-
-    if(EditorIsJustPressed(appState, editor, ACTION_Q)) 
-    {
-        DebugOut("start saving %s", def->name);
-        Serializer serializer;
-        BeginSerializing(&serializer, "cool.crtr", 1);
-        SerializeCreatureDefinition(&serializer, def);
-        EndSerializing(&serializer);
-        DebugOut("done saving");
-    }
-    if(EditorIsJustPressed(appState, editor, ACTION_E)) 
-    {
-        DebugOut("start loading");
-        Serializer serializer;
-        BeginSerializing(&serializer, "cool.crtr", 0);
-        SerializeCreatureDefinition(&serializer, def);
-        EndSerializing(&serializer);
-        RecalculateSubNodeBodyParts(def, def->bodyParts);
-        RecalculateBodyPartDrawOrder(def);
-
-        editor->idCounter = 1;
-        for(ui32 partDefIdx = 0;
-                partDefIdx < def->nBodyParts;
-                partDefIdx++)
-        {
-            BodyPartDefinition *partDef = def->bodyParts+partDefIdx;
-            editor->idCounter = Max(editor->idCounter, partDef->id+1);
-        }
-        DebugOut("done loading");
-    }
 }
 
 void

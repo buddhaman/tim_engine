@@ -7,6 +7,8 @@ enum
 
 #define LATEST_VERSION (SV_LATEST_PLUS_ONE-1)
 
+#define CREATURE_FOLDER_NAME "crdefs"
+
 typedef struct
 {
     ui32 dataVersion;

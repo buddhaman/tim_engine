@@ -58,6 +58,8 @@ typedef struct
     b32 canMoveCameraWithMouse;
     b32 isDraggingCamera;
 
+    b32 showLoadingWindow;
+
     b32 isErasing;
     r32 brushSize;
     b32 drawBrushInScreenCenter;

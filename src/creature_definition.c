@@ -191,3 +191,17 @@ GenerateRandomName(char *name, ui32 maxLength)
     strcpy(name+atChar, number);
 }
 
+void
+GeneratePathNames(CreatureDefinition *def, char *dataPath, char *texturePath)
+{
+    strcpy(dataPath, CREATURE_FOLDER_NAME);
+    strcat(dataPath, "/");
+    strcat(dataPath, def->name);
+    strcat(dataPath, ".crdf");
+
+    strcpy(texturePath, CREATURE_FOLDER_NAME);
+    strcat(texturePath, "/");
+    strcat(texturePath, def->name);
+    strcat(texturePath, ".png");
+}
+

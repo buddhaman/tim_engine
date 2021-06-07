@@ -35,6 +35,15 @@ NormalizePositions(TextureAtlas *atlas, int totalWidth, int totalHeight)
     }
 }
 
+void
+SetTextureAtlasImageData(TextureAtlas *atlas, unsigned char *data)
+{
+    memcpy(atlas->image, data, sizeof(unsigned char)*4*atlas->width*atlas->height);
+    glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlas->width, atlas->height, 
+            0, GL_RGBA, GL_UNSIGNED_BYTE, atlas->image);
+}
+
 // Assume square texture
 void
 DrawCircleOnTexture(TextureAtlas *atlas, Vec2 rangePos, Vec2 rangeSize, Vec2 uvCenter, r32 radius, ui32 color)
