@@ -1,5 +1,7 @@
 #include "external_headers.h"
 #include <time.h>
+#include <string.h>
+
 
 // Special file.
 #include "tim_types.h"
@@ -98,6 +100,7 @@ LoadImage(char *path)
 #include "world.h"
 #include "app_state.h"
 #include "tim_ui.h"
+#include "serialize.h"
 #include "fake_world_screen.h"
 #include "creature_editor.h"
 
@@ -115,6 +118,7 @@ LoadImage(char *path)
 #include "creature.c"
 #include "app_state.c"
 #include "tim_ui.c"
+#include "serialize.c"
 #include "fake_world_screen.c"
 #include "creature_editor.c"
 

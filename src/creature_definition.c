@@ -154,3 +154,40 @@ AssignBrainIO(CreatureDefinition *def)
     def->geneSize = GetMinimalGatedUnitGeneSize(def->nInputs, def->nOutputs, def->nHidden);
 }
 
+void
+GenerateRandomName(char *name, ui32 maxLength)
+{
+    ui32 nSyls = 0;
+    char *syls[64];
+    syls[nSyls++] = "ha"; 
+    syls[nSyls++] = "hu"; 
+    syls[nSyls++] = "ho";
+    syls[nSyls++] = "la";
+    syls[nSyls++] = "pe";
+    syls[nSyls++] = "nis";
+    syls[nSyls++] = "yo";
+    syls[nSyls++] = "ji";
+    syls[nSyls++] = "bru";
+    syls[nSyls++] = "hm";
+    ui32 atChar = 0;
+    for(ui32 atSyl = 0; 
+            atSyl < 3;
+            atSyl++)
+    {
+        char *syl = syls[RandomUI32(0, nSyls)];
+        ui32 len = strlen(syl);
+        if(atChar+len < maxLength-3)
+        {
+            strcpy(name+atChar, syl);
+            atChar+=strlen(syl);
+        }
+        else
+        {
+            break;
+        }
+    }
+    char number[10];
+    sprintf(number, "%03u", RandomUI32(0, 1000));
+    strcpy(name+atChar, number);
+}
+

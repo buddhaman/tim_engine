@@ -11,37 +11,37 @@ CreatureEditorWasEditing(CreatureEditorScreen *editor)
     return editor->prevEditState!=EDIT_CREATURE_NONE;
 }
 
-b32 
+internal inline b32 
 EditorCanAddBodyPart(CreatureEditorScreen *editor)
 {
     return editor->creatureDefinition->nBodyParts < MAX_BODYPARTS;
 }
 
-b32
+internal inline b32
 EditorIsJustPressed(AppState *appState, CreatureEditorScreen *editor, KeyAction action)
 {
     return !editor->isInputCaptured && IsKeyActionJustDown(appState, action);
 }
 
-b32
+internal inline b32
 EditorIsJustReleased(AppState *appState, CreatureEditorScreen *editor, KeyAction action)
 {
     return !editor->isInputCaptured && IsKeyActionJustReleased(appState, action);
 }
 
-b32
+internal inline b32
 EditorIsMousePressed(AppState *appState, CreatureEditorScreen *editor)
 {
     return !editor->isInputCaptured && IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT);
 }
 
-r32
+internal inline r32
 SnapTo(r32 value, r32 res)
 {
     return round(value/res)*res;
 }
 
-r32
+internal inline r32
 SnapDim(CreatureEditorScreen *editor, r32 dim)
 {
     if(editor->isDimSnapEnabled)
@@ -54,7 +54,7 @@ SnapDim(CreatureEditorScreen *editor, r32 dim)
     }
 }
 
-r32
+internal inline r32
 SnapAngle(CreatureEditorScreen *editor, r32 angle)
 {
     if(editor->isAngleSnapEnabled)
@@ -67,7 +67,7 @@ SnapAngle(CreatureEditorScreen *editor, r32 angle)
     }
 }
 
-r32
+internal inline r32
 SnapEdge(CreatureEditorScreen *editor, r32 offset)
 {
     if(editor->isEdgeSnapEnabled)
@@ -86,7 +86,7 @@ EditorRemoveBodyPart(CreatureEditorScreen *editor, ui32 id)
     CreatureDefinition *def = editor->creatureDefinition;
     BodyPartDefinition *parent = GetBodyPartById(def, id);
 
-    editor->isTextureSquareOccupied[parent->texGridX+parent->texGridY*editor->creatureTextureGridDivs] = 0;
+    def->isTextureSquareOccupied[parent->texGridX+parent->texGridY*def->creatureTextureGridDivs] = 0;
     editor->selectedId = 0;
 
     ui32 parts[def->nBodyParts];
@@ -200,15 +200,15 @@ typedef struct
 } TextureGridLocation;
 
 internal inline TextureGridLocation
-UseEmptyTextureGridLocation(CreatureEditorScreen *editor)
+UseEmptyTextureGridLocation(CreatureDefinition *def)
 {
-    for(int y = 0; y < editor->creatureTextureGridDivs; y++)
-    for(int x = 0; x < editor->creatureTextureGridDivs; x++)
+    for(int y = 0; y < def->creatureTextureGridDivs; y++)
+    for(int x = 0; x < def->creatureTextureGridDivs; x++)
     {
-        int idx = x+y*editor->creatureTextureGridDivs;
-        if(!editor->isTextureSquareOccupied[idx])
+        int idx = x+y*def->creatureTextureGridDivs;
+        if(!def->isTextureSquareOccupied[idx])
         {
-            editor->isTextureSquareOccupied[idx] = 1;
+            def->isTextureSquareOccupied[idx] = 1;
             return (TextureGridLocation){x, y};
         }
     }
@@ -217,10 +217,10 @@ UseEmptyTextureGridLocation(CreatureEditorScreen *editor)
 }
 
 internal inline void
-AssignTextureToBodyPartDefinition(CreatureEditorScreen *editor, BodyPartDefinition *part)
+AssignTextureToBodyPartDefinition(CreatureDefinition *def, BodyPartDefinition *part)
 {
-    int divs = editor->creatureTextureGridDivs;
-    TextureGridLocation loc = UseEmptyTextureGridLocation(editor);
+    int divs = def->creatureTextureGridDivs;
+    TextureGridLocation loc = UseEmptyTextureGridLocation(def);
     part->uvPos = vec2(((r32)loc.x)/divs, ((r32)loc.y)/divs);
     part->uvDims = vec2(1.0/divs, 1.0/divs);
     part->texGridX = loc.x;
@@ -228,16 +228,16 @@ AssignTextureToBodyPartDefinition(CreatureEditorScreen *editor, BodyPartDefiniti
 }
 
 internal inline void
-RecalculateTextureDims(CreatureEditorScreen *editor, r32 totalTextureSize)
+RecalculateTextureDims(CreatureDefinition *def, r32 totalTextureSize)
 {
     r32 pix = 1.0/totalTextureSize;
-    r32 divs = editor->creatureTextureGridDivs;
-    r32 overhang = editor->creatureDefinition->textureOverhang;
+    r32 divs = def->creatureTextureGridDivs;
+    r32 overhang = def->textureOverhang;
     for(ui32 partIdx = 0;
-            partIdx < editor->creatureDefinition->nBodyParts;
+            partIdx < def->nBodyParts;
             partIdx++)
     {
-        BodyPartDefinition *part = editor->creatureDefinition->bodyParts+partIdx;
+        BodyPartDefinition *part = def->bodyParts+partIdx;
         r32 w = part->width+overhang*2;
         r32 h = part->height+overhang*2;
         r32 maxDim = Max(w, h);    
@@ -618,7 +618,7 @@ UpdateCreatureEditorScreen(AppState *appState,
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
 
     // TODO: DELETE! dont recalculate every frame. Assumes width=height.
-    RecalculateTextureDims(editor, creatureAtlas->width);
+    RecalculateTextureDims(def, creatureAtlas->width);
     b32 hasLastBrushStroke = 0;
     
     // Key and mouse input
@@ -863,7 +863,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                 newPart->hasDragOutput = 1;
                 newPart->hasRotaryMuscleOutput = 1;
 
-                AssignTextureToBodyPartDefinition(editor, newPart);
+                AssignTextureToBodyPartDefinition(def, newPart);
 
                 RecalculateSubNodeBodyParts(def, def->bodyParts);
                 RecalculateBodyPartDrawOrder(def);
@@ -1193,6 +1193,36 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
     editor->prevEditState = editor->editState;
+
+    if(EditorIsJustPressed(appState, editor, ACTION_Q)) 
+    {
+        DebugOut("start saving %s", def->name);
+        Serializer serializer;
+        BeginSerializing(&serializer, "cool.crtr", 1);
+        SerializeCreatureDefinition(&serializer, def);
+        EndSerializing(&serializer);
+        DebugOut("done saving");
+    }
+    if(EditorIsJustPressed(appState, editor, ACTION_E)) 
+    {
+        DebugOut("start loading");
+        Serializer serializer;
+        BeginSerializing(&serializer, "cool.crtr", 0);
+        SerializeCreatureDefinition(&serializer, def);
+        EndSerializing(&serializer);
+        RecalculateSubNodeBodyParts(def, def->bodyParts);
+        RecalculateBodyPartDrawOrder(def);
+
+        editor->idCounter = 1;
+        for(ui32 partDefIdx = 0;
+                partDefIdx < def->nBodyParts;
+                partDefIdx++)
+        {
+            BodyPartDefinition *partDef = def->bodyParts+partDefIdx;
+            editor->idCounter = Max(editor->idCounter, partDef->id+1);
+        }
+        DebugOut("done loading");
+    }
 }
 
 void
@@ -1207,6 +1237,7 @@ InitCreatureEditorScreen(AppState *appState,
 
     editor->creatureDefinition = PushStruct(arena, CreatureDefinition);
     *editor->creatureDefinition = (CreatureDefinition){};
+    GenerateRandomName(editor->creatureDefinition->name, MAX_CREATURE_NAME_LENGTH);
     
     editor->gui = PushStruct(arena, Gui);
     InitGui(editor->gui, arena, appState, editor->camera, renderContext);
@@ -1225,8 +1256,10 @@ InitCreatureEditorScreen(AppState *appState,
     editor->deviation = 0.003;
 
     // Texture
-    editor->creatureTextureGridDivs = 4;
-    memset(editor->isTextureSquareOccupied, 0, sizeof(editor->isTextureSquareOccupied));
+    editor->creatureDefinition->creatureTextureGridDivs = 4;
+    memset(editor->creatureDefinition->isTextureSquareOccupied,
+            0, 
+            sizeof(editor->creatureDefinition->isTextureSquareOccupied));
     editor->brushSize = 3.0;
     editor->brushColor = (struct nk_colorf){1.0, 0.0, 0.0, 1.0};
     editor->creatureSolidColor = (struct nk_colorf){0.8, 0.8, 0.8, 1.0};
@@ -1245,7 +1278,7 @@ InitCreatureEditorScreen(AppState *appState,
     torso->height = 50;
     torso->hasDragOutput = 1;
     torso->hasRotaryMuscleOutput = 0;
-    AssignTextureToBodyPartDefinition(editor, torso);
+    AssignTextureToBodyPartDefinition(editor->creatureDefinition, torso);
     AssignBrainIO(editor->creatureDefinition);
     RecalculateBodyPartDrawOrder(editor->creatureDefinition);
 }

@@ -26,7 +26,7 @@ TODO BEFORE DEMO LAUNCH:
 - Make at least one devlog.
 - Setup website, newsletter or written devlog.
 
-STRETCH GOALS: 
+
 
 - Drag camera in fakeworld.
 - Drag camera when drawing if outside drawable area.
@@ -40,11 +40,11 @@ STRETCH GOALS:
 
 ------ Evolution Sim -------
 
-- Implement right click.   V
-- Timer in gui to animate radial menu. V
-- Make items selectable. V
 - Radial menu on right click to draw on single bodypart, delete, or other features. (Idea).
 - Show drawable surface by drawing dashed lines.
+
+--- NOW ---
+- Serialization!
 
 - Add tutorial.
 - Draw on single bodypart.
@@ -99,6 +99,9 @@ STRETCH GOALS:
 
 DONE:
 
+- Implement right click.   
+- Timer in gui to animate radial menu. 
+- Make items selectable. 
 - Keep tools in single tab with deselect button. Current situation is confusing.
 - Mouse controll camera.
 - Create some overhang on the edges of a bodypart.

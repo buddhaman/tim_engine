@@ -80,3 +80,4 @@ ESNextSolution(EvolutionStrategies *strategies)
     VecR32AddScaled(strategies->solution, strategies->solution, tempGene, factor);
 }
 
+

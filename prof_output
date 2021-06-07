@@ -1,0 +1,640 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+100.00      0.01     0.01        1    10.00    10.00  MakeRandomTextureAtlas
+  0.00      0.01     0.00    24709     0.00     0.00  vec2
+  0.00      0.01     0.00    18762     0.00     0.00  PushIndex
+  0.00      0.01     0.00    12508     0.00     0.00  PushVertex2
+  0.00      0.01     0.00     3127     0.00     0.00  PushQuad2
+  0.00      0.01     0.00     2809     0.00     0.00  PushRect2
+  0.00      0.01     0.00     1696     0.00     0.00  v2_add
+  0.00      0.01     0.00     1272     0.00     0.00  v2_muls
+  0.00      0.01     0.00      689     0.00     0.00  v2_sub
+  0.00      0.01     0.00      375     0.00     0.00  vec4
+  0.00      0.01     0.00      371     0.00     0.00  IsKeyActionDown
+  0.00      0.01     0.00      265     0.00     0.00  BeginSpritebatch
+  0.00      0.01     0.00      265     0.00     0.00  EndSpritebatch
+  0.00      0.01     0.00      265     0.00     0.00  v2_length
+  0.00      0.01     0.00      212     0.00     0.00  IsKeyActionJustDown
+  0.00      0.01     0.00      212     0.00     0.00  NKEditFloatProperty
+  0.00      0.01     0.00      212     0.00     0.00  PushLine2
+  0.00      0.01     0.00      159     0.00     0.00  GetCreatureTool
+  0.00      0.01     0.00      106     0.00     0.00  CreatureEditorIsEditing
+  0.00      0.01     0.00      106     0.00     0.00  EditorCanAddBodyPart
+  0.00      0.01     0.00      106     0.00     0.00  EditorIsJustPressed
+  0.00      0.01     0.00      106     0.00     0.00  PushOrientedRectangle2
+  0.00      0.01     0.00      106     0.00     0.00  Sign
+  0.00      0.01     0.00      106     0.00     0.00  UpdateCamera2D
+  0.00      0.01     0.00      106     0.00     0.00  m3_translation_and_scale
+  0.00      0.01     0.00      106     0.00     0.00  mat3
+  0.00      0.01     0.00       54     0.00     0.00  DegToRad
+  0.00      0.01     0.00       53     0.00     0.00  CreatureEditorWasEditing
+  0.00      0.01     0.00       53     0.00     0.00  DoRadialMenu
+  0.00      0.01     0.00       53     0.00     0.00  DoRadialMenuV
+  0.00      0.01     0.00       53     0.00     0.00  DoToolWindow
+  0.00      0.01     0.00       53     0.00     0.00  DrawBodyPartWithTexture
+  0.00      0.01     0.00       53     0.00     0.00  DrawGrid
+  0.00      0.01     0.00       53     0.00     0.00  EditorIsJustReleased
+  0.00      0.01     0.00       53     0.00     0.00  FitCamera2DToScreen
+  0.00      0.01     0.00       53     0.00     0.00  GetNearestBoxEdgeLocation
+  0.00      0.01     0.00       53     0.00     0.00  GetToolName
+  0.00      0.01     0.00       53     0.00     0.00  GuiUpdate
+  0.00      0.01     0.00       53     0.00     0.00  IsKeyActionJustReleased
+  0.00      0.01     0.00       53     0.00     0.00  OrientedBoxPoint2Intersect
+  0.00      0.01     0.00       53     0.00     0.00  PushOrientedLineRectangle2
+  0.00      0.01     0.00       53     0.00     0.00  RadToDeg
+  0.00      0.01     0.00       53     0.00     0.00  RecalculateTextureDims
+  0.00      0.01     0.00       53     0.00     0.00  ResetKeyActions
+  0.00      0.01     0.00       53     0.00     0.00  UpdateCameraInput
+  0.00      0.01     0.00       53     0.00     0.00  UpdateCreatureEditorScreen
+  0.00      0.01     0.00       53     0.00     0.00  v2_dist
+  0.00      0.01     0.00       18     0.00     0.00  PushMemory_
+  0.00      0.01     0.00        3     0.00     0.00  AddAtlasRegion
+  0.00      0.01     0.00        3     0.00     0.00  PushAndZeroMemory_
+  0.00      0.01     0.00        2     0.00     0.00  CreateAndCompileShaderSource
+  0.00      0.01     0.00        2     0.00     0.00  CreateMemoryArena
+  0.00      0.01     0.00        2     0.00     0.00  InitAtlas
+  0.00      0.01     0.00        2     0.00     0.00  InitCamera2D
+  0.00      0.01     0.00        2     0.00     0.00  MapKeyCodeToAction
+  0.00      0.01     0.00        2     0.00     0.00  NormalizePositions
+  0.00      0.01     0.00        2     0.00     0.00  ReadEntireFile
+  0.00      0.01     0.00        2     0.00     0.00  RegisterKeyAction
+  0.00      0.01     0.00        1     0.00     0.00  AssignBrainIO
+  0.00      0.01     0.00        1     0.00     0.00  AssignTextureToBodyPartDefinition
+  0.00      0.01     0.00        1     0.00     0.00  CreateAndLinkShaderProgram
+  0.00      0.01     0.00        1     0.00     0.00  DoTests
+  0.00      0.01     0.00        1     0.00     0.00  GetMinimalGatedUnitGeneSize
+  0.00      0.01     0.00        1     0.00     0.00  InitCreatureEditorScreen
+  0.00      0.01     0.00        1     0.00     0.00  InitFontRenderer
+  0.00      0.01     0.00        1     0.00     0.00  InitGui
+  0.00      0.01     0.00        1     0.00    10.00  InitRenderContext
+  0.00      0.01     0.00        1     0.00     0.00  InitShader
+  0.00      0.01     0.00        1     0.00     0.00  InitSpriteBatch
+  0.00      0.01     0.00        1     0.00     0.00  LoadImage
+  0.00      0.01     0.00        1     0.00     0.00  LoadShader
+  0.00      0.01     0.00        1     0.00     0.00  MakeDefaultTexture
+  0.00      0.01     0.00        1     0.00     0.00  NuklearColorFToVec3
+  0.00      0.01     0.00        1     0.00     0.00  RGBAToVec4
+  0.00      0.01     0.00        1     0.00     0.00  RecalculateBodyPartDrawOrder
+  0.00      0.01     0.00        1     0.00     0.00  UseEmptyTextureGridLocation
+  0.00      0.01     0.00        1     0.00     0.00  vec3
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+Copyright (C) 2012-2021 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 100.00% of 0.01 seconds
+
+index % time    self  children    called     name
+                0.00    0.01       1/1           main [3]
+[1]    100.0    0.00    0.01       1         InitRenderContext [1]
+                0.01    0.00       1/1           MakeRandomTextureAtlas [2]
+                0.00    0.00       3/18          PushMemory_ [50]
+                0.00    0.00       1/1           InitSpriteBatch [70]
+                0.00    0.00       1/1           MakeDefaultTexture [73]
+                0.00    0.00       1/1           InitShader [69]
+                0.00    0.00       1/1           LoadShader [72]
+                0.00    0.00       1/1           InitFontRenderer [67]
+-----------------------------------------------
+                0.01    0.00       1/1           InitRenderContext [1]
+[2]    100.0    0.01    0.00       1         MakeRandomTextureAtlas [2]
+                0.00    0.00       1/18          PushMemory_ [50]
+                0.00    0.00       1/2           InitAtlas [55]
+                0.00    0.00       1/3           PushAndZeroMemory_ [52]
+                0.00    0.00       1/3           AddAtlasRegion [51]
+                0.00    0.00       1/2           NormalizePositions [58]
+-----------------------------------------------
+                                                 <spontaneous>
+[3]    100.0    0.00    0.01                 main [3]
+                0.00    0.01       1/1           InitRenderContext [1]
+                0.00    0.00      53/53          ResetKeyActions [46]
+                0.00    0.00      53/53          FitCamera2DToScreen [37]
+                0.00    0.00      53/106         UpdateCamera2D [26]
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+                0.00    0.00       3/18          PushMemory_ [50]
+                0.00    0.00       2/2           CreateMemoryArena [54]
+                0.00    0.00       2/2           MapKeyCodeToAction [57]
+                0.00    0.00       2/2           RegisterKeyAction [60]
+                0.00    0.00       1/1           DoTests [64]
+                0.00    0.00       1/1           LoadImage [71]
+                0.00    0.00       1/1           RGBAToVec4 [75]
+                0.00    0.00       1/2           InitCamera2D [56]
+                0.00    0.00       1/1           InitCreatureEditorScreen [66]
+-----------------------------------------------
+                0.00    0.00       1/24709       InitCreatureEditorScreen [66]
+                0.00    0.00       2/24709       InitCamera2D [56]
+                0.00    0.00       2/24709       AssignTextureToBodyPartDefinition [62]
+                0.00    0.00       6/24709       NormalizePositions [58]
+                0.00    0.00      53/24709       FitCamera2DToScreen [37]
+                0.00    0.00     106/24709       PushOrientedLineRectangle2 [43]
+                0.00    0.00     106/24709       RecalculateTextureDims [45]
+                0.00    0.00     159/24709       GetNearestBoxEdgeLocation [38]
+                0.00    0.00     212/24709       PushLine2 [19]
+                0.00    0.00     212/24709       PushOrientedRectangle2 [24]
+                0.00    0.00     212/24709       UpdateCreatureEditorScreen [48]
+                0.00    0.00     318/24709       UpdateCamera2D [26]
+                0.00    0.00    5512/24709       DrawGrid [35]
+                0.00    0.00    8427/24709       PushRect2 [8]
+                0.00    0.00    9381/24709       PushQuad2 [7]
+[4]      0.0    0.00    0.00   24709         vec2 [4]
+-----------------------------------------------
+                0.00    0.00   18762/18762       PushQuad2 [7]
+[5]      0.0    0.00    0.00   18762         PushIndex [5]
+-----------------------------------------------
+                0.00    0.00   12508/12508       PushQuad2 [7]
+[6]      0.0    0.00    0.00   12508         PushVertex2 [6]
+-----------------------------------------------
+                0.00    0.00     106/3127        PushOrientedRectangle2 [24]
+                0.00    0.00     212/3127        PushLine2 [19]
+                0.00    0.00    2809/3127        PushRect2 [8]
+[7]      0.0    0.00    0.00    3127         PushQuad2 [7]
+                0.00    0.00   18762/18762       PushIndex [5]
+                0.00    0.00   12508/12508       PushVertex2 [6]
+                0.00    0.00    9381/24709       vec2 [4]
+-----------------------------------------------
+                0.00    0.00      53/2809        UpdateCreatureEditorScreen [48]
+                0.00    0.00    2756/2809        DrawGrid [35]
+[8]      0.0    0.00    0.00    2809         PushRect2 [8]
+                0.00    0.00    8427/24709       vec2 [4]
+                0.00    0.00    2809/3127        PushQuad2 [7]
+-----------------------------------------------
+                0.00    0.00     424/1696        PushLine2 [19]
+                0.00    0.00     424/1696        PushOrientedLineRectangle2 [43]
+                0.00    0.00     848/1696        PushOrientedRectangle2 [24]
+[9]      0.0    0.00    0.00    1696         v2_add [9]
+-----------------------------------------------
+                0.00    0.00     424/1272        PushOrientedLineRectangle2 [43]
+                0.00    0.00     848/1272        PushOrientedRectangle2 [24]
+[10]     0.0    0.00    0.00    1272         v2_muls [10]
+-----------------------------------------------
+                0.00    0.00      53/689         v2_dist [49]
+                0.00    0.00     636/689         PushLine2 [19]
+[11]     0.0    0.00    0.00     689         v2_sub [11]
+-----------------------------------------------
+                0.00    0.00       1/375         RGBAToVec4 [75]
+                0.00    0.00       3/375         InitGui [68]
+                0.00    0.00      53/375         DrawGrid [35]
+                0.00    0.00     318/375         UpdateCreatureEditorScreen [48]
+[12]     0.0    0.00    0.00     375         vec4 [12]
+-----------------------------------------------
+                0.00    0.00      53/371         UpdateCreatureEditorScreen [48]
+                0.00    0.00     318/371         UpdateCameraInput [47]
+[13]     0.0    0.00    0.00     371         IsKeyActionDown [13]
+-----------------------------------------------
+                0.00    0.00     265/265         UpdateCreatureEditorScreen [48]
+[14]     0.0    0.00    0.00     265         BeginSpritebatch [14]
+-----------------------------------------------
+                0.00    0.00     265/265         UpdateCreatureEditorScreen [48]
+[15]     0.0    0.00    0.00     265         EndSpritebatch [15]
+-----------------------------------------------
+                0.00    0.00      53/265         v2_dist [49]
+                0.00    0.00     212/265         PushLine2 [19]
+[16]     0.0    0.00    0.00     265         v2_length [16]
+-----------------------------------------------
+                0.00    0.00     106/212         EditorIsJustPressed [23]
+                0.00    0.00     106/212         UpdateCreatureEditorScreen [48]
+[17]     0.0    0.00    0.00     212         IsKeyActionJustDown [17]
+-----------------------------------------------
+                0.00    0.00     106/212         DoToolWindow [33]
+                0.00    0.00     106/212         UpdateCreatureEditorScreen [48]
+[18]     0.0    0.00    0.00     212         NKEditFloatProperty [18]
+-----------------------------------------------
+                0.00    0.00     212/212         PushOrientedLineRectangle2 [43]
+[19]     0.0    0.00    0.00     212         PushLine2 [19]
+                0.00    0.00     636/689         v2_sub [11]
+                0.00    0.00     424/1696        v2_add [9]
+                0.00    0.00     212/265         v2_length [16]
+                0.00    0.00     212/24709       vec2 [4]
+                0.00    0.00     212/3127        PushQuad2 [7]
+-----------------------------------------------
+                0.00    0.00      53/159         GetToolName [39]
+                0.00    0.00      53/159         DoToolWindow [33]
+                0.00    0.00      53/159         UpdateCreatureEditorScreen [48]
+[20]     0.0    0.00    0.00     159         GetCreatureTool [20]
+-----------------------------------------------
+                0.00    0.00     106/106         UpdateCreatureEditorScreen [48]
+[21]     0.0    0.00    0.00     106         CreatureEditorIsEditing [21]
+-----------------------------------------------
+                0.00    0.00     106/106         UpdateCreatureEditorScreen [48]
+[22]     0.0    0.00    0.00     106         EditorCanAddBodyPart [22]
+-----------------------------------------------
+                0.00    0.00     106/106         UpdateCreatureEditorScreen [48]
+[23]     0.0    0.00    0.00     106         EditorIsJustPressed [23]
+                0.00    0.00     106/212         IsKeyActionJustDown [17]
+-----------------------------------------------
+                0.00    0.00      53/106         DrawBodyPartWithTexture [34]
+                0.00    0.00      53/106         UpdateCreatureEditorScreen [48]
+[24]     0.0    0.00    0.00     106         PushOrientedRectangle2 [24]
+                0.00    0.00     848/1272        v2_muls [10]
+                0.00    0.00     848/1696        v2_add [9]
+                0.00    0.00     212/24709       vec2 [4]
+                0.00    0.00     106/3127        PushQuad2 [7]
+-----------------------------------------------
+                0.00    0.00     106/106         GetNearestBoxEdgeLocation [38]
+[25]     0.0    0.00    0.00     106         Sign [25]
+-----------------------------------------------
+                0.00    0.00      53/106         UpdateCreatureEditorScreen [48]
+                0.00    0.00      53/106         main [3]
+[26]     0.0    0.00    0.00     106         UpdateCamera2D [26]
+                0.00    0.00     318/24709       vec2 [4]
+                0.00    0.00     106/106         m3_translation_and_scale [27]
+-----------------------------------------------
+                0.00    0.00     106/106         UpdateCamera2D [26]
+[27]     0.0    0.00    0.00     106         m3_translation_and_scale [27]
+                0.00    0.00     106/106         mat3 [28]
+-----------------------------------------------
+                0.00    0.00     106/106         m3_translation_and_scale [27]
+[28]     0.0    0.00    0.00     106         mat3 [28]
+-----------------------------------------------
+                0.00    0.00       1/54          InitCreatureEditorScreen [66]
+                0.00    0.00      53/54          DoToolWindow [33]
+[29]     0.0    0.00    0.00      54         DegToRad [29]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[30]     0.0    0.00    0.00      53         CreatureEditorWasEditing [30]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[31]     0.0    0.00    0.00      53         DoRadialMenu [31]
+                0.00    0.00      53/53          DoRadialMenuV [32]
+-----------------------------------------------
+                0.00    0.00      53/53          DoRadialMenu [31]
+[32]     0.0    0.00    0.00      53         DoRadialMenuV [32]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[33]     0.0    0.00    0.00      53         DoToolWindow [33]
+                0.00    0.00     106/212         NKEditFloatProperty [18]
+                0.00    0.00      53/53          GetToolName [39]
+                0.00    0.00      53/159         GetCreatureTool [20]
+                0.00    0.00      53/53          RadToDeg [44]
+                0.00    0.00      53/54          DegToRad [29]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[34]     0.0    0.00    0.00      53         DrawBodyPartWithTexture [34]
+                0.00    0.00      53/106         PushOrientedRectangle2 [24]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[35]     0.0    0.00    0.00      53         DrawGrid [35]
+                0.00    0.00    5512/24709       vec2 [4]
+                0.00    0.00    2756/2809        PushRect2 [8]
+                0.00    0.00      53/375         vec4 [12]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[36]     0.0    0.00    0.00      53         EditorIsJustReleased [36]
+                0.00    0.00      53/53          IsKeyActionJustReleased [41]
+-----------------------------------------------
+                0.00    0.00      53/53          main [3]
+[37]     0.0    0.00    0.00      53         FitCamera2DToScreen [37]
+                0.00    0.00      53/24709       vec2 [4]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[38]     0.0    0.00    0.00      53         GetNearestBoxEdgeLocation [38]
+                0.00    0.00     159/24709       vec2 [4]
+                0.00    0.00     106/106         Sign [25]
+                0.00    0.00      53/53          v2_dist [49]
+-----------------------------------------------
+                0.00    0.00      53/53          DoToolWindow [33]
+[39]     0.0    0.00    0.00      53         GetToolName [39]
+                0.00    0.00      53/159         GetCreatureTool [20]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[40]     0.0    0.00    0.00      53         GuiUpdate [40]
+-----------------------------------------------
+                0.00    0.00      53/53          EditorIsJustReleased [36]
+[41]     0.0    0.00    0.00      53         IsKeyActionJustReleased [41]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[42]     0.0    0.00    0.00      53         OrientedBoxPoint2Intersect [42]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[43]     0.0    0.00    0.00      53         PushOrientedLineRectangle2 [43]
+                0.00    0.00     424/1272        v2_muls [10]
+                0.00    0.00     424/1696        v2_add [9]
+                0.00    0.00     212/212         PushLine2 [19]
+                0.00    0.00     106/24709       vec2 [4]
+-----------------------------------------------
+                0.00    0.00      53/53          DoToolWindow [33]
+[44]     0.0    0.00    0.00      53         RadToDeg [44]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[45]     0.0    0.00    0.00      53         RecalculateTextureDims [45]
+                0.00    0.00     106/24709       vec2 [4]
+-----------------------------------------------
+                0.00    0.00      53/53          main [3]
+[46]     0.0    0.00    0.00      53         ResetKeyActions [46]
+-----------------------------------------------
+                0.00    0.00      53/53          UpdateCreatureEditorScreen [48]
+[47]     0.0    0.00    0.00      53         UpdateCameraInput [47]
+                0.00    0.00     318/371         IsKeyActionDown [13]
+-----------------------------------------------
+                0.00    0.00      53/53          main [3]
+[48]     0.0    0.00    0.00      53         UpdateCreatureEditorScreen [48]
+                0.00    0.00     318/375         vec4 [12]
+                0.00    0.00     265/265         BeginSpritebatch [14]
+                0.00    0.00     265/265         EndSpritebatch [15]
+                0.00    0.00     212/24709       vec2 [4]
+                0.00    0.00     106/212         IsKeyActionJustDown [17]
+                0.00    0.00     106/106         CreatureEditorIsEditing [21]
+                0.00    0.00     106/106         EditorCanAddBodyPart [22]
+                0.00    0.00     106/106         EditorIsJustPressed [23]
+                0.00    0.00     106/212         NKEditFloatProperty [18]
+                0.00    0.00      53/53          RecalculateTextureDims [45]
+                0.00    0.00      53/53          UpdateCameraInput [47]
+                0.00    0.00      53/106         UpdateCamera2D [26]
+                0.00    0.00      53/2809        PushRect2 [8]
+                0.00    0.00      53/53          DrawGrid [35]
+                0.00    0.00      53/106         PushOrientedRectangle2 [24]
+                0.00    0.00      53/53          DrawBodyPartWithTexture [34]
+                0.00    0.00      53/53          OrientedBoxPoint2Intersect [42]
+                0.00    0.00      53/53          PushOrientedLineRectangle2 [43]
+                0.00    0.00      53/53          GetNearestBoxEdgeLocation [38]
+                0.00    0.00      53/371         IsKeyActionDown [13]
+                0.00    0.00      53/53          DoRadialMenu [31]
+                0.00    0.00      53/53          GuiUpdate [40]
+                0.00    0.00      53/159         GetCreatureTool [20]
+                0.00    0.00      53/53          DoToolWindow [33]
+                0.00    0.00      53/53          CreatureEditorWasEditing [30]
+                0.00    0.00      53/53          EditorIsJustReleased [36]
+-----------------------------------------------
+                0.00    0.00      53/53          GetNearestBoxEdgeLocation [38]
+[49]     0.0    0.00    0.00      53         v2_dist [49]
+                0.00    0.00      53/689         v2_sub [11]
+                0.00    0.00      53/265         v2_length [16]
+-----------------------------------------------
+                0.00    0.00       1/18          MakeRandomTextureAtlas [2]
+                0.00    0.00       1/18          MakeDefaultTexture [73]
+                0.00    0.00       2/18          InitSpriteBatch [70]
+                0.00    0.00       2/18          InitAtlas [55]
+                0.00    0.00       3/18          PushAndZeroMemory_ [52]
+                0.00    0.00       3/18          InitRenderContext [1]
+                0.00    0.00       3/18          InitCreatureEditorScreen [66]
+                0.00    0.00       3/18          main [3]
+[50]     0.0    0.00    0.00      18         PushMemory_ [50]
+-----------------------------------------------
+                0.00    0.00       1/3           MakeRandomTextureAtlas [2]
+                0.00    0.00       2/3           MakeDefaultTexture [73]
+[51]     0.0    0.00    0.00       3         AddAtlasRegion [51]
+-----------------------------------------------
+                0.00    0.00       1/3           MakeRandomTextureAtlas [2]
+                0.00    0.00       2/3           InitGui [68]
+[52]     0.0    0.00    0.00       3         PushAndZeroMemory_ [52]
+                0.00    0.00       3/18          PushMemory_ [50]
+-----------------------------------------------
+                0.00    0.00       2/2           LoadShader [72]
+[53]     0.0    0.00    0.00       2         CreateAndCompileShaderSource [53]
+-----------------------------------------------
+                0.00    0.00       2/2           main [3]
+[54]     0.0    0.00    0.00       2         CreateMemoryArena [54]
+-----------------------------------------------
+                0.00    0.00       1/2           MakeRandomTextureAtlas [2]
+                0.00    0.00       1/2           MakeDefaultTexture [73]
+[55]     0.0    0.00    0.00       2         InitAtlas [55]
+                0.00    0.00       2/18          PushMemory_ [50]
+-----------------------------------------------
+                0.00    0.00       1/2           InitCreatureEditorScreen [66]
+                0.00    0.00       1/2           main [3]
+[56]     0.0    0.00    0.00       2         InitCamera2D [56]
+                0.00    0.00       2/24709       vec2 [4]
+-----------------------------------------------
+                0.00    0.00       2/2           main [3]
+[57]     0.0    0.00    0.00       2         MapKeyCodeToAction [57]
+-----------------------------------------------
+                0.00    0.00       1/2           MakeRandomTextureAtlas [2]
+                0.00    0.00       1/2           MakeDefaultTexture [73]
+[58]     0.0    0.00    0.00       2         NormalizePositions [58]
+                0.00    0.00       6/24709       vec2 [4]
+-----------------------------------------------
+                0.00    0.00       2/2           LoadShader [72]
+[59]     0.0    0.00    0.00       2         ReadEntireFile [59]
+-----------------------------------------------
+                0.00    0.00       2/2           main [3]
+[60]     0.0    0.00    0.00       2         RegisterKeyAction [60]
+-----------------------------------------------
+                0.00    0.00       1/1           InitCreatureEditorScreen [66]
+[61]     0.0    0.00    0.00       1         AssignBrainIO [61]
+                0.00    0.00       1/1           GetMinimalGatedUnitGeneSize [65]
+-----------------------------------------------
+                0.00    0.00       1/1           InitCreatureEditorScreen [66]
+[62]     0.0    0.00    0.00       1         AssignTextureToBodyPartDefinition [62]
+                0.00    0.00       2/24709       vec2 [4]
+                0.00    0.00       1/1           UseEmptyTextureGridLocation [77]
+-----------------------------------------------
+                0.00    0.00       1/1           LoadShader [72]
+[63]     0.0    0.00    0.00       1         CreateAndLinkShaderProgram [63]
+-----------------------------------------------
+                0.00    0.00       1/1           main [3]
+[64]     0.0    0.00    0.00       1         DoTests [64]
+-----------------------------------------------
+                0.00    0.00       1/1           AssignBrainIO [61]
+[65]     0.0    0.00    0.00       1         GetMinimalGatedUnitGeneSize [65]
+-----------------------------------------------
+                0.00    0.00       1/1           main [3]
+[66]     0.0    0.00    0.00       1         InitCreatureEditorScreen [66]
+                0.00    0.00       3/18          PushMemory_ [50]
+                0.00    0.00       1/2           InitCamera2D [56]
+                0.00    0.00       1/1           InitGui [68]
+                0.00    0.00       1/54          DegToRad [29]
+                0.00    0.00       1/1           NuklearColorFToVec3 [74]
+                0.00    0.00       1/24709       vec2 [4]
+                0.00    0.00       1/1           AssignTextureToBodyPartDefinition [62]
+                0.00    0.00       1/1           AssignBrainIO [61]
+                0.00    0.00       1/1           RecalculateBodyPartDrawOrder [76]
+-----------------------------------------------
+                0.00    0.00       1/1           InitRenderContext [1]
+[67]     0.0    0.00    0.00       1         InitFontRenderer [67]
+-----------------------------------------------
+                0.00    0.00       1/1           InitCreatureEditorScreen [66]
+[68]     0.0    0.00    0.00       1         InitGui [68]
+                0.00    0.00       3/375         vec4 [12]
+                0.00    0.00       2/3           PushAndZeroMemory_ [52]
+-----------------------------------------------
+                0.00    0.00       1/1           InitRenderContext [1]
+[69]     0.0    0.00    0.00       1         InitShader [69]
+-----------------------------------------------
+                0.00    0.00       1/1           InitRenderContext [1]
+[70]     0.0    0.00    0.00       1         InitSpriteBatch [70]
+                0.00    0.00       2/18          PushMemory_ [50]
+-----------------------------------------------
+                0.00    0.00       1/1           main [3]
+[71]     0.0    0.00    0.00       1         LoadImage [71]
+-----------------------------------------------
+                0.00    0.00       1/1           InitRenderContext [1]
+[72]     0.0    0.00    0.00       1         LoadShader [72]
+                0.00    0.00       2/2           ReadEntireFile [59]
+                0.00    0.00       2/2           CreateAndCompileShaderSource [53]
+                0.00    0.00       1/1           CreateAndLinkShaderProgram [63]
+-----------------------------------------------
+                0.00    0.00       1/1           InitRenderContext [1]
+[73]     0.0    0.00    0.00       1         MakeDefaultTexture [73]
+                0.00    0.00       2/3           AddAtlasRegion [51]
+                0.00    0.00       1/18          PushMemory_ [50]
+                0.00    0.00       1/2           InitAtlas [55]
+                0.00    0.00       1/2           NormalizePositions [58]
+-----------------------------------------------
+                0.00    0.00       1/1           InitCreatureEditorScreen [66]
+[74]     0.0    0.00    0.00       1         NuklearColorFToVec3 [74]
+                0.00    0.00       1/1           vec3 [78]
+-----------------------------------------------
+                0.00    0.00       1/1           main [3]
+[75]     0.0    0.00    0.00       1         RGBAToVec4 [75]
+                0.00    0.00       1/375         vec4 [12]
+-----------------------------------------------
+                0.00    0.00       1/1           InitCreatureEditorScreen [66]
+[76]     0.0    0.00    0.00       1         RecalculateBodyPartDrawOrder [76]
+-----------------------------------------------
+                0.00    0.00       1/1           AssignTextureToBodyPartDefinition [62]
+[77]     0.0    0.00    0.00       1         UseEmptyTextureGridLocation [77]
+-----------------------------------------------
+                0.00    0.00       1/1           NuklearColorFToVec3 [74]
+[78]     0.0    0.00    0.00       1         vec3 [78]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+Copyright (C) 2012-2021 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Index by function name
+
+  [51] AddAtlasRegion         [55] InitAtlas               [7] PushQuad2
+  [61] AssignBrainIO          [56] InitCamera2D            [8] PushRect2
+  [62] AssignTextureToBodyPartDefinition (creature_editor.c) [66] InitCreatureEditorScreen [6] PushVertex2 (render2d.c)
+  [14] BeginSpritebatch (render2d.c) [67] InitFontRenderer [75] RGBAToVec4 (tim_math.c)
+  [53] CreateAndCompileShaderSource [68] InitGui          [44] RadToDeg (tim_math.c)
+  [63] CreateAndLinkShaderProgram [1] InitRenderContext   [59] ReadEntireFile
+  [54] CreateMemoryArena      [69] InitShader             [76] RecalculateBodyPartDrawOrder
+  [21] CreatureEditorIsEditing (creature_editor.c) [70] InitSpriteBatch [45] RecalculateTextureDims (creature_editor.c)
+  [30] CreatureEditorWasEditing (creature_editor.c) [13] IsKeyActionDown [60] RegisterKeyAction
+  [29] DegToRad (tim_math.c)  [17] IsKeyActionJustDown    [46] ResetKeyActions
+  [31] DoRadialMenu           [41] IsKeyActionJustReleased [25] Sign
+  [32] DoRadialMenuV          [71] LoadImage              [26] UpdateCamera2D
+  [64] DoTests                [72] LoadShader             [47] UpdateCameraInput
+  [33] DoToolWindow           [73] MakeDefaultTexture     [48] UpdateCreatureEditorScreen
+  [34] DrawBodyPartWithTexture (render_context.c) [2] MakeRandomTextureAtlas [77] UseEmptyTextureGridLocation (creature_editor.c)
+  [35] DrawGrid               [57] MapKeyCodeToAction     [27] m3_translation_and_scale
+  [22] EditorCanAddBodyPart   [18] NKEditFloatProperty    [28] mat3 (math_2d.h)
+  [23] EditorIsJustPressed    [58] NormalizePositions      [9] v2_add (math_2d.h)
+  [36] EditorIsJustReleased   [74] NuklearColorFToVec3 (creature_editor.c) [49] v2_dist (math_2d.h)
+  [15] EndSpritebatch (render2d.c) [42] OrientedBoxPoint2Intersect (tim_math.c) [16] v2_length (math_2d.h)
+  [37] FitCamera2DToScreen    [52] PushAndZeroMemory_ (cool_memory.c) [10] v2_muls (math_2d.h)
+  [20] GetCreatureTool (creature_editor.c) [5] PushIndex (render2d.c) [11] v2_sub (math_2d.h)
+  [65] GetMinimalGatedUnitGeneSize [19] PushLine2          [4] vec2 (math_3d.h)
+  [38] GetNearestBoxEdgeLocation (tim_math.c) [50] PushMemory_ (cool_memory.c) [78] vec3 (math_3d.h)
+  [39] GetToolName (creature_editor.c) [43] PushOrientedLineRectangle2 [12] vec4 (math_3d.h)
+  [40] GuiUpdate              [24] PushOrientedRectangle2

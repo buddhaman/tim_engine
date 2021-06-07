@@ -49,10 +49,6 @@ typedef struct
 
     b32 isCreatureColorPickerVisible;
 
-    // Texture atlas
-    ui32 creatureTextureGridDivs;
-    b32 isTextureSquareOccupied[16];
-
     struct nk_colorf creatureSolidColor;
     b32 isSolidColorPickerVisible;
 

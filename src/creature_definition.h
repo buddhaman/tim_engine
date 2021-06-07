@@ -4,6 +4,7 @@
 
 #define MAX_BODYPARTS 16
 #define CREATURE_TEX_SIZE 2048
+#define MAX_CREATURE_NAME_LENGTH 64
 
 typedef struct
 {
@@ -57,8 +58,14 @@ typedef struct
     r32 textureOverhang;
     b32 drawSolidColor;
     Vec3 solidColor;
+
+    // Texture atlas
+    ui32 creatureTextureGridDivs;
+    b32 isTextureSquareOccupied[16];
+
     BodyPartDefinition bodyParts[MAX_BODYPARTS];
     BodyPartDefinition *drawOrder[MAX_BODYPARTS];
+    char name[MAX_CREATURE_NAME_LENGTH];
 } CreatureDefinition;
 
 #endif

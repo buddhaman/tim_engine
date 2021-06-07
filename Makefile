@@ -1,7 +1,7 @@
 CC=gcc
 
 SRC_CHIPMUNK = $(wildcard src_chipmunk/*.c)
-SRC = $(wildcard src/*.c)
+SRC = $(wildcard src/*)
 
 DEBUG0 = -g
 CFLAGS = -DNDEBUG
