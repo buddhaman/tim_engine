@@ -336,6 +336,46 @@ DoColorPickerButton(struct nk_context *ctx, struct nk_colorf *color, b32 *isColo
     return result;
 }
 
+void
+LoadCreatureDefinition(CreatureEditorScreen *editor,
+        RenderContext *renderContext,
+        CreatureDefinitionFile *file)
+{
+    TextureAtlas *creatureAtlas = renderContext->creatureTextureAtlas;
+    CreatureDefinition *def = editor->creatureDefinition;
+    Serializer serializer;
+    BeginSerializing(&serializer, file->dataPath, 0);
+    SerializeCreatureDefinition(&serializer, def);
+    EndSerializing(&serializer);
+    RecalculateSubNodeBodyParts(def, def->bodyParts);
+    RecalculateBodyPartDrawOrder(def);
+    int x, y, n;
+    unsigned char *data = stbi_load(file->texturePath, &x, &y, &n, 4);
+    DebugOut("loaded creature texture %dx%d with %d components per pixel", 
+            x, y, n);
+    if(x==CREATURE_TEX_SIZE && n==4)
+    {
+        SetTextureAtlasImageData(creatureAtlas, data);
+    }
+    else
+    {
+        DebugOut("Incorrect texture format, should be 2048x2048 png with 4 components per pixel (rgba).");
+    }
+    stbi_image_free(data);
+
+    editor->idCounter = 1;
+    for(ui32 partDefIdx = 0;
+            partDefIdx < def->nBodyParts;
+            partDefIdx++)
+    {
+        BodyPartDefinition *partDef = def->bodyParts+partDefIdx;
+        editor->idCounter = Max(editor->idCounter, partDef->id+1);
+    }
+    editor->selectedId = 0;
+    editor->rightSelectedId = 0;
+    DebugOut("done loading");
+}
+
 void 
 EditBodypartDefinition(CreatureEditorScreen *editor, 
         RenderContext *renderContext, 
@@ -489,6 +529,27 @@ EditBodypartDefinition(CreatureEditorScreen *editor,
     RecalculateSubNodeBodyParts(def, def->bodyParts);
 }
 
+int
+BeginCenterPopup(AppState *appState, 
+        struct nk_context *ctx,
+        r32 width, r32 height,
+        char *title)
+{
+    r32 x = appState->screenWidth/2-width/2;
+    r32 y = appState->screenHeight/2-height/2;
+    return nk_begin(ctx, title, nk_rect(x, y, width, height), 
+                NK_WINDOW_TITLE | 
+                NK_WINDOW_BORDER | 
+                NK_WINDOW_MOVABLE | 
+                NK_WINDOW_SCALABLE );
+}
+
+void
+EndCenterPopup(struct nk_context *ctx)
+{
+    nk_end(ctx);
+}
+
 void
 DoToolWindow(AppState *appState, CreatureEditorScreen *editor, struct nk_context *ctx)
 {
@@ -622,13 +683,15 @@ UpdateCreatureEditorScreen(AppState *appState,
     b32 hasLastBrushStroke = 0;
     
     // Key and mouse input
-    editor->isInputCaptured = nk_window_is_any_hovered(ctx);
+    editor->isInputCaptured = nk_window_is_any_hovered(ctx) ||
+        editor->showSaveScreen ||
+        editor->showLoadScreen;
     editor->canMoveCameraWithMouse = editor->editState==EDIT_CREATURE_NONE;
     if(IsKeyActionJustDown(appState, ACTION_ESCAPE))
     {
         editor->editState = EDIT_CREATURE_NONE;
     }
-    if(IsKeyActionJustDown(appState, ACTION_DELETE))
+    if(EditorIsJustReleased(appState, editor, ACTION_DELETE))
     {
         if(editor->selectedId > 1)
         {
@@ -1163,28 +1226,10 @@ UpdateCreatureEditorScreen(AppState *appState,
             NKEditFloatProperty(ctx, "Deviation", 0.001, &editor->deviation, 10, 0.01, 0.01);
             if(nk_button_label(ctx, "Save"))
             {
-                char dataPath[256];
-                char texturePath[256];
-                GeneratePathNames(def, dataPath, texturePath);
-
-                DebugOut("Saving to %s and %s.", dataPath, texturePath);
-                Serializer serializer;
-                BeginSerializing(&serializer, dataPath, 1);
-                SerializeCreatureDefinition(&serializer, def);
-                EndSerializing(&serializer);
-
-                // Save texture image as png
-                stbi_write_png(texturePath, 
-                        creatureAtlas->width,
-                        creatureAtlas->height,
-                        4,
-                        creatureAtlas->image,
-                        creatureAtlas->width*4);
-                DebugOut("done saving");
+                editor->showSaveScreen = 1;
             }
             if(nk_button_label(ctx, "Load"))
             {
-
                 // Show list of creatures.
 
                 int maxFiles = 64;
@@ -1196,7 +1241,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                 char *textureFiles[maxFiles];
 
                 tinydir_dir dir;
-                tinydir_open(&dir, "crdefs");
+                tinydir_open(&dir, CREATURE_FOLDER_NAME);
                 while(dir.has_next)
                 {
                     tinydir_file file;
@@ -1228,48 +1273,17 @@ UpdateCreatureEditorScreen(AppState *appState,
 
                 DebugOut("creature files: %d, texture files: %d", creatureCounter, textureCounter);
 
-                PairCreatureFiles(MAX_CREATURE_FILES, 
-                editor->creatureFiles,
-                creatureCounter, 
-                creatureFiles,
-                textureCounter,
-                textureFiles);
+                editor->nCreatureFiles = PairCreatureFiles(MAX_CREATURE_FILES, 
+                                                            editor->creatureFiles,
+                                                            creatureCounter, 
+                                                            creatureFiles,
+                                                            textureCounter,
+                                                            textureFiles);
                         
                 free(fileNameBuffer);
 
-                /*
-                Serializer serializer;
-                BeginSerializing(&serializer, dataPath, 0);
-                SerializeCreatureDefinition(&serializer, def);
-                EndSerializing(&serializer);
-                RecalculateSubNodeBodyParts(def, def->bodyParts);
-                RecalculateBodyPartDrawOrder(def);
-                int x, y, n;
-                unsigned char *data = stbi_load(texturePath, &x, &y, &n, 4);
-                DebugOut("loaded creature texture %dx%d with %d components per pixel", 
-                        x, y, n);
-                if(x==CREATURE_TEX_SIZE && n==4)
-                {
-                    SetTextureAtlasImageData(creatureAtlas, data);
-                }
-                else
-                {
-                    DebugOut("Incorrect texture format, should be 2048x2048 png with 4 components per pixel (rgba).");
-                }
-                stbi_image_free(data);
+                editor->showLoadScreen = 1;
 
-                editor->idCounter = 1;
-                for(ui32 partDefIdx = 0;
-                        partDefIdx < def->nBodyParts;
-                        partDefIdx++)
-                {
-                    BodyPartDefinition *partDef = def->bodyParts+partDefIdx;
-                    editor->idCounter = Max(editor->idCounter, partDef->id+1);
-                }
-                editor->selectedId = 0;
-                editor->rightSelectedId = 0;
-                DebugOut("done loading");
-                */
             }
             if(nk_button_label(ctx, "Start Simulation"))
             {
@@ -1279,6 +1293,76 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
     nk_end(ctx);
+    
+    if(editor->showLoadScreen)
+    {
+        r32 savedCreatureWidth = 400;
+        r32 savedCreatureHeight = 400;
+        if(BeginCenterPopup(appState, ctx, savedCreatureWidth, savedCreatureHeight, "Load Creature"))
+        {
+            nk_layout_row_dynamic(ctx, 30, 1);
+            for(ui32 creatureIdx = 0;
+                    creatureIdx < editor->nCreatureFiles;
+                    creatureIdx++)
+            {
+                CreatureDefinitionFile *file = editor->creatureFiles+creatureIdx;
+                if(nk_button_label(ctx, file->name))
+                {
+                    LoadCreatureDefinition(editor, renderer, file);
+                    editor->showLoadScreen = 0;
+                }
+            }
+            if(nk_button_label(ctx, "Cancel"))
+            {
+                editor->showLoadScreen = 0;
+            }
+        }
+        EndCenterPopup(ctx);
+    }
+
+    if(editor->showSaveScreen)
+    {
+        r32 saveScreenWidth = 400;
+        r32 saveScreenHeight = 400;
+        if(BeginCenterPopup(appState, ctx, saveScreenWidth, saveScreenHeight, "Save Creature"))
+        {
+            nk_layout_row_dynamic(ctx, 30, 1);
+
+            nk_edit_string_zero_terminated(ctx, 
+                    NK_EDIT_FIELD, 
+                    def->name, 
+                    MAX_CREATURE_NAME_LENGTH-10, nk_filter_default);
+
+            nk_layout_row_dynamic(ctx, 30, 2);
+            if(nk_button_label(ctx, "Okay"))
+            {
+                char dataPath[256];
+                char texturePath[256];
+                GeneratePathNames(def, dataPath, texturePath);
+
+                DebugOut("Saving to %s and %s.", dataPath, texturePath);
+                Serializer serializer;
+                BeginSerializing(&serializer, dataPath, 1);
+                SerializeCreatureDefinition(&serializer, def);
+                EndSerializing(&serializer);
+
+                // Save texture image as png
+                stbi_write_png(texturePath, 
+                        creatureAtlas->width,
+                        creatureAtlas->height,
+                        4,
+                        creatureAtlas->image,
+                        creatureAtlas->width*4);
+                DebugOut("done saving");
+                editor->showSaveScreen = 0;
+            }
+            if(nk_button_label(ctx, "Cancel"))
+            {
+                editor->showSaveScreen = 0;
+            }
+        }
+        EndCenterPopup(ctx);
+    }
 
     DoToolWindow(appState, editor, ctx);
 

@@ -5,6 +5,8 @@
 #define MAX_BODYPARTS 16
 #define CREATURE_TEX_SIZE 2048
 #define MAX_CREATURE_NAME_LENGTH 64
+#define MAX_CREATURE_FILES 64
+#define CREATURE_FOLDER_NAME "crdefs"
 
 typedef struct
 {

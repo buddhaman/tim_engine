@@ -3,15 +3,22 @@ void
 BeginSerializing(Serializer *serializer, char *path, b32 write)
 {
     serializer->file = fopen(path, write ? "wb" : "rb");
-    serializer->isWriting = write;
-    if(serializer->isWriting)
+    if(serializer->file)
     {
-        serializer->dataVersion = LATEST_VERSION;
-        fwrite(&serializer->dataVersion, sizeof(ui32), 1, serializer->file);
+        serializer->isWriting = write;
+        if(serializer->isWriting)
+        {
+            serializer->dataVersion = LATEST_VERSION;
+            fwrite(&serializer->dataVersion, sizeof(ui32), 1, serializer->file);
+        }
+        else
+        {
+            fread(&serializer->dataVersion, sizeof(ui32), 1, serializer->file);
+        }
     }
     else
     {
-        fread(&serializer->dataVersion, sizeof(ui32), 1, serializer->file);
+        DebugOut("ERROR: File not found: %s", path);
     }
 }
 

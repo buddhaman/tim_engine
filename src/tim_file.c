@@ -38,7 +38,8 @@ FindWithPrefix(int nStrings, char *strings[nStrings], char *prefix)
     return NULL;
 }
 
-void
+// Returns number of matches.
+int
 PairCreatureFiles(int maxCreatures, 
         CreatureDefinitionFile creatureDefinitionFiles[maxCreatures],
         int nCreatureDataFiles,
@@ -62,13 +63,20 @@ PairCreatureFiles(int maxCreatures,
         if(texturePath)
         {
             CreatureDefinitionFile *result = creatureDefinitionFiles+matchCounter++;
-            strcpy(result->dataPath, creatureDataPath);
-            strcpy(result->texturePath, texturePath);
+
+            strcpy(result->name, prefix);
+            strcpy(result->dataPath, CREATURE_FOLDER_NAME"/");
+            strcat(result->dataPath, creatureDataPath);
+
+            strcpy(result->texturePath, CREATURE_FOLDER_NAME"/");
+            strcat(result->texturePath, texturePath);
+
             if(matchCounter > maxCreatures)
             {
                 break;
             }
         }
     }
+    return matchCounter;
 }
 

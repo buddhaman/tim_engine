@@ -1,6 +1,4 @@
 
-#define MAX_CREATURE_FILES 64
-
 typedef enum
 {
     EDIT_CREATURE_NONE,
@@ -60,15 +58,16 @@ typedef struct
     b32 canMoveCameraWithMouse;
     b32 isDraggingCamera;
 
-
     b32 isErasing;
     r32 brushSize;
     b32 drawBrushInScreenCenter;
     b32 hasLastBrushStroke;
     Vec2 lastBrushStroke;
 
+    b32 showSaveScreen;
 
-    b32 showSavedCreatures;
+    b32 showLoadScreen;
+    ui32 nCreatureFiles;
     CreatureDefinitionFile creatureFiles[MAX_CREATURE_FILES];
 
 } CreatureEditorScreen;
