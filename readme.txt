@@ -14,88 +14,29 @@ Nice: Do competition. 150 dollars for best creature.
 
 TODO BEFORE DEMO LAUNCH:
 
-- Draw on single bodypart :     
-    - Implement right click.
-    - Radial menu ?  Yes V
-    - Select draw on bodypart. Show outline of texture reach. V
-    - Use masking.  V  
-
-- Add tutorial.
-- Set training target and add multiple.
 - Make at least one devlog.
 - Setup website, newsletter or written devlog.
-
-- Drag camera in fakeworld.
-- Drag camera when drawing if outside drawable area.
-- Add ingame tutorial.
 - Try to compile to windows and send some versions to people to test. 
 
-- Figure out way to create graphs. Probably create own graphing. Base on own ui library.
-- Combobox for training method and setup training method. 
-- Edit video. Publish to youtube.
-- Figure out one more way to promote game.
+LATER: 
 
------- Evolution Sim -------
-
-- Radial menu on right click to draw on single bodypart, delete, or other features. (Idea).
-- Show drawable surface by drawing dashed lines.
-
---- NOW ---
-- Serialization!
-
-- Add tutorial.
-- Draw on single bodypart.
-
-- Give very clear feedback for current tool.
-- When selecting bodypart switch to selection. No need to cancel inbetween.
-- Ui needs to be waayyyy better. 
-- Clear texture on bodypart option in radial menu.
-
-- Add multiple views. See edges, see actual result, same in fakeworld.
-- Generate random texture.
-- Make videos: Create joker.
-- Give clear feedback about the current tool
-- Choose base color for every part.
-- Add googly eyes.
-
-- Gray out buttons when action is not available.
-
-- Visualize fitness in world for first creature.
+- Contact saplings developer. Wessel.
+- Make googly eyes, or other decorations.
 - Calculate fitness per second.
 - Set fitness function before starting the simulation.
-- Make nuklear graph.
-
-- Anti aliasing.
-- Idea: Make texture pill shaped ? 
-
-- Serialization: load the creature defs and play.
 - Save entire trained brains.
-- Make googly eyes, or other decorations.
-- Generate textures with noise.
-- Add googly eyes.
-- Serialization: Pull in json? library and save the creature defs.
-- Show all inputs clearly and highlight in the world when you hover over it in the brain and vice versa
+- Show all inputs clearly and highlight in the world when you hover over it in 
+the brain and vice versa
   (when in brain vis mode).
-
-- Make mouse tooltip.
-- Show matrix name on hover in mouse tooltip.
-- Graph in nuklear gui? or in own gui
-- Make function for visualizing constraint without gui to reuse.
-
 - 2D lighting.
-
 - Training mode: Get body close to ball. Implement with tournaments just like football simulation.
 - Training mode: Walk with gravity.
-
-- Add icons for all edit buttons.
-
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
-- Write single make file with options for compiling external, internal, windows, linux.
-
-- Make website that explains everything and has a devlog.
 
 DONE:
 
+- Drag camera in fakeworld.
+- Drag camera when drawing if outside drawable area.
 - Serialization.
 - Implement right click.   
 - Timer in gui to animate radial menu. 

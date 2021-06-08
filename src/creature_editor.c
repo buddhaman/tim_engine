@@ -155,7 +155,7 @@ IsInsideBodyPartTextureArea(CreatureEditorScreen *editor, Vec2 point)
     if(editor->selectedId)
     {
         BodyPartDefinition *partDef = GetBodyPartById(def, editor->selectedId);
-        return BodyPartTexturePoint2Intersect(partDef, def->textureOverhang, point);
+        return BodyPartTexturePoint2Intersect(partDef, editor->brushSize+def->textureOverhang, point);
     }
     else
     {
@@ -164,7 +164,7 @@ IsInsideBodyPartTextureArea(CreatureEditorScreen *editor, Vec2 point)
                 bodyPartIdx++)
         {
             BodyPartDefinition *partDef = def->bodyParts+bodyPartIdx;
-            if(BodyPartTexturePoint2Intersect(partDef, def->textureOverhang, point))
+            if(BodyPartTexturePoint2Intersect(partDef, editor->brushSize+def->textureOverhang, point))
             {
                 return 1;
             }
