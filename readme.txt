@@ -21,12 +21,9 @@ TODO BEFORE DEMO LAUNCH:
     - Use masking.  V  
 
 - Add tutorial.
-- Serialization.
 - Set training target and add multiple.
 - Make at least one devlog.
 - Setup website, newsletter or written devlog.
-
-
 
 - Drag camera in fakeworld.
 - Drag camera when drawing if outside drawable area.
@@ -99,6 +96,7 @@ TODO BEFORE DEMO LAUNCH:
 
 DONE:
 
+- Serialization.
 - Implement right click.   
 - Timer in gui to animate radial menu. 
 - Make items selectable. 
@@ -331,4 +329,5 @@ FUN:
 
     IDEA: Export creature texture as image. Tag bodyparts (manualy in editor). put your own body on it in gimp.
     IDEA: @ Lex Fridman in mijn volgende tweets. En @openai over hun ES paper. Denk groots
+    IDEA: Schrijf website waar gedeeltes van ecosystemen gedownload kunnen worden. Animeer in javascript.
  

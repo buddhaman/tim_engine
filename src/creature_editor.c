@@ -1185,11 +1185,59 @@ UpdateCreatureEditorScreen(AppState *appState,
             if(nk_button_label(ctx, "Load"))
             {
 
-                char dataPath[256];
-                char texturePath[256];
-                GeneratePathNames(def, dataPath, texturePath);
-                DebugOut("Loading from %s and %s.", dataPath, texturePath);
+                // Show list of creatures.
 
+                int maxFiles = 64;
+                char *fileNameBuffer = malloc(sizeof(char)*maxFiles*128);
+                char *buffer = fileNameBuffer;
+                ui32 creatureCounter = 0;
+                char *creatureFiles[maxFiles];
+                ui32 textureCounter = 0;
+                char *textureFiles[maxFiles];
+
+                tinydir_dir dir;
+                tinydir_open(&dir, "crdefs");
+                while(dir.has_next)
+                {
+                    tinydir_file file;
+                    tinydir_readfile(&dir, &file);
+                    DebugOut("%s", file.name);
+                    size_t l = strlen(file.name);
+                    if(!file.is_dir && l < 64)
+                    {
+                        b32 isValid = 0;
+                        size_t l = strlen(file.name);
+                        if(StringEndsWith(file.name, ".crdf"))
+                        {
+                            creatureFiles[creatureCounter++] = buffer;
+                            isValid = 1;
+                        }
+                        if(StringEndsWith(file.name, ".png"))
+                        {
+                            textureFiles[textureCounter++] = buffer;
+                            isValid = 1;
+                        }
+                        if(isValid)
+                        {
+                            strcpy(buffer, file.name);
+                            buffer+=(l+1);
+                        }
+                    }
+                    tinydir_next(&dir);
+                }
+
+                DebugOut("creature files: %d, texture files: %d", creatureCounter, textureCounter);
+
+                PairCreatureFiles(MAX_CREATURE_FILES, 
+                editor->creatureFiles,
+                creatureCounter, 
+                creatureFiles,
+                textureCounter,
+                textureFiles);
+                        
+                free(fileNameBuffer);
+
+                /*
                 Serializer serializer;
                 BeginSerializing(&serializer, dataPath, 0);
                 SerializeCreatureDefinition(&serializer, def);
@@ -1221,6 +1269,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                 editor->selectedId = 0;
                 editor->rightSelectedId = 0;
                 DebugOut("done loading");
+                */
             }
             if(nk_button_label(ctx, "Start Simulation"))
             {

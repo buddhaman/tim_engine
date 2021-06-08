@@ -20,3 +20,5 @@
 #include "chipmunk/chipmunk_structs.h"
 #include "chipmunk/chipmunk.h"
 
+#include "tinydir.h"
+
