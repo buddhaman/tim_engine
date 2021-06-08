@@ -227,6 +227,8 @@ UpdateFakeWorldScreen(AppState *appState,
     AtlasRegion *circleRegion = defaultAtlas->regions;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
 
+    screen->isInputCaptured = nk_window_is_any_hovered(ctx);
+
     // Adjust timescale
     if(IsKeyActionJustDown(appState, ACTION_Q))
     {
@@ -237,7 +239,15 @@ UpdateFakeWorldScreen(AppState *appState,
         AdjustFakeWorldTimeScale(screen, 1);
     }
 
-    UpdateCameraInput(appState, camera);
+    if(!screen->isInputCaptured)
+    {
+        UpdateCameraInput(appState, camera);
+    }
+
+    if(!IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT))
+    {
+        CameraStopDragging(camera);
+    }
 
     // Do evolution
     if(!screen->isPaused)

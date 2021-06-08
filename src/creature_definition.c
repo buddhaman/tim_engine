@@ -41,6 +41,13 @@ GetAbsoluteEdgeAngle(BodyPartDefinition *part, int xEdge, int yEdge)
     return NormalizeAngle(atan2f(yEdge, xEdge)+part->angle);
 }
 
+internal inline b32
+BodyPartTexturePoint2Intersect(BodyPartDefinition *part, r32 textureOverhang, Vec2 point)
+{
+    return OrientedBoxPoint2Intersect(part->pos,
+            vec2(part->width+textureOverhang*2, part->height+textureOverhang*2), part->angle, point);
+}
+
 ui32
 GetSubNodeBodyPartsById(CreatureDefinition *def, 
         BodyPartDefinition *parent,

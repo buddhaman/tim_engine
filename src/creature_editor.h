@@ -56,13 +56,13 @@ typedef struct
     b32 isBrushColorPickerVisible;
 
     b32 canMoveCameraWithMouse;
-    b32 isDraggingCamera;
 
     b32 isErasing;
     r32 brushSize;
     b32 drawBrushInScreenCenter;
     b32 hasLastBrushStroke;
     Vec2 lastBrushStroke;
+    b32 isMouseInDrawArea;
 
     b32 showSaveScreen;
 

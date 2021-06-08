@@ -25,15 +25,3 @@ typedef struct
     Vec4 colorState;
     b32 isDrawing;
 } SpriteBatch;
-
-typedef struct
-{
-    Vec2 pos;
-    Vec2 size;
-    r32 scale;
-    b32 isYUp;
-    Mat3 transform;
-
-    Vec2 mousePos;  // World coordinates.
-} Camera2D;
-

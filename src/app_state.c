@@ -55,25 +55,6 @@ IsKeyActionJustReleased(AppState *appState, KeyAction action)
     return !appState->isActionDown[action] && appState->wasActionDown[action];
 }
 
-//TODO: Move to camera file. This is a weird place.
-void
-UpdateCameraInput(AppState *appState, Camera2D *camera)
-{
-    r32 zoomSpeed = 0.98;
-    r32 camSpeed = 8.0 * camera->scale;
-    if(IsKeyActionDown(appState, ACTION_Z)) { camera->scale*=zoomSpeed; }
-    if(IsKeyActionDown(appState, ACTION_X)) { camera->scale/=zoomSpeed; }
-    if(IsKeyActionDown(appState, ACTION_UP)) { camera->pos.y+=camSpeed; }
-    if(IsKeyActionDown(appState, ACTION_DOWN)) { camera->pos.y-=camSpeed; }
-    if(IsKeyActionDown(appState, ACTION_LEFT)) { camera->pos.x-=camSpeed; }
-    if(IsKeyActionDown(appState, ACTION_RIGHT)) { camera->pos.x+=camSpeed; }
-    if(appState->mouseScrollY)
-    {
-        r32 zoomFactor = pow(0.9, appState->mouseScrollY);
-        camera->scale*=zoomFactor;
-    }
-}
-
 void
 StartFakeWorld(AppState *appState, CreatureDefinition *definition, ui32 nGenes, r32 dev, r32 learningRate)
 {

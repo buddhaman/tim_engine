@@ -148,6 +148,31 @@ DoDrawAtPointForBodyPart(CreatureEditorScreen *editor,
             creatureTexCoord, radius, color);
 }
 
+internal b32
+IsInsideBodyPartTextureArea(CreatureEditorScreen *editor, Vec2 point)
+{
+    CreatureDefinition *def = editor->creatureDefinition;
+    if(editor->selectedId)
+    {
+        BodyPartDefinition *partDef = GetBodyPartById(def, editor->selectedId);
+        return BodyPartTexturePoint2Intersect(partDef, def->textureOverhang, point);
+    }
+    else
+    {
+        for(ui32 bodyPartIdx = 0;
+                bodyPartIdx < def->nBodyParts;
+                bodyPartIdx++)
+        {
+            BodyPartDefinition *partDef = def->bodyParts+bodyPartIdx;
+            if(BodyPartTexturePoint2Intersect(partDef, def->textureOverhang, point))
+            {
+                return 1;
+            }
+        }
+        return 0;
+    }
+}
+
 internal void
 DoDrawAtPoint(CreatureEditorScreen *editor, TextureAtlas *creatureAtlas, Vec2 point)
 {
@@ -686,7 +711,8 @@ UpdateCreatureEditorScreen(AppState *appState,
     editor->isInputCaptured = nk_window_is_any_hovered(ctx) ||
         editor->showSaveScreen ||
         editor->showLoadScreen;
-    editor->canMoveCameraWithMouse = editor->editState==EDIT_CREATURE_NONE;
+    editor->canMoveCameraWithMouse = editor->editState==EDIT_CREATURE_NONE ||
+        (editor->editState==EDIT_CREATURE_DRAW && !editor->isMouseInDrawArea);
     if(IsKeyActionJustDown(appState, ACTION_ESCAPE))
     {
         editor->editState = EDIT_CREATURE_NONE;
@@ -701,7 +727,6 @@ UpdateCreatureEditorScreen(AppState *appState,
 
     if(!editor->isInputCaptured)
     {
-        UpdateCameraInput(appState, camera);
     }
     UpdateCamera2D(camera, appState);
     Vec2 mousePos = camera->mousePos;
@@ -939,13 +964,13 @@ UpdateCreatureEditorScreen(AppState *appState,
     } 
     else if(editor->editState==EDIT_CREATURE_DRAW)
     {
+        editor->isMouseInDrawArea = IsInsideBodyPartTextureArea(editor, mousePos);
         if(EditorIsMousePressed(appState, editor))
         {
             hasLastBrushStroke = 1;
             if(editor->hasLastBrushStroke)
             {
                 ui32 maxPoints = 8;
-                // Draw line. TODO: Make actual line rendering algorithm. This is expensive.
                 for(ui32 pointIdx = 0;
                         pointIdx < maxPoints; 
                         pointIdx++)
@@ -1020,7 +1045,8 @@ UpdateCreatureEditorScreen(AppState *appState,
     BeginSpritebatch(batch);
     glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&screenCamera->transform);
     if(editor->editState==EDIT_CREATURE_DRAW 
-            && !editor->isInputCaptured)
+            && !editor->isInputCaptured
+            && editor->isMouseInDrawArea)
     {
         r32 brushSize = editor->brushSize/camera->scale;
         SDL_ShowCursor(SDL_DISABLE);
@@ -1072,24 +1098,20 @@ UpdateCreatureEditorScreen(AppState *appState,
 
     EndSpritebatch(batch);
 
+    b32 stopDragging = 0;
     // Do camera handling
-    if(editor->isDraggingCamera)
+    if(editor->canMoveCameraWithMouse
+            && !editor->isInputCaptured)
     {
-        if(!IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT)
-                || !editor->canMoveCameraWithMouse)
-        {
-            editor->isDraggingCamera = 0;
-        }
-        else
-        {
-            camera->pos.x-=appState->dx*camera->scale;
-            camera->pos.y+=appState->dy*camera->scale;
-        }
+        UpdateCameraInput(appState, camera);
     }
-    else if(editor->canMoveCameraWithMouse 
-            && EditorIsJustPressed(appState, editor, ACTION_MOUSE_BUTTON_LEFT))
+    else
     {
-        editor->isDraggingCamera = 1;
+        stopDragging = 1;
+    }
+    if(stopDragging || !IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT))
+    {
+        CameraStopDragging(camera);
     }
 
     // Begin UI

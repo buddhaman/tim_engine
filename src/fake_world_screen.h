@@ -9,6 +9,7 @@ typedef struct
 
     b32 isPaused;
     ui32 stepsPerFrame;
+    b32 isInputCaptured;
 
     ui32 generation;
     ui32 tick;
