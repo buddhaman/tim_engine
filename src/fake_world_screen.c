@@ -222,6 +222,7 @@ UpdateFakeWorldScreen(AppState *appState,
     Shader *spriteShader = renderer->spriteShader;
 
     char toolTip[512];
+    memset(toolTip, 0, sizeof(toolTip));
     (void)toolTip;
 
     AtlasRegion *circleRegion = defaultAtlas->regions;

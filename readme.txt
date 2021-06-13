@@ -14,6 +14,7 @@ Nice: Do competition. 150 dollars for best creature.
 
 TODO BEFORE DEMO LAUNCH:
 
+- LAST LAST CODE THING: implement rest of radial menu features.
 - Make at least one devlog.
 - Setup website, newsletter or written devlog.
 - Try to compile to windows and send some versions to people to test. 
@@ -270,5 +271,5 @@ FUN:
 
     IDEA: Export creature texture as image. Tag bodyparts (manualy in editor). put your own body on it in gimp.
     IDEA: @ Lex Fridman in mijn volgende tweets. En @openai over hun ES paper. Denk groots
-    IDEA: Schrijf website waar gedeeltes van ecosystemen gedownload kunnen worden. Animeer in javascript.
+    IDEA: Schrijf website waar gedeeltes van ecosystemen gedownload kunnen worden. Animeer creatures in javascript.
  
