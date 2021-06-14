@@ -1082,6 +1082,18 @@ UpdateCreatureEditorScreen(AppState *appState,
             editor->rightSelectedId = 0;
             SetDrawState(editor, 0, 1);
         }
+        else if(selectedFromRadialMenu==1)
+        {
+            editor->selectedId = editor->rightSelectedId;
+        }
+        else if(selectedFromRadialMenu==2)
+        {
+            if(editor->rightSelectedId > 1)
+            {
+                EditorRemoveBodyPart(editor, editor->rightSelectedId);
+                editor->rightSelectedId = 0;
+            }
+        }
     }
 
     // Only text from here
