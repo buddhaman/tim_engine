@@ -10,11 +10,11 @@ InitRenderContext(RenderContext *renderContext, MemoryArena *arena)
     renderContext->creatureTextureAtlas = MakeRandomTextureAtlas(arena);
 
     renderContext->spriteShader = PushStruct(arena, Shader);
-    InitShader(renderContext->spriteShader, "shaders/sprite.vert", "shaders/sprite.frag");
+    InitShader(renderContext->spriteShader, "assets/shaders/sprite.vert", "assets/shaders/sprite.frag");
     LoadShader(renderContext->spriteShader);
 
     renderContext->fontRenderer = PushStruct(arena, FontRenderer);
-    InitFontRenderer(renderContext->fontRenderer, "DejaVuSansMono.ttf");
+    InitFontRenderer(renderContext->fontRenderer, "assets/DejaVuSansMono.ttf");
 }
 
 internal inline void

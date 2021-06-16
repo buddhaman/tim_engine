@@ -264,7 +264,7 @@ RandomVecR32(VecR32 *vec, r32 min, r32 max)
 {
     for(int i = 0; i < vec->n; i++)
     {
-        r32 r = ((random() % 10000) / 10000.0)*(max-min)+min;
+        r32 r = ((rand() % 10000) / 10000.0)*(max-min)+min;
         vec->v[i] = r;
     }
 }
@@ -275,8 +275,8 @@ RandomMatR32(MatR32 *mat, r32 min, r32 max)
     for(int y = 0; y < mat->h; y++)
     for(int x = 0; x < mat->w; x++)
     {
-        // TODO: Better random
-        r32 r = ((random() % 10000) / 10000.0)*(max-min)+min;
+        // TODO: Better rand
+        r32 r = ((rand() % 10000) / 10000.0)*(max-min)+min;
         MAT_VAL(mat, x, y) = r;
     }
 }
@@ -287,8 +287,8 @@ RandomIntMatR32(MatR32 *mat, int min, int max)
     for(int y = 0; y < mat->h; y++)
     for(int x = 0; x < mat->w; x++)
     {
-        // TODO: Better random
-        r32 r = random()%(max-min)+min;
+        // TODO: Better rand
+        r32 r = rand()%(max-min)+min;
         MAT_VAL(mat, x, y) = r;
     }
 }

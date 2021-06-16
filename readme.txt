@@ -18,6 +18,7 @@ TODO BEFORE DEMO LAUNCH:
 - Make at least one devlog.
 - Setup website, newsletter or written devlog.
 - Try to compile to windows and send some versions to people to test. 
+- COOL: make timelapse of programming.
 
 LATER: 
 

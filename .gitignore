@@ -48,3 +48,7 @@ Thumbs.db
 *.mov
 *.wmv
 
+#myself hehehe
+deploy/
+obj/
+obj_win/

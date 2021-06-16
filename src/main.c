@@ -1,7 +1,8 @@
 #include "external_headers.h"
 #include <time.h>
 #include <string.h>
-
+#include <stdlib.h>
+#include <stdio.h>
 
 // Special file.
 #include "tim_types.h"
@@ -64,7 +65,7 @@ typedef struct {
 global_variable NuklearMedia nuklearMedia;
 
 ui32
-LoadImage(char *path)
+TimLoadImage(char *path)
 {
     int x, y, n;
     ui32 tex;
@@ -204,13 +205,13 @@ main(int argc, char**argv)
     // Nuklear font
     struct nk_font_atlas *nkFontAtlas;
     nk_sdl_font_stash_begin(&nkFontAtlas);
-    struct nk_font *font = nk_font_atlas_add_from_file(nkFontAtlas, "DejaVuSansMono.ttf", 16.0, 0);
+    struct nk_font *font = nk_font_atlas_add_from_file(nkFontAtlas, "assets/DejaVuSansMono.ttf", 16.0, 0);
     nk_sdl_font_stash_end();
     nk_style_set_font(ctx, &font->handle);
 
     // Load nuklear images and set style.
     ui32 textureSize = 512;
-    nuklearMedia.textureHandle = LoadImage("creature_ui.png");
+    nuklearMedia.textureHandle = TimLoadImage("assets/creature_ui.png");
 
     nuklearMedia.select = nk_subimage_id(nuklearMedia.textureHandle, 
             textureSize, textureSize, nk_rect(0, 0, 128, 128));

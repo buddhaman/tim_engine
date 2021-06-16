@@ -1,15 +1,15 @@
 
-// TODO: Better random.
+// TODO: Better rand.
 r32
 RandomR32(r32 min, r32 max)
 {
-    return min + (max - min)*(random()%RAND_MAX)/RAND_MAX;
+    return min + (max - min)*(rand()%RAND_MAX)/RAND_MAX;
 }
 
 int
 RandomUI32(ui32 min, ui32 max)
 {
-    return min + (random()%(max-min));
+    return min + (rand()%(max-min));
 }
 
 r32
