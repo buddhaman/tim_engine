@@ -264,9 +264,6 @@ main(int argc, char**argv)
     CreatureEditorScreen *creatureEditorScreen = PushStruct(gameArena, CreatureEditorScreen);
     InitCreatureEditorScreen(appState, creatureEditorScreen, renderContext, gameArena);
 
-    // Anti aliasing in opengl.
-    glEnable(GL_MULTISAMPLE);
-
     // Handle evolution
     while(!done)
     {
@@ -357,6 +354,9 @@ main(int argc, char**argv)
         glClearColor(clearColor.x, clearColor.y, clearColor.z, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, appState->screenWidth, appState->screenHeight);
+
+        // Anti aliasing in opengl.
+        glEnable(GL_MULTISAMPLE);
 
         switch(appState->currentScreen)
         {

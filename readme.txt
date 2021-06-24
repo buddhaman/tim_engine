@@ -12,13 +12,18 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 Nice: Do competition. 150 dollars for best creature. 
 
-TODO BEFORE DEMO LAUNCH:
+Decide what to do next:
 
-- LAST LAST CODE THING: implement rest of radial menu features.
-- Make at least one devlog.
-- Setup website, newsletter or written devlog.
-- Try to compile to windows and send some versions to people to test. 
-- COOL: make timelapse of programming.
+Big projects:
+- Fancy rendering with shadows.
+- More training scenarios: Moving towards object. (Easy)
+- More training scenarios: Walking upright with gravity. (Hard)
+- Save brain results: requires some designing.
+- Create world where creatures can interact with eachother. Work towards ecosystem.
+- Store multiple brains in a creature.
+- Design the entire look and feel. Create your own ui library for smooth juicy ui.
+- Multithreading for training.
+- Fancy rendering with normal/specular mapping. Generate 3d textures.
 
 LATER: 
 
