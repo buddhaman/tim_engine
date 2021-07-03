@@ -22,6 +22,22 @@ GetBodyPartShade(BodyPart *part, r32 dragColorIntensity)
     return 1.0-part->body->drag*dragColorIntensity;
 }
 
+internal inline void
+DrawSolidRigidBody(SpriteBatch *batch, 
+        RigidBody *body,
+        AtlasRegion *texture)
+{
+    Vec2 pos = GetBodyPos(body);
+    r32 angle = GetBodyAngle(body);
+
+    PushOrientedRectangle2(batch, 
+            pos,
+            body->width,
+            body->height,
+            angle,
+            texture);
+}
+
 void
 DrawBodyPart(SpriteBatch *batch, 
         BodyPart *part,
@@ -31,20 +47,12 @@ DrawBodyPart(SpriteBatch *batch,
         AtlasRegion *texture)
 {
     RigidBody *body = part->body;
-    Vec2 pos = GetBodyPos(body);
-    r32 angle = GetBodyAngle(body);
     r32 shade = GetBodyPartShade(part, dragColorIntensity);
-
     batch->colorState = vec4(shade*creatureColor.x, 
             shade*creatureColor.y, 
             shade*creatureColor.z, 
             alpha);
-    PushOrientedRectangle2(batch, 
-            pos,
-            body->width,
-            body->height,
-            angle,
-            texture);
+    DrawSolidRigidBody(batch, body, texture);
 }
 
 internal inline void
@@ -132,7 +140,6 @@ DrawClock(SpriteBatch *batch,
             squareTexture->size);
 }
 
-// For now assumes batch has already begun.
 void
 DrawFakeWorld(FakeWorldScreen *screen, 
         SpriteBatch *batch, 
@@ -167,6 +174,15 @@ DrawFakeWorld(FakeWorldScreen *screen,
                 DrawBodyPart(batch, part, creatureColor, alpha, 1.0, squareRegion);
             }
         }
+    }
+
+    for(ui32 floorIdx = 0;
+            floorIdx < world->nStaticBodies;
+            floorIdx++)
+    {
+        RigidBody *floor = world->staticBodies[floorIdx];
+        batch->colorState = vec4(0.5, 0.5, 0.5, 1.0);
+        DrawSolidRigidBody(batch, floor, squareRegion);
     }
 
     // Draw first creature
@@ -266,10 +282,9 @@ UpdateFakeWorldScreen(AppState *appState,
                         geneIdx < world->nGenes;
                         geneIdx++)
                 {
-                    world->strategies->fitness->v[geneIdx] = CreatureGetFitness(world->creatures+geneIdx);
+                    world->strategies->fitness->v[geneIdx] = CreatureGetFitness(world, world->creatures+geneIdx);
                 }
                 screen->avgFitness = VecR32Average(world->strategies->fitness);
-                screen->fitnessGraph[screen->generation] = screen->avgFitness;
                 screen->generation++;
                 screen->tick = 0;
 
@@ -298,6 +313,15 @@ UpdateFakeWorldScreen(AppState *appState,
     glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
 
     DrawFakeWorld(screen, batch, camera, defaultAtlas, renderer->creatureTextureAtlas);
+
+    BeginSpritebatch(batch);
+    glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
+    if(world->trainingType==TRAIN_DISTANCE_TARGET)
+    {
+        batch->colorState = vec4(1.0, 1.0, 0.0, 1.0);
+        PushCircle2(batch, world->target, 10, circleRegion);
+    }
+    EndSpritebatch(batch);
 
     // Render on screen
     BeginSpritebatch(batch);
@@ -379,6 +403,33 @@ UpdateFakeWorldScreen(AppState *appState,
                     radius, radians, squareRegion, circleRegion);
         }
 
+        // Draw inputs
+
+        BodyPart *selectedBodyPart = screen->selectedBodyPart;
+        r32 lineWidth = 2.0;
+        if(selectedBodyPart && 
+                world->trainingType==TRAIN_DISTANCE_TARGET)
+        {
+            r32 angle = GetBodyAngle(selectedBodyPart->body);
+            Vec2 dir = v2_polar(-angle, 100.0);
+            Vec2 pos = CameraToScreenPos(camera, appState, GetBodyPos(selectedBodyPart->body));
+            Vec2 targetPos = CameraToScreenPos(camera, appState, world->target);
+            Vec2 to = v2_add(pos, dir);
+            batch->colorState = vec4(1.0, 0.0, 0.0, 1.0);
+            PushLine2(batch, 
+                    pos, 
+                    to, 
+                    lineWidth,
+                    squareRegion->pos,
+                    squareRegion->size);
+            batch->colorState = vec4(0.0, 1.0, 0.0, 1.0);
+            PushLine2(batch, 
+                    pos, 
+                    targetPos,
+                    lineWidth,
+                    squareRegion->pos,
+                    squareRegion->size);
+        }
     }
 
     EndSpritebatch(batch);
@@ -416,8 +467,23 @@ UpdateFakeWorldScreen(AppState *appState,
     }
     if(screen->selectedCreature)
     {
+        Creature *creature = screen->selectedCreature;
+        BodyPart *part = screen->selectedBodyPart;
         Vec2 bodyPartPos = CameraToScreenPos(camera, appState, GetBodyPartPos(screen->selectedBodyPart));
-        DrawString2D(batch, fontRenderer, bodyPartPos, "hit");
+        if(part->def->hasAngleTowardsTargetInput)
+        {
+            r32 activation = creature->brain->x.v[part->def->angleTowardsTargetInputIdx];
+            char bodyPartInfo[128];
+            sprintf(bodyPartInfo, "angle activation = %.2f", activation); 
+            DrawString2D(batch, fontRenderer, bodyPartPos, bodyPartInfo);
+        } 
+        else if(part->def->hasAbsoluteAngleInput)
+        {
+            r32 activation = creature->brain->x.v[part->def->absoluteAngleInputIdx];
+            char bodyPartInfo[128];
+            sprintf(bodyPartInfo, "angle activation = %.2f", activation); 
+            DrawString2D(batch, fontRenderer, bodyPartPos, bodyPartInfo);
+        }
     }
 
     EndSpritebatch(batch);
@@ -517,7 +583,6 @@ InitFakeWorldScreen(AppState *appState,
     screen->tick = 0;
     screen->ticksPerGeneration = 60*15;    // 10 seconds
     screen->avgFitness = -100000.0;
-    screen->fitnessGraph = PushAndZeroArray(arena, r32, 10000);
 
     // Settings
     screen->isPopulationVisible = 0;

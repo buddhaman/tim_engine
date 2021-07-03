@@ -2,6 +2,7 @@
 #ifndef FAKE_WORLD_SCREEN_H
 #define FAKE_WORLD_SCREEN_H
 
+
 typedef struct
 {
     FakeWorld *world;
@@ -14,8 +15,9 @@ typedef struct
     ui32 generation;
     ui32 tick;
     ui32 ticksPerGeneration;
+    
     r32 avgFitness;
-    r32 *fitnessGraph;
+    Vec2 target;
 
     Camera2D *camera;
     

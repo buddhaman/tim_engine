@@ -150,6 +150,8 @@ AssignBrainIO(CreatureDefinition *def)
         //Inputs
         if(bodyPartDef->hasAbsoluteXPositionInput) bodyPartDef->absoluteXPositionInputIdx = atInputIdx++;
         if(bodyPartDef->hasAbsoluteYPositionInput) bodyPartDef->absoluteYPositionInputIdx = atInputIdx++;
+        if(bodyPartDef->hasAngleTowardsTargetInput) bodyPartDef->angleTowardsTargetInputIdx = atInputIdx++;
+        if(bodyPartDef->hasAbsoluteAngleInput) bodyPartDef->absoluteAngleInputIdx = atInputIdx++;
 
         // Outputs
         if(bodyPartDef->hasDragOutput) bodyPartDef->dragOutputIdx = atOutputIdx++;

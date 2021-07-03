@@ -22,6 +22,7 @@ typedef struct
 {
     CreatureDefinition *creatureDefinition;
     Camera2D *camera;
+    RenderGroup *uiRenderGroup;
     Gui *gui;
     b32 isInputCaptured;
     

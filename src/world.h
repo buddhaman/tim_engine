@@ -19,6 +19,15 @@ struct RigidBody
 
 #include "creature.h"
 
+typedef enum TrainingScenario TrainingScenario;
+
+enum TrainingScenario
+{
+    TRAIN_DISTANCE_X,
+    TRAIN_DISTANCE_TARGET,
+    TRAIN_WALK_RIGHT
+};
+
 // For now most of the arrays are fixed size. World is destroyed after each generation.
 struct FakeWorld
 {
@@ -32,9 +41,15 @@ struct FakeWorld
 
     ui32 physicsGroupCounter;
 
+    TrainingScenario trainingType;
+    Vec2 target;
+
     int nRigidBodies;
     int maxRigidBodies;
     RigidBody *rigidBodies;
+
+    int nStaticBodies;
+    RigidBody *staticBodies[16];
 
     int nCreatures;
     int maxCreatures;

@@ -15,6 +15,7 @@ AtlasRegion *
 AddAtlasRegion(TextureAtlas *atlas, int x, int y, int width, int height)
 {
     AtlasRegion *region = atlas->regions+atlas->nRegions++;
+    region->atlas = atlas;
     region->width = width;
     region->height = height;
     region->x = x;

@@ -15,33 +15,64 @@ Nice: Do competition. 150 dollars for best creature.
 Decide what to do next:
 
 Big projects:
+
+IMPORTANT FIRST:
+- Rendergroups. Abstract rendering a bit. Should make things easier for the future. Collect rendercommands.
+- Use rendergroups in personal ui library.
+- Better asset loading.
+- Single atlas for entire ui. 
+- Render to framebuffer.
+- Gaussian blur.
+- Shadow in 2d (simple). Use gaussian blur on shadow.
+- OPTIONAL: save icons for creatures and select.
+- LATER: Replace entire ui with own ui.
+- LATER: abstract entre rendering out and make reusable. Make another simple game with engine.
+
 - Fancy rendering with shadows.
-- More training scenarios: Moving towards object. (Easy)
+- Fancy rendering with normal/specular mapping. Generate 3d textures.
 - More training scenarios: Walking upright with gravity. (Hard)
 - Save brain results: requires some designing.
 - Create world where creatures can interact with eachother. Work towards ecosystem.
 - Store multiple brains in a creature.
 - Design the entire look and feel. Create your own ui library for smooth juicy ui.
 - Multithreading for training.
-- Fancy rendering with normal/specular mapping. Generate 3d textures.
 
 LATER: 
 
+- Texture editor! Create normal maps. Specular maps etc inside editor. And generate this for the terrain.
 - Contact saplings developer. Wessel.
 - Make googly eyes, or other decorations.
 - Calculate fitness per second.
 - Set fitness function before starting the simulation.
 - Save entire trained brains.
 - Show all inputs clearly and highlight in the world when you hover over it in 
-the brain and vice versa
-  (when in brain vis mode).
+  the brain and vice versa (when in brain vis mode).
 - 2D lighting.
 - Training mode: Get body close to ball. Implement with tournaments just like football simulation.
-- Training mode: Walk with gravity.
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
+
+NOW:
+
+RENDERGROUPS:
+
+
+BRAIN EDIT SCREEN:
+- Refactor edit code. Make multiple states, one for brain, one for body.
+- Make buttons inside creature 
+- Separate brain definition from bodydefinition, Store in creaturedef.
+- Serialize.
+- Switch trainingscenarios.
+- Give clear feedback about current fitness. Visualize.
+- Save brain results.
+- Show brain constantly. In juicy way. Springs.
 
 DONE:
 
+- Training mode: Walk with gravity.
+- Add walking scenario.
+- Static floor in world.
+- Add inputs for bodyparts: angle.
+- More training scenarios: Moving towards object. (Easy)
 - Drag camera in fakeworld.
 - Drag camera when drawing if outside drawable area.
 - Serialization.

@@ -1,6 +1,10 @@
 
-typedef struct
+typedef struct TextureAtlas TextureAtlas;
+typedef struct AtlasRegion AtlasRegion;
+
+struct AtlasRegion
 {
+    TextureAtlas *atlas;
     char *name;
     int width;
     int height;
@@ -8,9 +12,9 @@ typedef struct
     int y;
     Vec2 pos;
     Vec2 size;
-} AtlasRegion;
+};
 
-typedef struct
+struct TextureAtlas
 {
     // Optional
     ui32 width;
@@ -22,5 +26,5 @@ typedef struct
     int maxRegions;
     int nRegions;
     AtlasRegion *regions;
-} TextureAtlas;
+};
 

@@ -8,3 +8,4 @@ typedef struct
     
     Shader *spriteShader;
 } RenderContext;
+

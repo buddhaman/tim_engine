@@ -228,7 +228,7 @@ SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
 {
     r32 absActivation = fabsf(activation);
     cpSimpleMotorSetRate(muscle->motor, activation < 0.0 ? -5 : 5);
-    r32 maxActivation = 800000.0;
+    r32 maxActivation = 1200000.0;
     cpConstraintSetMaxForce(muscle->motor, absActivation*maxActivation);
 }
 
@@ -249,29 +249,6 @@ FitnessStrictlyMoveForward(Creature *creature)
     return minY - maxX;
 }
 
-r32
-FitnessStrictlyMoveRight(Creature *creature)
-{
-    r32 minX = 10000.0;
-    r32 maxY = -10000.0;
-    for(ui32 bodyPartIdx = 0;
-            bodyPartIdx < creature->nBodyParts;
-            bodyPartIdx++)
-    {
-        BodyPart *part = creature->bodyParts+bodyPartIdx;
-        cpVect pos = cpBodyGetPosition(part->body->body);
-        minX = Min(minX, pos.x);
-        maxY = Max(maxY, fabs(pos.y));
-    }
-    return minX - maxY;
-}
-
-r32
-CreatureGetFitness(Creature *creature)
-{
-    return FitnessStrictlyMoveRight(creature);
-}
-
 void
 UpdateCreature(FakeWorld *world, Creature *creature)
 {
@@ -279,10 +256,6 @@ UpdateCreature(FakeWorld *world, Creature *creature)
     r32 drag = 0.2;
 
     creature->internalClock+=1.0/60.0;
-    //r32 input0 = sinf(4*creature->internalClock);
-    //r32 input1 = sinf(8*creature->internalClock);
-    //r32 input0 = sinf(GetInternalClockValue(creature, 0));
-    //r32 input1 = sinf(GetInternalClockValue(creature, 1));
 
     for(ui32 internalClockIdx = 0;
             internalClockIdx < creature->nInternalClocks;
@@ -297,6 +270,7 @@ UpdateCreature(FakeWorld *world, Creature *creature)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         Vec2 pos = GetBodyPartCenter(part);
+        r32 angle = GetBodyAngle(part->body);
         if(part->def->hasAbsoluteXPositionInput)
         {
             r32 activation = pos.x/100;
@@ -306,6 +280,18 @@ UpdateCreature(FakeWorld *world, Creature *creature)
         {
             r32 activation = pos.y/100;
             brain->x.v[part->def->absoluteYPositionInputIdx] = activation;
+        }
+        if(part->def->hasAngleTowardsTargetInput)
+        {
+            Vec2 diff = v2_sub(world->target, pos);
+            r32 tAngle = atan2f(diff.y, diff.x);
+            r32 activation = GetNormalizedAngDiff(angle, tAngle);
+            brain->x.v[part->def->angleTowardsTargetInputIdx] = activation;
+        }
+        if(part->def->hasAbsoluteAngleInput)
+        {
+            r32 activation = angle;
+            brain->x.v[part->def->absoluteAngleInputIdx] = activation;
         }
     }
 

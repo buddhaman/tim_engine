@@ -51,6 +51,8 @@ AddStaticRectangle(FakeWorld *world, Vec2 pos, r32 width, r32 height, r32 angle)
     cpBodySetAngle(body->body, angle);
     cpSpaceReindexShapesForBody(space, body->body);
 
+    world->staticBodies[world->nStaticBodies++] = body;
+
     return body;
 }
 
@@ -80,6 +82,70 @@ GetRigidBodyBox(RigidBody *body)
     cpVect pos = cpBodyGetPosition(body->body);
     r32 angle = GetBodyAngle(body);
     return (OrientedBox){vec2(pos.x, pos.y), vec2(body->width, body->height), angle};
+}
+
+internal r32
+FitnessStrictlyMoveRight(FakeWorld *world, Creature *creature)
+{
+    r32 minX = 10000.0;
+    r32 maxY = -10000.0;
+    for(ui32 bodyPartIdx = 0;
+            bodyPartIdx < creature->nBodyParts;
+            bodyPartIdx++)
+    {
+        BodyPart *part = creature->bodyParts+bodyPartIdx;
+        cpVect pos = cpBodyGetPosition(part->body->body);
+        minX = Min(minX, pos.x);
+        maxY = Max(maxY, fabs(pos.y));
+    }
+    return minX - maxY;
+}
+
+internal r32
+FitnessDistanceTarget(FakeWorld *world, Creature *creature)
+{
+    // Position of main bodypart
+    Vec2 creaturePos = GetBodyPos(creature->bodyParts->body);
+    r32 dist = v2_dist(creaturePos, world->target);
+    return -dist;
+}
+
+internal r32
+FitnessWalkRight(FakeWorld *world, Creature *creature)
+{
+    BodyPart *part = creature->bodyParts;
+    Vec2 pos = GetBodyPos(part->body);
+    return pos.x;
+}
+
+internal r32
+CreatureGetFitness(FakeWorld *world, Creature *creature)
+{
+    switch(world->trainingType)
+    {
+
+    case TRAIN_DISTANCE_TARGET:
+    {
+        return FitnessDistanceTarget(world, creature);
+    } break;
+
+    case TRAIN_DISTANCE_X:
+    {
+        return FitnessStrictlyMoveRight(world, creature);
+    } break;
+
+    case TRAIN_WALK_RIGHT:
+    {
+        return FitnessWalkRight(world, creature);
+    } break;
+
+    default:
+    {
+        DebugOut("ERROR: Fitness strategy not implemented");
+        return -1.0;
+    }
+
+    }
 }
 
 internal inline void
@@ -117,9 +183,9 @@ RestartFakeWorld(FakeWorld *world)
 {
     CreatureDefinition *def = &world->def;
     world->space = cpSpaceNew();
-    cpSpaceSetGravity(world->space, cpv(0, 0));
 
     world->physicsGroupCounter = 1U;
+    world->nStaticBodies = 0;
 
 #define DefineFixedWorldArray(type, counterName, maxName, maxValue, arrayName) \
     world->counterName = 0;\
@@ -135,6 +201,18 @@ RestartFakeWorld(FakeWorld *world)
     ui32 transientStateSize = GetMinimalGatedUnitStateSize(def->nInputs, 
             def->nOutputs,
             def->nHidden);
+
+    // Set new target
+    if(world->trainingType==TRAIN_DISTANCE_TARGET)
+    {
+        r32 randomAngle = RandomR32(-M_PI, M_PI);
+        world->target = v2_polar(randomAngle, 500.0);
+    }
+    else if(world->trainingType==TRAIN_WALK_RIGHT)
+    {
+        AddStaticRectangle(world, vec2(0,-150.0), 3200.0, 40.0, 0.0);
+        cpSpaceSetGravity(world->space, cpv(0, -1200.0));
+    }
 
     r32 startXDev = 0.0;
     for(int creatureIdx = 0; 
@@ -163,6 +241,9 @@ InitFakeWorld(FakeWorld *world,
     world->transientMemory = transientMemory;
     world->def = *creatureDefinition;
     world->nGenes = nGenes;
+
+    // Set trainging scenario.
+    world->trainingType = TRAIN_WALK_RIGHT;
 
     DebugOut("Gene size = %u" ,world->def.geneSize);
 

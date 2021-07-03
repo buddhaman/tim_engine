@@ -368,6 +368,7 @@ LoadCreatureDefinition(CreatureEditorScreen *editor,
 {
     TextureAtlas *creatureAtlas = renderContext->creatureTextureAtlas;
     CreatureDefinition *def = editor->creatureDefinition;
+    *def = (CreatureDefinition){};
     Serializer serializer;
     BeginSerializing(&serializer, file->dataPath, 0);
     SerializeCreatureDefinition(&serializer, def);
@@ -948,8 +949,9 @@ UpdateCreatureEditorScreen(AppState *appState,
                 newPart->minAngle = -1;
                 newPart->maxAngle = 1;
                 
-                newPart->hasDragOutput = 1;
+                newPart->hasDragOutput = 0;
                 newPart->hasRotaryMuscleOutput = 1;
+                newPart->hasAbsoluteAngleInput = 1;
 
                 AssignTextureToBodyPartDefinition(def, newPart);
 
@@ -1192,14 +1194,18 @@ UpdateCreatureEditorScreen(AppState *appState,
                     isEdited = 1;
 
                 nk_label(ctx, "Sensors", NK_TEXT_LEFT);
-                if(NKEditCreatureIO(ctx, "Abs X pos", 
-                            "This bodypart can sense how much it deviates from the y-axis",
-                            &part->hasAbsoluteXPositionInput, 
-                            part->absoluteXPositionInputIdx)) isBrainEdited = 1;
                 if(NKEditCreatureIO(ctx, "Abs Y pos", 
                             "This bodypart can sense how much it deviates from the x-axis",
                             &part->hasAbsoluteYPositionInput, 
                             part->absoluteYPositionInputIdx)) isBrainEdited = 1;
+                if(NKEditCreatureIO(ctx, "Angle", 
+                            "This bodypart can sense how much it points towards the target",
+                            &part->hasAngleTowardsTargetInput, 
+                            part->angleTowardsTargetInputIdx)) isBrainEdited = 1;
+                if(NKEditCreatureIO(ctx, "Absolute Angle", 
+                            "This bodypart can sense its vertical angle",
+                            &part->hasAbsoluteAngleInput, 
+                            part->absoluteAngleInputIdx)) isBrainEdited = 1;
 
                 nk_layout_row_dynamic(ctx, 30, 1);
                 nk_label(ctx, "Actuators", NK_TEXT_LEFT);
@@ -1466,7 +1472,8 @@ InitCreatureEditorScreen(AppState *appState,
     torso->pos = vec2(0,0);
     torso->width = 50;
     torso->height = 50;
-    torso->hasDragOutput = 1;
+    torso->hasAbsoluteAngleInput = 1;
+    torso->hasDragOutput = 0;
     torso->hasRotaryMuscleOutput = 0;
     AssignTextureToBodyPartDefinition(editor->creatureDefinition, torso);
     AssignBrainIO(editor->creatureDefinition);

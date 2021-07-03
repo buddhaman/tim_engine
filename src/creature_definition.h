@@ -31,9 +31,13 @@ typedef struct
     b32 hasRotaryMuscleOutput;
     b32 hasAbsoluteXPositionInput;      
     b32 hasAbsoluteYPositionInput;       
+    b32 hasAngleTowardsTargetInput;
+    b32 hasAbsoluteAngleInput;
 
     ui32 absoluteXPositionInputIdx;
     ui32 absoluteYPositionInputIdx;
+    ui32 angleTowardsTargetInputIdx;
+    ui32 absoluteAngleInputIdx;
 
     ui32 dragOutputIdx;
     ui32 rotaryMuscleOutputIdx;
