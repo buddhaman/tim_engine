@@ -1,11 +1,9 @@
 
 typedef struct
 {
-    stbtt_packedchar charData12[128];
-    stbtt_packedchar charData32[128];
-    ui32 font12Texture;
-    int textureWidth;
-    int textureHeight;
+    TextureAtlas *atlas;
+    stbtt_packedchar charData[128];
+    ui32 firstChar;
 } FontRenderer;
 
 typedef struct
@@ -25,3 +23,4 @@ typedef struct
     Vec4 colorState;
     b32 isDrawing;
 } SpriteBatch;
+

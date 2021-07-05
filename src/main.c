@@ -94,10 +94,11 @@ TimLoadImage(char *path)
 #include "shader.h"
 #include "neural_net.h"
 #include "tim_file.h"
-#include "render2d.h"
 #include "texture_atlas.h"
+#include "render2d.h"
 #include "render_group.h"
-#include "render_context.h"
+#include "assets.h"
+#include "world_renderer.h"
 #include "creature_definition.h"
 #include "evolution_strategies.h"
 #include "world.h"
@@ -114,10 +115,11 @@ TimLoadImage(char *path)
 #include "shader.c"
 #include "neural_net.c"
 #include "tim_file.c"
-#include "render_group.c"
 #include "texture_atlas.c"
 #include "render2d.c"
-#include "render_context.c"
+#include "render_group.c"
+#include "assets.c"
+#include "world_renderer.c"
 #include "creature_definition.c"
 #include "evolution_strategies.c"
 #include "world.c"
@@ -260,11 +262,11 @@ main(int argc, char**argv)
     b32 done = 0;
     ui32 frameCounter = 0;
 
-    RenderContext *renderContext = PushStruct(gameArena, RenderContext);
-    InitRenderContext(renderContext, gameArena);
+    Assets *assets = PushStruct(gameArena, Assets);
+    InitAssets(assets, gameArena);
 
     CreatureEditorScreen *creatureEditorScreen = PushStruct(gameArena, CreatureEditorScreen);
-    InitCreatureEditorScreen(appState, creatureEditorScreen, renderContext, gameArena);
+    InitCreatureEditorScreen(appState, creatureEditorScreen, assets, gameArena);
 
     // Handle evolution
     while(!done)
@@ -365,12 +367,12 @@ main(int argc, char**argv)
 
         case SCREEN_FAKE_WORLD:
         {
-            UpdateFakeWorldScreen(appState, appState->fakeWorldScreen, renderContext, ctx);
+            UpdateFakeWorldScreen(appState, appState->fakeWorldScreen, assets, ctx);
         } break;
 
         case SCREEN_CREATURE_EDITOR:
         {
-            UpdateCreatureEditorScreen(appState, creatureEditorScreen, renderContext, ctx);
+            UpdateCreatureEditorScreen(appState, creatureEditorScreen, assets, ctx);
         } break;
 
         }

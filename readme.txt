@@ -14,8 +14,6 @@ Nice: Do competition. 150 dollars for best creature.
 
 Decide what to do next:
 
-Big projects:
-
 IMPORTANT FIRST:
 - Rendergroups. Abstract rendering a bit. Should make things easier for the future. Collect rendercommands.
 - Use rendergroups in personal ui library.
@@ -52,9 +50,13 @@ LATER:
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
 
 NOW:
-
-RENDERGROUPS:
-
+- LineRectangle rendering.
+- SemiCircle rendering.
+- Line semicircle rendering.
+- Reimplement Clipping.
+- RenderGroup in simulation screen
+- Implement render target (FBO).
+- Use rendergroups to draw shadow.
 
 BRAIN EDIT SCREEN:
 - Refactor edit code. Make multiple states, one for brain, one for body.
@@ -68,6 +70,7 @@ BRAIN EDIT SCREEN:
 
 DONE:
 
+- Create assets. remove rendercontext.
 - Training mode: Walk with gravity.
 - Add walking scenario.
 - Static floor in world.

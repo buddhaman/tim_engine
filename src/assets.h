@@ -7,5 +7,5 @@ typedef struct
     FontRenderer *fontRenderer;
     
     Shader *spriteShader;
-} RenderContext;
+} Assets;
 

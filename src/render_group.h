@@ -8,6 +8,7 @@ enum RenderCommandType
     RENDER_2D_RECT,
     RENDER_2D_ORIENTED_RECT,
     RENDER_2D_LINE,
+    RENDER_2D_SEMICIRCLE,
 };
 
 // For now explicitly create commands for geometric shapes.
@@ -15,7 +16,6 @@ struct RenderCommand
 {
     RenderCommandType type;
 
-    // TODO: Is this safe ? 
     union
     {
         Vec2 from;
@@ -26,13 +26,22 @@ struct RenderCommand
     {
         Vec2 to;
         Vec2 dims;
+        Vec2 range;     // Angle range in combination with pos.
     };
 
-    // For oriented rectangle 
-    Vec2 center;
-    r32 thickness;
+    union
+    {
+        r32 angle;
+        r32 radius; 
+    };
+
+    ui32 nPoints;
+    r32 lineWidth;
     Vec4 color;
-    AtlasRegion *texture;
+
+    ui32 textureHandle;
+    Vec2 uvPos;
+    Vec2 uvDims;
 };
 
 struct RenderGroup 

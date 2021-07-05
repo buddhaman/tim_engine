@@ -11,9 +11,9 @@ typedef struct
     AppState *appState;
     // TODO: Clean all this. This is messy.
     Camera2D *camera;
-    RenderContext *renderContext;
-
-    b32 hasFocus;
+    Assets *assets;
+    RenderGroup *screenRenderGroup;
+    RenderGroup *worldRenderGroup;
 
     Vec4 defaultColor;
     Vec4 hitColor;

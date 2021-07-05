@@ -1,29 +1,47 @@
 
 void
-InitFontRenderer(FontRenderer *fontRenderer, const char *pathToFont)
+InitFontRenderer(MemoryArena *arena, 
+        FontRenderer *fontRenderer, 
+        const char *pathToFont, 
+        r32 fontSize)
 {
-    fontRenderer->textureWidth = 512;
-    fontRenderer->textureHeight = 512;
+    ui32 w = 512;
+    ui32 h = 512;
+    ui32 rangeSize = 95;
+    ui32 firstGlyph = 32;
+
+    fontRenderer->atlas = PushStruct(arena, TextureAtlas);
+    InitAtlas(arena, fontRenderer->atlas, rangeSize, w, h);
+
     stbtt_pack_context packContext;
     stbtt_pack_range range = {};
     ui8 *ttfBuffer = malloc(1<<20);
-    ui8 *tmpBitmap = malloc(fontRenderer->textureWidth*fontRenderer->textureHeight);
-    ui8 *fontTextureImage = malloc(sizeof(ui32)*fontRenderer->textureWidth*fontRenderer->textureHeight);
+    ui8 *tmpBitmap = malloc(sizeof(ui8)*w*h);
+    ui8 *fontTextureImage = malloc(sizeof(ui32)*w*h);
 
-    fread(ttfBuffer, 1, 1<<20, fopen(pathToFont, "rb"));
+    FILE *handle = fopen(pathToFont, "rb");
+    if(handle)
+    {
+        fread(ttfBuffer, 1, 1<<20, handle);
+        fclose(handle);
+    }
+    else
+    {
+        DebugOut("ERROR: Cant open font file: %s.", pathToFont);
+    }
 
-    range.font_size = 24.0;
-    range.first_unicode_codepoint_in_range = 32;
-    range.num_chars = 95;
-    range.chardata_for_range = fontRenderer->charData12;
+    range.font_size = fontSize;
+    range.first_unicode_codepoint_in_range = firstGlyph;
+    range.num_chars = rangeSize;
+    range.chardata_for_range = fontRenderer->charData;
 
-    stbtt_PackBegin(&packContext, tmpBitmap, fontRenderer->textureWidth, fontRenderer->textureHeight, 0, 1, NULL);
+    stbtt_PackBegin(&packContext, tmpBitmap, w, h, 0, 1, NULL);
     stbtt_PackSetOversampling(&packContext, 1, 1);
     stbtt_PackFontRanges(&packContext, ttfBuffer, 0, &range, 1);
     stbtt_PackEnd(&packContext);
 
     // Turn bitmap into rgba image
-    ui32 imageSize = fontRenderer->textureWidth*fontRenderer->textureHeight;
+    ui32 imageSize = w*h;
     for(int idx = 0; idx < imageSize; idx++)
     {
         fontTextureImage[idx*4+0] = 255;
@@ -32,11 +50,11 @@ InitFontRenderer(FontRenderer *fontRenderer, const char *pathToFont)
         fontTextureImage[idx*4+3] = tmpBitmap[idx];
     }
 
-    glGenTextures(1, &fontRenderer->font12Texture);
-    glBindTexture(GL_TEXTURE_2D, fontRenderer->font12Texture);
+    glGenTextures(1, &fontRenderer->atlas->textureHandle);
+    glBindTexture(GL_TEXTURE_2D, fontRenderer->atlas->textureHandle);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 
-            fontRenderer->textureWidth, fontRenderer->textureHeight, 
-            0, GL_RGBA, GL_UNSIGNED_BYTE, fontTextureImage);
+            w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, fontTextureImage);
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -155,13 +173,13 @@ PushSemiCircle2(SpriteBatch *batch,
         r32 radius, 
         r32 minAngle, 
         r32 maxAngle, 
-        int nPoints, 
+        ui32 nPoints, 
         AtlasRegion *tex)
 {
     ui16 lastIdx = batch->nVertices;
     PushVertex2(batch, pos, tex->pos, batch->colorState);
     r32 angDiff = (maxAngle-minAngle)/(nPoints-1);
-    for(int atPoint = 0;
+    for(ui32 atPoint = 0;
             atPoint < nPoints;
             atPoint++)
     {
@@ -169,7 +187,7 @@ PushSemiCircle2(SpriteBatch *batch,
         Vec2 point = v2_add(pos, v2_polar(angle, radius));
         PushVertex2(batch, point, tex->pos, batch->colorState); 
     }
-    for(int atPoint = 0;
+    for(ui32 atPoint = 0;
             atPoint < nPoints-1;
             atPoint++)
     {
@@ -333,16 +351,6 @@ EndStencilShape()
     glStencilMask(0x00);
 }
 
-void
-BeginDrawStenciled()
-{
-}
-
-void
-EndDrawStenciled()
-{
-}
-
 Vec2
 GetStringSize(FontRenderer *fontRenderer, char *sequence)
 {
@@ -351,10 +359,12 @@ GetStringSize(FontRenderer *fontRenderer, char *sequence)
     r32 y = 0.0;
     r32 minY = 10000.0;
     r32 maxY = -10000.0;
+    ui32 w = fontRenderer->atlas->width;
+    ui32 h = fontRenderer->atlas->height;
 
     while(*sequence)
     {
-        stbtt_GetPackedQuad(fontRenderer->charData12, 512, 512, *sequence-32, &x, &y, &q, 0);
+        stbtt_GetPackedQuad(fontRenderer->charData, w, h, *sequence-32, &x, &y, &q, 0);
         minY = Min(minY, q.y0);
         maxY = Max(maxY, q.y1);
         sequence++;
@@ -368,14 +378,15 @@ DrawString2D(SpriteBatch *batch, FontRenderer *fontRenderer, Vec2 pos, char *seq
     stbtt_aligned_quad q;
     r32 x = pos.x;
     r32 y = pos.y;
+    ui32 w = fontRenderer->atlas->width;
+    ui32 h = fontRenderer->atlas->height;
 
     while(*sequence)
     {
-        stbtt_GetPackedQuad(fontRenderer->charData12, 512, 512, *sequence-32, &x, &y, &q, 0);
+        stbtt_GetPackedQuad(fontRenderer->charData, w, h, *sequence-32, &x, &y, &q, 0);
         PushRect2(batch, vec2(q.x0, q.y0), vec2(q.x1-q.x0, q.y1-q.y0), 
                 vec2(q.s0, q.t1), vec2(q.s1-q.s0, q.t0-q.t1));
         sequence++;
     }
 }
-
 

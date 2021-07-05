@@ -9,7 +9,7 @@
 #define DebugOut(args...) printf(args); printf("\n")
 #endif
 
-#define Assert(expr) if(!(expr)) {DebugOut("assert failed : %s", ""#expr""); \
+#define Assert(expr) if(!(expr)) {DebugOut("%s %d: assert failed : %s",__FILE__, __LINE__, ""#expr""); \
     *((int *)0)=0;}
 
 #define local_persist static

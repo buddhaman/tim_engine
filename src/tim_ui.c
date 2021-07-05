@@ -61,9 +61,9 @@ NKEditRadInDegProperty(struct nk_context *ctx,
 internal inline void
 GuiPushCircle(Gui *gui, Vec2 pos, r32 radius, Vec4 color)
 {
-    SpriteBatch *batch = gui->renderContext->batch;
-    batch->colorState = color;
-    PushCircle2(batch, pos, radius, gui->renderContext->defaultAtlas->regions);
+    RenderGroup *renderGroup = gui->worldRenderGroup;
+    Assets *assets = gui->assets;
+    Push2DCircleColored(renderGroup, pos, radius, color, assets->defaultAtlas->regions);
 }
 
 b32
@@ -158,28 +158,14 @@ DoDragButtonAlongAxis(Gui *gui, Vec2 axisOrigin, Vec2 axis, r32 *length, r32 rad
     }
 }
 
-void
-PushLabel(Gui *gui, Vec2 pos, Vec4 color, char *text)
-{
-    size_t labelSize = strlen(text)+1;
-    Assert(gui->nLabels+1 < gui->maxLabels);
-    Assert(gui->labelBufferSize+labelSize < gui->maxLabelBufferSize);
-
-    GuiLabel *label = gui->labels+gui->nLabels++;
-
-    label->text = gui->labelBuffer+gui->labelBufferSize;
-    memcpy(label->text, text, labelSize);
-    gui->labelBufferSize+=labelSize;
-    label->pos = pos;
-    label->color = color;
-}
-
 int
 DoRadialMenuV(Gui *gui, Vec2 center, b32 isActive, int nItems, va_list args)
 {   
     int result = -1;
     if(gui->isRadialMenuActive)
     {
+        RenderGroup *renderGroup = gui->screenRenderGroup;
+        FontRenderer *fontRenderer = gui->assets->fontRenderer;
         r32 dAngle = 2*M_PI/nItems;
         for(ui32 itemIdx = 0;
                 itemIdx < nItems;
@@ -209,8 +195,9 @@ DoRadialMenuV(Gui *gui, Vec2 center, b32 isActive, int nItems, va_list args)
             }
 
             char *text = va_arg(args, char*);
-            Vec2 dims = GetStringSize(gui->renderContext->fontRenderer, text);
-            PushLabel(gui, 
+            Vec2 dims = GetStringSize(gui->assets->fontRenderer, text);
+            Push2DTextColored(renderGroup, 
+                    fontRenderer, 
                     vec2(gui->radialMenuPos.x+c*renderRadius-dims.x/2, gui->radialMenuPos.y+s*renderRadius+dims.y/2), 
                     hit ? vec4(1,1,0,1) : vec4(1,1,1,1), 
                     text);
@@ -240,20 +227,9 @@ DoRadialMenu(Gui *gui, Vec2 center, b32 isActive, int nItems, ...)
     return result;
 }
 
-// Assumes all context is managed elsewhere and only text is drawn. TODO: Change this.
 void
-GuiUpdate(Gui *gui)
+GuiUpdate(Gui *gui, Camera2D *screenCamera, Camera2D *worldCamera)
 {
-    SpriteBatch *batch = gui->renderContext->batch;
-
-    for(size_t labelIdx = 0;
-            labelIdx < gui->nLabels;
-            labelIdx++)
-    {
-        GuiLabel *label = gui->labels+labelIdx;
-        batch->colorState = label->color;
-        DrawString2D(batch, gui->renderContext->fontRenderer, label->pos, label->text);
-    }
     if(gui->isRadialMenuActive && gui->radialTimer < 1.0)
     {
         gui->radialTimer+=(1.0/10.0);   // Sixth of a second.
@@ -262,8 +238,10 @@ GuiUpdate(Gui *gui)
             gui->radialTimer = 1.0;
         }
     }
-
-    gui->labelBufferSize = gui->nLabels = 0;
+    ExecuteRenderGroup(gui->worldRenderGroup, 
+            gui->assets, worldCamera, gui->assets->spriteShader);
+    ExecuteRenderGroup(gui->screenRenderGroup, 
+            gui->assets, screenCamera, gui->assets->spriteShader);
 }
 
 void
@@ -271,14 +249,19 @@ InitGui(Gui *gui,
         MemoryArena *arena,
         AppState *appState, 
         Camera2D *camera,
-        RenderContext *renderContext)
+        Assets *assets)
 {
     gui->appState = appState;
     gui->camera = camera;
-    gui->renderContext = renderContext;
+    gui->assets = assets;
     gui->defaultColor = vec4(0.6, 0.3, 0.3, 1.0);
     gui->hitColor = vec4(0.8, 0.5, 0.5, 1.0);
     gui->pressedColor = vec4(0.4, 0.2, 0.2, 1.0);
+
+    gui->worldRenderGroup = PushStruct(arena, RenderGroup);
+    InitRenderGroup(arena, gui->worldRenderGroup, 1024);
+    gui->screenRenderGroup = PushStruct(arena, RenderGroup);
+    InitRenderGroup(arena, gui->screenRenderGroup, 1024);
 
     gui->labelBufferSize = 0;
     gui->maxLabelBufferSize = 4096;

@@ -1,34 +1,21 @@
 
-void
-InitRenderContext(RenderContext *renderContext, MemoryArena *arena)
-{
-    renderContext->batch = PushStruct(arena, SpriteBatch);
-    InitSpriteBatch(renderContext->batch, 100000, arena);
-
-    // Init simple textureatlas
-    renderContext->defaultAtlas = MakeDefaultTexture(arena, 256);
-    renderContext->creatureTextureAtlas = MakeRandomTextureAtlas(arena);
-
-    renderContext->spriteShader = PushStruct(arena, Shader);
-    InitShader(renderContext->spriteShader, "assets/shaders/sprite.vert", "assets/shaders/sprite.frag");
-    LoadShader(renderContext->spriteShader);
-
-    renderContext->fontRenderer = PushStruct(arena, FontRenderer);
-    InitFontRenderer(renderContext->fontRenderer, "assets/DejaVuSansMono.ttf");
-}
-
 internal inline void
-DrawBodyPartWithTexture(SpriteBatch *batch, BodyPartDefinition *part, Vec2 pos, r32 angle, r32 textureOverhang)
+DrawBodyPartWithTexture(RenderGroup *renderGroup, 
+        BodyPartDefinition *part, 
+        Vec2 pos, 
+        r32 angle, 
+        r32 textureOverhang,
+        ui32 textureHandle,
+        Vec4 color)
 {
-    AtlasRegion region;
-    region.pos = part->uvPos;
-    region.size = part->uvDims;
-    PushOrientedRectangle2(batch,
+    Push2DTexOrientedRectangleColored(renderGroup,
             pos,
-            part->width+textureOverhang*2,
-            part->height+textureOverhang*2,
+            vec2(part->width+textureOverhang*2, part->height+textureOverhang*2),
             angle,
-            &region);
+            textureHandle,
+            part->uvPos,
+            part->uvDims,
+            color);
 }
 
 void

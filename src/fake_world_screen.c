@@ -215,10 +215,12 @@ DrawFakeWorld(FakeWorldScreen *screen,
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         RigidBody *body = part->body;
         Vec2 pos = GetBodyPos(body);
+        (void)pos;
         r32 angle = GetBodyAngle(body);
+        (void)angle;
         r32 shade = screen->isDragVisible ? GetBodyPartShade(part, 1.0) : 1.0;
         batch->colorState = vec4(shade, shade, shade, 1.0);
-        DrawBodyPartWithTexture(batch, part->def, pos, angle, world->def.textureOverhang);
+        //DrawBodyPartWithTexture(batch, part->def, pos, angle, world->def.textureOverhang);
     }
     EndSpritebatch(batch);
 }
@@ -226,16 +228,16 @@ DrawFakeWorld(FakeWorldScreen *screen,
 void
 UpdateFakeWorldScreen(AppState *appState, 
         FakeWorldScreen *screen, 
-        RenderContext *renderer, 
+        Assets *assets, 
         struct nk_context *ctx) 
 {
     Camera2D *camera = screen->camera;
     Camera2D *screenCamera = appState->screenCamera;    // Mildly confusing
-    SpriteBatch *batch = renderer->batch;
-    FontRenderer *fontRenderer = renderer->fontRenderer;
+    SpriteBatch *batch = assets->batch;
+    FontRenderer *fontRenderer = assets->fontRenderer;
     FakeWorld *world = screen->world;
-    TextureAtlas *defaultAtlas = renderer->defaultAtlas;
-    Shader *spriteShader = renderer->spriteShader;
+    TextureAtlas *defaultAtlas = assets->defaultAtlas;
+    Shader *spriteShader = assets->spriteShader;
 
     char toolTip[512];
     memset(toolTip, 0, sizeof(toolTip));
@@ -312,7 +314,7 @@ UpdateFakeWorldScreen(AppState *appState,
     int matLocation = glGetUniformLocation(spriteShader->program, "transform");
     glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
 
-    DrawFakeWorld(screen, batch, camera, defaultAtlas, renderer->creatureTextureAtlas);
+    DrawFakeWorld(screen, batch, camera, defaultAtlas, assets->creatureTextureAtlas);
 
     BeginSpritebatch(batch);
     glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
@@ -436,7 +438,7 @@ UpdateFakeWorldScreen(AppState *appState,
 
     // Only text from here
     BeginSpritebatch(batch);
-    glBindTexture(GL_TEXTURE_2D, fontRenderer->font12Texture);
+    glBindTexture(GL_TEXTURE_2D, fontRenderer->atlas->textureHandle);
     char info[512];
 
     batch->colorState=vec4(1,1,1,1);

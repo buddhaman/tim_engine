@@ -1,14 +1,15 @@
 
 void
-InitAtlas(MemoryArena *arena, TextureAtlas *atlas, int maxRegions)
+InitAtlas(MemoryArena *arena, TextureAtlas *atlas, ui32 maxRegions, ui32 width, ui32 height)
 {
     *atlas = (TextureAtlas){};
     atlas->maxRegions = maxRegions;
     atlas->regions = PushArray(arena, AtlasRegion, maxRegions);
+    atlas->width = width;
+    atlas->height = height;
 
     glGenTextures(1, &atlas->textureHandle);
     glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
-
 }
 
 AtlasRegion *
@@ -45,7 +46,6 @@ SetTextureAtlasImageData(TextureAtlas *atlas, unsigned char *data)
             0, GL_RGBA, GL_UNSIGNED_BYTE, atlas->image);
 }
 
-// Assume square texture
 void
 DrawCircleOnTexture(TextureAtlas *atlas, Vec2 rangePos, Vec2 rangeSize, Vec2 uvCenter, r32 radius, ui32 color)
 {
@@ -93,16 +93,16 @@ DrawCircleOnTexture(TextureAtlas *atlas, Vec2 rangePos, Vec2 rangeSize, Vec2 uvC
 TextureAtlas *
 MakeRandomTextureAtlas(MemoryArena *arena)
 {
+    ui32 width = 2048;
+    ui32 height = 2048;
     TextureAtlas *atlas = PushStruct(arena, TextureAtlas);
-    InitAtlas(arena, atlas, 16);    // Grid of 4x4. 
+    InitAtlas(arena, atlas, 16, width, height);    // Grid of 4x4. 
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    ui32 width = 2048;
-    ui32 height = 2048;
     ui32 *image = PushAndZeroArray(arena, ui32, width*height);
     atlas->image = image;
     atlas->width = width;
@@ -131,15 +131,15 @@ TextureAtlas *
 MakeDefaultTexture(MemoryArena *arena, int circleRadius)
 {
     TextureAtlas *atlas = PushStruct(arena, TextureAtlas);
-    InitAtlas(arena, atlas, 2);
+    int width = circleRadius*2 + 2;
+    int height = circleRadius*2 + 2;
+    InitAtlas(arena, atlas, 2, width, height);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    int width = circleRadius*2 + 2;
-    int height = circleRadius*2 + 2;
 
     // Not stored. Doesnt matter
     ui32 *image = malloc(sizeof(ui32)*width*height);
