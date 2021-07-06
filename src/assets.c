@@ -12,6 +12,10 @@ InitAssets(Assets *assets, MemoryArena *arena)
     InitShader(assets->spriteShader, "assets/shaders/sprite.vert", "assets/shaders/sprite.frag");
     LoadShader(assets->spriteShader);
 
+    assets->blurShader = PushStruct(arena, Shader);
+    InitShader(assets->blurShader, "assets/shaders/sprite.vert", "assets/shaders/blur.frag");
+    LoadShader(assets->blurShader);
+
     assets->fontRenderer = PushStruct(arena, FontRenderer);
     InitFontRenderer(arena, assets->fontRenderer, "assets/DejaVuSansMono.ttf", 24.0);
 }

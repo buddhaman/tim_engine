@@ -24,3 +24,12 @@ typedef struct
     b32 isDrawing;
 } SpriteBatch;
 
+typedef struct
+{
+    ui32 width;
+    ui32 height;
+
+    ui32 colorTexture;
+    ui32 fbo;
+} FrameBuffer;
+

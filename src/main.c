@@ -26,6 +26,7 @@ ReadEntireFile(const char *path)
 {
     char *buffer = NULL;
     size_t stringSize, readSize;
+    (void)readSize;
     FILE *handler = fopen(path, "r");
     if(handler)
     {
@@ -35,12 +36,6 @@ ReadEntireFile(const char *path)
         buffer = (char *)malloc(sizeof(char) * (stringSize + 1));
         readSize = fread(buffer, sizeof(char), stringSize, handler);
         buffer[stringSize] = 0;
-
-        if(stringSize!=readSize)
-        {
-            free(buffer);
-            buffer = NULL;
-        }
         fclose(handler);
         return buffer;
     }

@@ -55,7 +55,7 @@ CreateAndLinkShaderProgram(ui32 vertexShader, ui32 fragmentShader)
 void
 InitShader(Shader *shader, const char *vertexPath, const char *fragmentPath)
 {
-    shader->fragmentSourcePath = malloc(sizeof(char)*(strlen(fragmentPath+1)));
+    shader->fragmentSourcePath = malloc(sizeof(char)*(strlen(fragmentPath)+1));
     shader->vertexSourcePath = malloc(sizeof(char)*(strlen(vertexPath)+1));
     strcpy(shader->fragmentSourcePath, fragmentPath);
     strcpy(shader->vertexSourcePath, vertexPath);
@@ -66,6 +66,8 @@ LoadShader(Shader *shader)
 {
     shader->fragmentSource = ReadEntireFile(shader->fragmentSourcePath);
     shader->vertexSource = ReadEntireFile(shader->vertexSourcePath);
+
+    //printf("Shader source for %s:\n %s\n", shader->fragmentSourcePath, shader->fragmentSource);
 
     ui32 fragmentShader = CreateAndCompileShaderSource(shader->fragmentSource, GL_FRAGMENT_SHADER);
     ui32 vertexShader = CreateAndCompileShaderSource(shader->vertexSource, GL_VERTEX_SHADER);

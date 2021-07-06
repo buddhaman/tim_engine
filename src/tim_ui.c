@@ -63,7 +63,7 @@ GuiPushCircle(Gui *gui, Vec2 pos, r32 radius, Vec4 color)
 {
     RenderGroup *renderGroup = gui->worldRenderGroup;
     Assets *assets = gui->assets;
-    Push2DCircleColored(renderGroup, pos, radius, color, assets->defaultAtlas->regions);
+    Push2DCircleColored(renderGroup, pos, radius, assets->defaultAtlas->regions, color);
 }
 
 b32
@@ -199,8 +199,8 @@ DoRadialMenuV(Gui *gui, Vec2 center, b32 isActive, int nItems, va_list args)
             Push2DTextColored(renderGroup, 
                     fontRenderer, 
                     vec2(gui->radialMenuPos.x+c*renderRadius-dims.x/2, gui->radialMenuPos.y+s*renderRadius+dims.y/2), 
-                    hit ? vec4(1,1,0,1) : vec4(1,1,1,1), 
-                    text);
+                    text,
+                    hit ? vec4(1,1,0,1) : vec4(1,1,1,1));
         }
     }
     if(!gui->isRadialMenuActive && isActive)
@@ -238,9 +238,9 @@ GuiUpdate(Gui *gui, Camera2D *screenCamera, Camera2D *worldCamera)
             gui->radialTimer = 1.0;
         }
     }
-    ExecuteRenderGroup(gui->worldRenderGroup, 
+    ExecuteAndFlushRenderGroup(gui->worldRenderGroup, 
             gui->assets, worldCamera, gui->assets->spriteShader);
-    ExecuteRenderGroup(gui->screenRenderGroup, 
+    ExecuteAndFlushRenderGroup(gui->screenRenderGroup, 
             gui->assets, screenCamera, gui->assets->spriteShader);
 }
 

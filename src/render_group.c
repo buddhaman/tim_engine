@@ -1,4 +1,10 @@
 
+void
+FlushRenderGroup(RenderGroup *renderGroup)
+{
+    renderGroup->nCommands = 0;
+}
+
 void 
 ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, Camera2D *camera, Shader *shader)
 {
@@ -85,6 +91,19 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, Camera2D *camera, S
                     &region);
         } break;
 
+        case RENDER_2D_LINE_CIRCLE:
+        {
+            batch->colorState = command->color;
+            AtlasRegion region;
+            region.pos = command->uvPos;
+            region.size = command->uvDims;
+            PushLineCircle2(batch,
+                    command->pos,
+                    command->radius,
+                    command->lineWidth,
+                    command->nPoints,
+                    &region);
+        } break;
 
         default:
         {
@@ -94,7 +113,13 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, Camera2D *camera, S
         }
     }
     EndSpritebatch(batch);
-    renderGroup->nCommands = 0;
+}
+
+void 
+ExecuteAndFlushRenderGroup(RenderGroup *renderGroup, Assets *assets, Camera2D *camera, Shader *shader)
+{
+    ExecuteRenderGroup(renderGroup, assets, camera, shader);
+    FlushRenderGroup(renderGroup);
 }
 
 internal inline RenderCommand*
@@ -128,8 +153,8 @@ internal inline void
 Push2DRectColored(RenderGroup* renderGroup,
         Vec2 pos,
         Vec2 dims,
-        Vec4 color,
-        AtlasRegion *texture)
+        AtlasRegion *texture,
+        Vec4 color)
 {
     Push2DTexRectColored(renderGroup,
             pos,
@@ -144,8 +169,8 @@ internal inline void
 Push2DCircleColored(RenderGroup* renderGroup,
         Vec2 center,
         r32 radius,
-        Vec4 color,
-        AtlasRegion *texture)
+        AtlasRegion *texture,
+        Vec4 color)
 {
     Push2DTexRectColored(renderGroup,
             vec2(center.x-radius, center.y-radius),
@@ -260,8 +285,8 @@ internal inline void
 Push2DTextColored(RenderGroup *renderGroup, 
         FontRenderer *fontRenderer,
         Vec2 pos, 
-        Vec4 color,
-        char *sequence)
+        char *sequence,
+        Vec4 color)
 {
     stbtt_aligned_quad q;
     r32 x = pos.x;
@@ -293,8 +318,8 @@ Push2DText(RenderGroup *renderGroup,
     Push2DTextColored(renderGroup,
             fontRenderer,
             pos, 
-            vec4(1,1,1,1),
-            sequence);
+            sequence,
+            vec4(1,1,1,1));
 }
 
 internal inline void
@@ -312,6 +337,26 @@ Push2DSemiCircleColored(RenderGroup *renderGroup,
     command->radius = radius;
     command->range = vec2(fromAngle, toAngle);
     command->nPoints = nPoints;
+    command->textureHandle = texture->atlas->textureHandle;
+    command->uvPos = texture->pos;
+    command->uvDims = texture->size;
+    command->color = color;
+}
+
+internal inline void
+Push2DLineCircleColored(RenderGroup *renderGroup, 
+        Vec2 pos,
+        r32 radius,
+        ui32 nPoints,
+        r32 lineWidth,
+        AtlasRegion *texture,
+        Vec4 color)
+{
+    RenderCommand *command = PushRenderCommand(renderGroup, RENDER_2D_LINE_CIRCLE);
+    command->pos = pos;
+    command->radius = radius;
+    command->nPoints = nPoints;
+    command->lineWidth = lineWidth;
     command->textureHandle = texture->atlas->textureHandle;
     command->uvPos = texture->pos;
     command->uvDims = texture->size;

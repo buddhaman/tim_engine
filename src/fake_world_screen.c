@@ -23,23 +23,24 @@ GetBodyPartShade(BodyPart *part, r32 dragColorIntensity)
 }
 
 internal inline void
-DrawSolidRigidBody(SpriteBatch *batch, 
+DrawSolidRigidBody(RenderGroup *renderGroup, 
         RigidBody *body,
-        AtlasRegion *texture)
+        AtlasRegion *texture,
+        Vec4 color)
 {
     Vec2 pos = GetBodyPos(body);
     r32 angle = GetBodyAngle(body);
 
-    PushOrientedRectangle2(batch, 
+    Push2DOrientedRectangleColored(renderGroup, 
             pos,
-            body->width,
-            body->height,
+            vec2(body->width, body->height),
             angle,
-            texture);
+            texture,
+            color);
 }
 
 void
-DrawBodyPart(SpriteBatch *batch, 
+DrawBodyPart(RenderGroup *renderGroup,
         BodyPart *part,
         Vec3 creatureColor,
         r32 alpha,
@@ -48,15 +49,15 @@ DrawBodyPart(SpriteBatch *batch,
 {
     RigidBody *body = part->body;
     r32 shade = GetBodyPartShade(part, dragColorIntensity);
-    batch->colorState = vec4(shade*creatureColor.x, 
+    Vec4 color = vec4(shade*creatureColor.x, 
             shade*creatureColor.y, 
             shade*creatureColor.z, 
             alpha);
-    DrawSolidRigidBody(batch, body, texture);
+    DrawSolidRigidBody(renderGroup, body, texture, color);
 }
 
 internal inline void
-DrawVecR32(SpriteBatch *batch,
+DrawVecR32(RenderGroup *renderGroup,
         VecR32 *vec,
         Vec2 pos, 
         r32 size,
@@ -70,15 +71,15 @@ DrawVecR32(SpriteBatch *batch,
     for(ui32 i = 0; i < vec->n; i++)
     {
         r32 v = fabsf(vec->v[i])/maxAbs;
-        batch->colorState = vec->v[i] < 0 ? vec4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
+        Vec4 color = vec->v[i] < 0 ? vec4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
             : vec4(positiveColor.x*v, positiveColor.y*v, positiveColor.z*v, 1.0);
-        PushRect2(batch, vec2(pos.x+i*xDir*size, pos.y+i*yDir*size), 
-                vec2(size, size), texture->pos, texture->size);
+        Push2DRectColored(renderGroup, vec2(pos.x+i*xDir*size, pos.y+i*yDir*size), 
+                vec2(size, size), texture, color);
     }
 }
 
 internal inline void
-DrawMatR32(SpriteBatch *batch,
+DrawMatR32(RenderGroup *renderGroup,
         MatR32 *mat,
         Vec2 pos, 
         r32 size,
@@ -92,31 +93,31 @@ DrawMatR32(SpriteBatch *batch,
     {
         r32 m = mat->m[i+mat->w*j];
         r32 v = fabsf(m)/maxAbs;
-        batch->colorState =  m < 0 ? vec4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
+        Vec4 color =  m < 0 ? vec4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
             : vec4(positiveColor.x*v, positiveColor.y*v, positiveColor.z*v, 1.0);
-        PushRect2(batch, vec2(pos.x+i*size, pos.y+j*size), 
-                vec2(size, size), texture->pos, texture->size);
+        Push2DRectColored(renderGroup, vec2(pos.x+i*size, pos.y+j*size), 
+                vec2(size, size), texture, color);
     }
 }
 
 internal inline Vec2
-DrawBrainVector(SpriteBatch *batch, VecR32 *vec, Vec2 pos, r32 size, r32 maxAbs, int xDir, int yDir, AtlasRegion *texture)
+DrawBrainVector(RenderGroup *renderGroup, VecR32 *vec, Vec2 pos, r32 size, r32 maxAbs, int xDir, int yDir, AtlasRegion *texture)
 {
-    DrawVecR32(batch, vec, pos, size, vec3(1,0,0), vec3(0,1,0), maxAbs, xDir, yDir, texture);
+    DrawVecR32(renderGroup, vec, pos, size, vec3(1,0,0), vec3(0,1,0), maxAbs, xDir, yDir, texture);
     r32 w = xDir!=0 ? vec->n*size*xDir : size;
     r32 h = yDir!=0 ? vec->n*size*yDir : size;
     return vec2(pos.x+w, pos.y+h);
 }
 
 internal inline Vec2
-DrawBrainMatrix(SpriteBatch *batch, MatR32 *mat, Vec2 pos, r32 size, r32 maxAbs, AtlasRegion *texture)
+DrawBrainMatrix(RenderGroup *renderGroup, MatR32 *mat, Vec2 pos, r32 size, r32 maxAbs, AtlasRegion *texture)
 {
-    DrawMatR32(batch, mat, pos, size, vec3(1,0,0), vec3(0,1,0), maxAbs, texture);
+    DrawMatR32(renderGroup, mat, pos, size, vec3(1,0,0), vec3(0,1,0), maxAbs, texture);
     return vec2(pos.x+mat->w*size, pos.y+mat->h*size);
 }
 
 void
-DrawClock(SpriteBatch *batch, 
+DrawClock(RenderGroup *renderGroup,
         Vec2 pos, 
         r32 radius,
         r32 radians, 
@@ -127,35 +128,27 @@ DrawClock(SpriteBatch *batch,
     r32 c = cosf(radians);
     r32 s = sinf(radians);
 
-    batch->colorState = vec4(0,0,0,1);
-    PushCircle2(batch, pos, radius+lineWidth, circleTexture);
-    batch->colorState = vec4(0.5,0.5,0.5,1);
-    PushCircle2(batch, pos, radius, circleTexture);
-    batch->colorState = vec4(0,0,0,1);
-    PushLine2(batch, 
+    Push2DCircleColored(renderGroup, pos, radius+lineWidth, circleTexture, vec4(0,0,0,1));
+    Push2DCircleColored(renderGroup, pos, radius, circleTexture, vec4(0.5, 0.5, 0.5, 1.0));
+    Push2DLineColored(renderGroup, 
             pos, 
             v2_add(pos, vec2(c*radius, s*radius)), 
             lineWidth, 
-            squareTexture->pos, 
-            squareTexture->size);
+            squareTexture, vec4(0, 0, 0, 1));
 }
 
 void
 DrawFakeWorld(FakeWorldScreen *screen, 
-        SpriteBatch *batch, 
+        RenderGroup *renderGroup,
         Camera2D *camera, 
         TextureAtlas *defaultAtlas,
         TextureAtlas *creatureTextureAtlas)
 {
-    BeginSpritebatch(batch);
     FakeWorld *world = screen->world;
     AtlasRegion *circleRegion = defaultAtlas->regions;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
 
-    DrawGrid(batch, camera, 10.0, 1.0, squareRegion);
-    DrawGrid(batch, camera, 50.0, 2.0, squareRegion);
-    batch->colorState = vec4(1,1,1, 0.5);
-    PushCircle2(batch, vec2(0, 0), 3, circleRegion);
+    Push2DCircleColored(renderGroup, vec2(0, 0), 3, circleRegion, vec4(1,1,1,0.5));
 
     if(screen->isPopulationVisible)
     {
@@ -171,7 +164,7 @@ DrawFakeWorld(FakeWorldScreen *screen,
                     bodyPartIdx++)
             {
                 BodyPart *part = creature->bodyParts+bodyPartIdx;
-                DrawBodyPart(batch, part, creatureColor, alpha, 1.0, squareRegion);
+                DrawBodyPart(renderGroup, part, creatureColor, alpha, 1.0, squareRegion);
             }
         }
     }
@@ -181,8 +174,7 @@ DrawFakeWorld(FakeWorldScreen *screen,
             floorIdx++)
     {
         RigidBody *floor = world->staticBodies[floorIdx];
-        batch->colorState = vec4(0.5, 0.5, 0.5, 1.0);
-        DrawSolidRigidBody(batch, floor, squareRegion);
+        DrawSolidRigidBody(renderGroup, floor, squareRegion, vec4(0.5, 0.5, 0.5, 1.0));
     }
 
     // Draw first creature
@@ -190,24 +182,16 @@ DrawFakeWorld(FakeWorldScreen *screen,
     if(creature->drawSolidColor)
     {
         Vec3 creatureColor = creature->solidColor;
-        batch->colorState = vec4(1,1,1,1);
         for(int bodyPartIdx = creature->nBodyParts-1;
                 bodyPartIdx >= 0;
                 bodyPartIdx--)
         {
             BodyPart *part = creature->bodyParts+bodyPartIdx;
             r32 dragFactor = screen->isDragVisible ? 1.0 :  0.0;
-            DrawBodyPart(batch, part, creatureColor, 1.0, dragFactor, squareRegion);
+            DrawBodyPart(renderGroup, part, creatureColor, 1.0, dragFactor, squareRegion);
         }
     }
 
-    EndSpritebatch(batch);
-
-    BeginSpritebatch(batch);
-    glBindTexture(GL_TEXTURE_2D, creatureTextureAtlas->textureHandle);
-    // Only draw first creature with fancy texture
-    // Draw in reverse order. Should draw in reverse order of degree. 
-    batch->colorState = vec4(1,1,1,1);
     for(int bodyPartIdx = creature->nBodyParts-1;
             bodyPartIdx >= 0;
             bodyPartIdx--)
@@ -215,14 +199,12 @@ DrawFakeWorld(FakeWorldScreen *screen,
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         RigidBody *body = part->body;
         Vec2 pos = GetBodyPos(body);
-        (void)pos;
         r32 angle = GetBodyAngle(body);
-        (void)angle;
         r32 shade = screen->isDragVisible ? GetBodyPartShade(part, 1.0) : 1.0;
-        batch->colorState = vec4(shade, shade, shade, 1.0);
-        //DrawBodyPartWithTexture(batch, part->def, pos, angle, world->def.textureOverhang);
+        Vec4 color = vec4(shade, shade, shade, 1.0);
+        DrawBodyPartWithTexture(renderGroup, part->def, pos, angle, world->def.textureOverhang, 
+                creatureTextureAtlas->textureHandle, color);
     }
-    EndSpritebatch(batch);
 }
 
 void
@@ -233,7 +215,10 @@ UpdateFakeWorldScreen(AppState *appState,
 {
     Camera2D *camera = screen->camera;
     Camera2D *screenCamera = appState->screenCamera;    // Mildly confusing
-    SpriteBatch *batch = assets->batch;
+
+    RenderGroup *worldRenderGroup = screen->worldRenderGroup;
+    RenderGroup *screenRenderGroup = screen->screenRenderGroup;
+
     FontRenderer *fontRenderer = assets->fontRenderer;
     FakeWorld *world = screen->world;
     TextureAtlas *defaultAtlas = assets->defaultAtlas;
@@ -306,46 +291,34 @@ UpdateFakeWorldScreen(AppState *appState,
     // Calculate bodypart intersection of first creature
     screen->hitBodyPart = GetCreatureBodyPartAt(world->creatures, mousePos);
 
-    glUseProgram(spriteShader->program);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
-
     int matLocation = glGetUniformLocation(spriteShader->program, "transform");
     glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
 
-    DrawFakeWorld(screen, batch, camera, defaultAtlas, assets->creatureTextureAtlas);
+    DrawFakeWorld(screen, worldRenderGroup, camera, defaultAtlas, assets->creatureTextureAtlas);
 
-    BeginSpritebatch(batch);
-    glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
     if(world->trainingType==TRAIN_DISTANCE_TARGET)
     {
-        batch->colorState = vec4(1.0, 1.0, 0.0, 1.0);
-        PushCircle2(batch, world->target, 10, circleRegion);
+        Vec4 circleColor = vec4(1.0, 1.0, 0.0, 1.0);
+        Push2DCircleColored(worldRenderGroup, world->target, 10, circleRegion, circleColor);
     }
-    EndSpritebatch(batch);
 
     // Render on screen
-    BeginSpritebatch(batch);
-    glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&screenCamera->transform);
 
     r32 screenWidth = screenCamera->size.x;
     r32 screenHeight = screenCamera->size.y;
     r32 bottomBarHeight = 50;
 
-    glBindTexture(GL_TEXTURE_2D, defaultAtlas->textureHandle);
-    batch->colorState = appState->clearColor;
-    PushRect2(batch,
+    Push2DRectColored(screenRenderGroup,
             vec2(0,screenHeight-bottomBarHeight),
             vec2(screenWidth, bottomBarHeight),
-            squareRegion->pos,
-            squareRegion->size);
-    batch->colorState = vec4(1,1,1,0.2);
-    PushRect2(batch,
+            squareRegion,
+            appState->clearColor);
+
+    Push2DRectColored(screenRenderGroup,
             vec2(0, screenHeight-bottomBarHeight),
             vec2(screenWidth, 2),
-            squareRegion->pos,
-            squareRegion->size);
+            squareRegion,
+            vec4(1,1,1,1));
 
     if(screen->selectedCreature)
     {
@@ -362,36 +335,36 @@ UpdateFakeWorldScreen(AppState *appState,
         r32 maxRowY = 0;
         Vec2 lastPos;
 
-        lastPos = DrawBrainMatrix(batch, &brain->Wf, vec2(atX, atY), size, maxAbs, squareRegion);
+        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Wf, vec2(atX, atY), size, maxAbs, squareRegion);
         atX = lastPos.x+pad;
         maxRowY = Max(maxRowY, lastPos.y);
 
-        lastPos = DrawBrainMatrix(batch, &brain->Uf, vec2(atX, atY), size, maxAbs, squareRegion);
+        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Uf, vec2(atX, atY), size, maxAbs, squareRegion);
         atX = lastPos.x+pad;
         maxRowY = Max(maxRowY, lastPos.y);
 
-        lastPos = DrawBrainVector(batch, &brain->bf, vec2(atX, atY), size, maxAbs, 0, 1, squareRegion);
+        lastPos = DrawBrainVector(screenRenderGroup, &brain->bf, vec2(atX, atY), size, maxAbs, 0, 1, squareRegion);
         atX = leftX;
         atY = maxRowY+pad;
         maxRowY = 0;
 
-        lastPos = DrawBrainMatrix(batch, &brain->Wh, vec2(atX, atY), size, maxAbs, squareRegion);
+        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Wh, vec2(atX, atY), size, maxAbs, squareRegion);
         atX = lastPos.x+pad;
         maxRowY = Max(maxRowY, lastPos.y);
 
-        lastPos = DrawBrainMatrix(batch, &brain->Uh, vec2(atX, atY), size, maxAbs, squareRegion);
+        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Uh, vec2(atX, atY), size, maxAbs, squareRegion);
         atX = lastPos.x+pad;
         maxRowY = Max(maxRowY, lastPos.y);
 
-        lastPos = DrawBrainVector(batch, &brain->bh, vec2(atX, atY), size, maxAbs, 0, 1, squareRegion);
+        lastPos = DrawBrainVector(screenRenderGroup, &brain->bh, vec2(atX, atY), size, maxAbs, 0, 1, squareRegion);
         atX = leftX;
         atY = maxRowY+pad;
         maxRowY = 0;
 
-        DrawBrainVector(batch, &brain->x, vec2(atX, atY), size, 1.0, 1, 0, squareRegion);
-        DrawBrainVector(batch, &brain->h, vec2(atX, atY+size), size, 1.0, 1, 0, squareRegion);
-        DrawBrainVector(batch, &brain->hc, vec2(atX, atY+size*2), size, 1.0, 1, 0, squareRegion);
-        DrawBrainVector(batch, &brain->f, vec2(atX, atY+size*3), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(screenRenderGroup, &brain->x, vec2(atX, atY), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(screenRenderGroup, &brain->h, vec2(atX, atY+size), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(screenRenderGroup, &brain->hc, vec2(atX, atY+size*2), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(screenRenderGroup, &brain->f, vec2(atX, atY+size*3), size, 1.0, 1, 0, squareRegion);
         atY+=size*4+pad*3;
 
         // Draw clocks
@@ -401,7 +374,7 @@ UpdateFakeWorldScreen(AppState *appState,
         {
             r32 radians = GetInternalClockValue(creature, clockIdx);
             r32 radius = 20;
-            DrawClock(batch, vec2(atX+radius+radius*2*clockIdx+pad*2*clockIdx, atY+radius), 
+            DrawClock(screenRenderGroup, vec2(atX+radius+radius*2*clockIdx+pad*2*clockIdx, atY+radius), 
                     radius, radians, squareRegion, circleRegion);
         }
 
@@ -417,42 +390,34 @@ UpdateFakeWorldScreen(AppState *appState,
             Vec2 pos = CameraToScreenPos(camera, appState, GetBodyPos(selectedBodyPart->body));
             Vec2 targetPos = CameraToScreenPos(camera, appState, world->target);
             Vec2 to = v2_add(pos, dir);
-            batch->colorState = vec4(1.0, 0.0, 0.0, 1.0);
-            PushLine2(batch, 
+            Push2DLineColored(screenRenderGroup, 
                     pos, 
                     to, 
                     lineWidth,
-                    squareRegion->pos,
-                    squareRegion->size);
-            batch->colorState = vec4(0.0, 1.0, 0.0, 1.0);
-            PushLine2(batch, 
+                    squareRegion, vec4(1, 0, 0, 1));
+            Push2DLineColored(screenRenderGroup, 
                     pos, 
                     targetPos,
                     lineWidth,
-                    squareRegion->pos,
-                    squareRegion->size);
+                    squareRegion,
+                    vec4(0, 1, 0, 1));
         }
     }
 
-    EndSpritebatch(batch);
-
     // Only text from here
-    BeginSpritebatch(batch);
-    glBindTexture(GL_TEXTURE_2D, fontRenderer->atlas->textureHandle);
     char info[512];
 
-    batch->colorState=vec4(1,1,1,1);
     sprintf(info, "Steps per frame: %u. At Generation %u (%u/%u) fitness = %f", screen->stepsPerFrame,
             screen->generation, 
             screen->tick, 
             screen->ticksPerGeneration, 
             screen->avgFitness);
-    DrawString2D(batch, fontRenderer, vec2(20, screenHeight-bottomBarHeight/2+8), info);
+    Push2DText(screenRenderGroup, fontRenderer, vec2(20, screenHeight-bottomBarHeight/2+8), info);
 
     // Draw tooltip
     if(toolTip[0])
     {
-        DrawString2D(batch, fontRenderer, screenCamera->mousePos, toolTip);
+        Push2DText(screenRenderGroup, fontRenderer, screenCamera->mousePos, toolTip);
     }
 
     if(IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT) && !screen->isGuiInputCaptured)
@@ -477,18 +442,47 @@ UpdateFakeWorldScreen(AppState *appState,
             r32 activation = creature->brain->x.v[part->def->angleTowardsTargetInputIdx];
             char bodyPartInfo[128];
             sprintf(bodyPartInfo, "angle activation = %.2f", activation); 
-            DrawString2D(batch, fontRenderer, bodyPartPos, bodyPartInfo);
+            Push2DText(screenRenderGroup, fontRenderer, bodyPartPos, bodyPartInfo);
         } 
         else if(part->def->hasAbsoluteAngleInput)
         {
             r32 activation = creature->brain->x.v[part->def->absoluteAngleInputIdx];
             char bodyPartInfo[128];
             sprintf(bodyPartInfo, "angle activation = %.2f", activation); 
-            DrawString2D(batch, fontRenderer, bodyPartPos, bodyPartInfo);
+            Push2DText(screenRenderGroup, fontRenderer, bodyPartPos, bodyPartInfo);
         }
     }
 
-    EndSpritebatch(batch);
+    Camera2D shadowCamera;
+    Vec2 shadowOffset = vec2(-10, -10);
+    shadowCamera.pos = v2_sub(camera->pos, shadowOffset);
+    shadowCamera.scale = camera->scale;
+    shadowCamera.isYUp = camera->isYUp;
+    UpdateCamera2D(&shadowCamera, appState);
+
+    FrameBuffer *frameBuffer = screen->frameBuffer;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer->fbo);
+    glViewport(0, 0, frameBuffer->width, frameBuffer->height);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    ExecuteRenderGroup(worldRenderGroup, assets, &shadowCamera, spriteShader);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glViewport(0, 0, appState->screenWidth, appState->screenHeight);
+
+    DrawDirectRect(assets->batch,
+            screenCamera,
+            assets->blurShader,
+            vec2(0,0),
+            screenCamera->size,
+            frameBuffer->colorTexture,
+            vec2(0,0),
+            vec2(1,1),
+            vec4(0, 0, 0, 0.3));
+
+    ExecuteAndFlushRenderGroup(worldRenderGroup, assets, camera, spriteShader);
+    ExecuteAndFlushRenderGroup(screenRenderGroup, assets, screenCamera, spriteShader);
 
     // Begin UI
     if(nk_begin(ctx, "Simulation", nk_rect(50, 50, 280, 400),
@@ -579,6 +573,14 @@ InitFakeWorldScreen(AppState *appState,
         r32 dev,
         r32 learningRate)
 {
+    screen->worldRenderGroup = PushStruct(arena, RenderGroup);
+
+    InitRenderGroup(arena, screen->worldRenderGroup, 1024);
+    screen->screenRenderGroup = PushStruct(arena, RenderGroup);
+    InitRenderGroup(arena, screen->screenRenderGroup, 4096);
+
+    ui32 shadowResolution = 1024;
+    screen->frameBuffer = CreateFrameBuffer(arena, shadowResolution, shadowResolution);
 
     screen->stepsPerFrame = 1;
     screen->generation = 0;

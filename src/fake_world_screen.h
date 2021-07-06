@@ -8,6 +8,10 @@ typedef struct
     FakeWorld *world;
     MemoryArena *evolutionArena;
 
+    RenderGroup *worldRenderGroup;
+    RenderGroup *screenRenderGroup;
+    FrameBuffer *frameBuffer;
+
     b32 isPaused;
     ui32 stepsPerFrame;
     b32 isInputCaptured;

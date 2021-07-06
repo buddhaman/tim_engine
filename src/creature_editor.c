@@ -742,8 +742,9 @@ UpdateCreatureEditorScreen(AppState *appState,
     Push2DRectColored(worldRenderGroup, 
             vec2(-10, -10),
             vec2(20, 20),
-            vec4(1,1,1,0.1),
-            circleRegion);
+            circleRegion,
+            vec4(1,1,1,0.1));
+
     // TODO: Fix grid. DrawGrid(batch, camera, 50, 2.0, squareRegion);
 
     if(def->drawSolidColor)
@@ -884,8 +885,8 @@ UpdateCreatureEditorScreen(AppState *appState,
                 Push2DCircleColored(worldRenderGroup, 
                         minLocation.pos, 
                         5.0*camera->scale, 
-                        intersectCircleColor, 
-                        circleRegion);
+                        circleRegion,
+                        intersectCircleColor);
                 sprintf(info, "place on edge %.2f.", minLocation.offset);
                 if(IsKeyActionJustDown(appState, ACTION_MOUSE_BUTTON_LEFT))
                 {
@@ -994,9 +995,13 @@ UpdateCreatureEditorScreen(AppState *appState,
             editor->lastBrushStroke = mousePos;
         }
 
-#if 0
+#if 1
         // Render drawable surface
         glEnable(GL_STENCIL_TEST);
+        SpriteBatch *batch = assets->batch;
+        
+        SetupSpriteBatch(batch, camera, spriteShader);
+        glBindTexture(GL_TEXTURE_2D, assets->defaultAtlas->textureHandle);
 
         BeginStencilShape();
 
@@ -1021,24 +1026,26 @@ UpdateCreatureEditorScreen(AppState *appState,
 
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 
-        BeginSpritebatch(batch);
-        batch->colorState = vec4(1,1,1,0.3);
-        PushRect2(batch,
+        DrawDirectRect(batch, 
+                camera, 
+                spriteShader, 
                 vec2(camera->pos.x-camera->size.x/2.0, camera->pos.y-camera->size.y/2.0),
                 camera->size,
+                defaultAtlas->textureHandle,
                 squareRegion->pos,
-                squareRegion->size);
-        EndSpritebatch(batch);
+                squareRegion->size,
+                vec4(1,1,1,0.3));
 
         glDisable(GL_STENCIL_TEST);
 #endif
+
     }
     editor->hasLastBrushStroke = hasLastBrushStroke;
 
     Vec4 brushColor = GetBrushColor(editor);
     if(editor->drawBrushInScreenCenter)
     {
-        Push2DCircleColored(worldRenderGroup, camera->pos, editor->brushSize, brushColor, circleRegion);
+        Push2DCircleColored(worldRenderGroup, camera->pos, editor->brushSize, circleRegion, brushColor);
         editor->drawBrushInScreenCenter = 0;
     }
 
@@ -1050,17 +1057,15 @@ UpdateCreatureEditorScreen(AppState *appState,
         SDL_ShowCursor(SDL_DISABLE);
         if(editor->isErasing)
         {
-            /* TODO: IMplement!!!
-            batch->colorState = vec4(1.0, 1.0, 1.0, 1.0);
-            PushLineCircle2(batch, screenCamera->mousePos, brushSize, 2.0, 32, squareRegion);
-            */
+            Push2DLineCircleColored(screenRenderGroup, 
+                    screenCamera->mousePos, brushSize, 24, 2.0, squareRegion, vec4(1,1,1,0.5));
         }
         else
         {
-            Push2DCircleColored(worldRenderGroup, screenCamera->mousePos, brushSize+2, 
-                    vec4(0,0,0,0.5), circleRegion);
-            Push2DCircleColored(worldRenderGroup, screenCamera->mousePos, brushSize, 
-                    brushColor, circleRegion);
+            Push2DCircleColored(screenRenderGroup, screenCamera->mousePos, brushSize+2, 
+                    circleRegion, vec4(0,0,0,0.5));
+            Push2DCircleColored(screenRenderGroup, screenCamera->mousePos, brushSize, 
+                    circleRegion, brushColor);
         }
     }
     else 
@@ -1096,11 +1101,11 @@ UpdateCreatureEditorScreen(AppState *appState,
 
     if(info[0])
     {
-        Push2DTextColored(screenRenderGroup, fontRenderer, screenCamera->mousePos, vec4(1,1,1,1), info);
+        Push2DTextColored(screenRenderGroup, fontRenderer, screenCamera->mousePos, info, vec4(1,1,1,1));
     }
 
-    ExecuteRenderGroup(worldRenderGroup, assets, camera, spriteShader);
-    ExecuteRenderGroup(screenRenderGroup, assets, screenCamera, spriteShader);
+    ExecuteAndFlushRenderGroup(worldRenderGroup, assets, camera, spriteShader);
+    ExecuteAndFlushRenderGroup(screenRenderGroup, assets, screenCamera, spriteShader);
 
     GuiUpdate(editor->gui, screenCamera, camera);
 

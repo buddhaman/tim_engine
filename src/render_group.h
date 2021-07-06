@@ -9,6 +9,7 @@ enum RenderCommandType
     RENDER_2D_ORIENTED_RECT,
     RENDER_2D_LINE,
     RENDER_2D_SEMICIRCLE,
+    RENDER_2D_LINE_CIRCLE,
 };
 
 // For now explicitly create commands for geometric shapes.

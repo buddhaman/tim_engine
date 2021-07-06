@@ -65,6 +65,44 @@ InitFontRenderer(MemoryArena *arena,
     free(fontTextureImage);
 }
 
+FrameBuffer *
+CreateFrameBuffer(MemoryArena *arena, ui32 width, ui32 height)
+{
+    FrameBuffer *frameBuffer = PushStruct(arena, FrameBuffer);
+    frameBuffer->width = width;
+    frameBuffer->height = height;
+    glGenFramebuffers(1, &frameBuffer->fbo);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer->fbo);
+
+    glGenTextures(1, &frameBuffer->colorTexture);
+    glBindTexture(GL_TEXTURE_2D, frameBuffer->colorTexture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, 
+            GL_COLOR_ATTACHMENT0, 
+            GL_TEXTURE_2D, 
+            frameBuffer->colorTexture, 
+            0);
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE)
+    {
+        DebugOut("Framebuffer succesfully created!!!");
+    }
+    else
+    {
+        DebugOut("Framebuffer creation failed.");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return frameBuffer;
+}
+
 void
 InitSpriteBatch(SpriteBatch *batch, ui32 maxVertices, MemoryArena *arena)
 {
@@ -232,11 +270,17 @@ PushLineCircle2(SpriteBatch *batch,
     {
         PushIndex(batch, lastIdx+atPoint*2);
         PushIndex(batch, lastIdx+atPoint*2+1);
-        PushIndex(batch, lastIdx+atPoint*2+2);
-        PushIndex(batch, lastIdx+atPoint*2+2);
         PushIndex(batch, lastIdx+atPoint*2+3);
+        PushIndex(batch, lastIdx+atPoint*2+3);
+        PushIndex(batch, lastIdx+atPoint*2+2);
         PushIndex(batch, lastIdx+atPoint*2);
     }
+    PushIndex(batch, lastIdx+nPoints*2-2);
+    PushIndex(batch, lastIdx+nPoints*2-1);
+    PushIndex(batch, lastIdx+1);
+    PushIndex(batch, lastIdx+1);
+    PushIndex(batch, lastIdx);
+    PushIndex(batch, lastIdx+nPoints*2-2);
 }
 
 void
@@ -388,5 +432,43 @@ DrawString2D(SpriteBatch *batch, FontRenderer *fontRenderer, Vec2 pos, char *seq
                 vec2(q.s0, q.t1), vec2(q.s1-q.s0, q.t0-q.t1));
         sequence++;
     }
+}
+
+void
+SetupSpriteBatch(SpriteBatch *batch, Camera2D *camera, Shader *shader)
+{
+    glUseProgram(shader->program);
+    int matLocation = glGetUniformLocation(shader->program, "transform");
+    glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
+}
+
+internal inline void
+DrawDirectRect(SpriteBatch *batch, 
+        Camera2D *camera, 
+        Shader *shader, 
+        Vec2 pos, 
+        Vec2 dims, 
+        ui32 textureHandle, 
+        Vec2 uvPos, 
+        Vec2 uvDims,
+        Vec4 color)
+{
+    glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    BeginSpritebatch(batch);
+    SetupSpriteBatch(batch, camera, shader);
+    batch->colorState = color;
+    glBindTexture(GL_TEXTURE_2D, textureHandle);
+
+    PushRect2(batch,
+            pos,
+            dims,
+            uvPos,
+            uvDims);
+
+    EndSpritebatch(batch);
+
 }
 
