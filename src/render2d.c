@@ -83,6 +83,9 @@ CreateFrameBuffer(MemoryArena *arena, ui32 width, ui32 height)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
     glFramebufferTexture2D(GL_FRAMEBUFFER, 
             GL_COLOR_ATTACHMENT0, 
             GL_TEXTURE_2D, 
@@ -434,18 +437,9 @@ DrawString2D(SpriteBatch *batch, FontRenderer *fontRenderer, Vec2 pos, char *seq
     }
 }
 
-void
-SetupSpriteBatch(SpriteBatch *batch, Camera2D *camera, Shader *shader)
-{
-    glUseProgram(shader->program);
-    int matLocation = glGetUniformLocation(shader->program, "transform");
-    glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
-}
-
 internal inline void
 DrawDirectRect(SpriteBatch *batch, 
-        Camera2D *camera, 
-        Shader *shader, 
+        ShaderInstance *shaderInstance,
         Vec2 pos, 
         Vec2 dims, 
         ui32 textureHandle, 
@@ -458,7 +452,8 @@ DrawDirectRect(SpriteBatch *batch,
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     BeginSpritebatch(batch);
-    SetupSpriteBatch(batch, camera, shader);
+    BeginShaderInstance(shaderInstance);
+
     batch->colorState = color;
     glBindTexture(GL_TEXTURE_2D, textureHandle);
 

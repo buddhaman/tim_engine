@@ -82,8 +82,8 @@ UnloadShader(Shader *shader)
 void
 InitShaderInstance(ShaderInstance *instance, Shader *shader)
 {
+    *instance = (ShaderInstance){};
     instance->shader = shader;
-    instance->transformLocation = glGetUniformLocation(shader->program, "transform");
 }
 
 void 
@@ -92,13 +92,54 @@ InitSpriteShaderInstance(ShaderInstance *instance,
         Mat3 *transform)
 {
     InitShaderInstance(instance, shader);
-    instance->transform = transform;
+
+    instance->transformLocation = glGetUniformLocation(shader->program, "transform");
+    instance->hasMat3Transform = 1;
+    instance->mat3Transform = transform;
+}
+
+void
+InitBlurShader(ShaderInstance *instance, 
+        Shader *shader)
+{
+    InitShaderInstance(instance, shader);
+
+    instance->transformLocation = glGetUniformLocation(shader->program, "transform");
+    instance->hasMat3Transform = 1;
+
+    instance->radiusLocation = glGetUniformLocation(shader->program, "radius");
+    instance->hasRadius = 1;
+
+    instance->dir2Location = glGetUniformLocation(shader->program, "dir2");
+    instance->hasDir2 = 1;
 }
 
 void
 BeginShaderInstance(ShaderInstance *shaderInstance)
 {
     glUseProgram(shaderInstance->shader->program);
-    glUniformMatrix3fv(shaderInstance->transformLocation, 1, 0, (GLfloat *)shaderInstance->transform);
+
+    if(shaderInstance->hasMat3Transform)
+    {
+        Assert(shaderInstance->mat3Transform);
+        glUniformMatrix3fv(shaderInstance->transformLocation, 1, 0, (GLfloat *)shaderInstance->mat3Transform);
+    }
+
+    if(shaderInstance->hasMat4Transform)
+    {
+        Assert(shaderInstance->mat4Transform);
+        glUniformMatrix3fv(shaderInstance->transformLocation, 1, 0, (GLfloat *)shaderInstance->mat4Transform);
+    }
+
+    if(shaderInstance->hasRadius)
+    {
+        glUniform1f(shaderInstance->radiusLocation, shaderInstance->radius);
+    }
+
+    if(shaderInstance->hasDir2)
+    {
+        glUniform2f(shaderInstance->dir2Location, shaderInstance->dir2.x, shaderInstance->dir2.y);
+    }
+
 }
 

@@ -19,8 +19,6 @@ IMPORTANT FIRST:
 - Better asset loading.
 - Single atlas for entire ui. 
 - Render to framebuffer.
-- Gaussian blur.
-- Shadow in 2d (simple). Use gaussian blur on shadow.
 - OPTIONAL: save icons for creatures and select.
 - LATER: Replace entire ui with own ui.
 - LATER: abstract entre rendering out and make reusable. Make another simple game with engine.
@@ -50,10 +48,6 @@ LATER:
 - Improve gui library. Current solution is very ugly.
 - RenderGroup statistics. Debug window.
 
-NOW:
-
-- Two pass blur filter with bigger kernel.
-- Use right aspect ratio for shadows.
 
 BRAIN EDIT SCREEN:
 - Refactor edit code. Make multiple states, one for brain, one for body.
@@ -67,6 +61,10 @@ BRAIN EDIT SCREEN:
 
 DONE:
 
+- Gaussian blur.
+- Shadow in 2d (simple). Use gaussian blur on shadow.
+- Two pass blur filter with bigger kernel.
+- Use right aspect ratio for shadows.
 - Play with multiple shaders. Post process effects. Gaussian blur shadow.
 - Use rendergroups to draw shadow.
 - Implement render target (FBO).

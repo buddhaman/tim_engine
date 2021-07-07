@@ -223,7 +223,6 @@ UpdateFakeWorldScreen(AppState *appState,
     FontRenderer *fontRenderer = assets->fontRenderer;
     FakeWorld *world = screen->world;
     TextureAtlas *defaultAtlas = assets->defaultAtlas;
-    Shader *spriteShader = assets->spriteShader;
 
     char toolTip[512];
     memset(toolTip, 0, sizeof(toolTip));
@@ -291,9 +290,6 @@ UpdateFakeWorldScreen(AppState *appState,
 
     // Calculate bodypart intersection of first creature
     screen->hitBodyPart = GetCreatureBodyPartAt(world->creatures, mousePos);
-
-    int matLocation = glGetUniformLocation(spriteShader->program, "transform");
-    glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
 
     DrawFakeWorld(screen, worldRenderGroup, camera, defaultAtlas, assets->creatureTextureAtlas);
 
@@ -454,6 +450,7 @@ UpdateFakeWorldScreen(AppState *appState,
         }
     }
 
+    ShaderInstance *blurShaderInstance = assets->blurShaderInstance;
     Camera2D shadowCamera;
     Vec2 shadowOffset = vec2(-5, -5);
     shadowCamera.pos = v2_sub(camera->pos, shadowOffset);
@@ -461,28 +458,44 @@ UpdateFakeWorldScreen(AppState *appState,
     shadowCamera.isYUp = camera->isYUp;
     UpdateCamera2D(&shadowCamera, appState);
 
-    FrameBuffer *frameBuffer = screen->frameBuffer;
+    FrameBuffer *frameBuffer0 = screen->frameBuffer0;
+    FrameBuffer *frameBuffer1 = screen->frameBuffer1;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer->fbo);
-    glViewport(0, 0, frameBuffer->width, frameBuffer->height);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer0->fbo);
+    glViewport(0, 0, frameBuffer0->width, frameBuffer0->height);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-    renderTools->worldShader->transform = &shadowCamera.transform;
+    renderTools->worldShader->mat3Transform = &shadowCamera.transform;
     ExecuteRenderGroup(worldRenderGroup, assets, renderTools->worldShader);
-    renderTools->worldShader->transform = &camera->transform;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    renderTools->worldShader->mat3Transform = &camera->transform;
 
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer1->fbo);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    blurShaderInstance->mat3Transform = &camera->transform;
+    blurShaderInstance->dir2 = vec2(1.0/camera->size.x,0);
+    blurShaderInstance->radius = 1800;
+    DrawDirectRect(assets->batch,
+            blurShaderInstance,
+            vec2(camera->pos.x-camera->size.x/2, camera->pos.y-camera->size.y/2),
+            camera->size,
+            frameBuffer0->colorTexture,
+            vec2(0,1),
+            vec2(1,-1),
+            vec4(1, 1, 1, 0.4));
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, appState->screenWidth, appState->screenHeight);
 
+    blurShaderInstance->dir2 = vec2(0, 1.0/camera->size.y);
     DrawDirectRect(assets->batch,
-            screenCamera,
-            assets->blurShader,
-            vec2(0,0),
-            screenCamera->size,
-            frameBuffer->colorTexture,
-            vec2(0,0),
-            vec2(1,1),
-            vec4(0, 0, 0, 0.3));
+            blurShaderInstance,
+            vec2(camera->pos.x-camera->size.x/2, camera->pos.y-camera->size.y/2),
+            camera->size,
+            frameBuffer1->colorTexture,
+            vec2(0,1),
+            vec2(1,-1),
+            vec4(0, 0, 0, 1));
 
     ExecuteAndFlushRenderGroup(worldRenderGroup, assets, renderTools->worldShader);
     ExecuteAndFlushRenderGroup(screenRenderGroup, assets, renderTools->screenShader);
@@ -525,6 +538,9 @@ UpdateFakeWorldScreen(AppState *appState,
         NKEditFloatPropertyWithTooltip(ctx, "Learning Rate", "How fast will genes adapt", 
                 1.0, &learningRateScaled, parameterScale, 1.0, 1.0);
         world->strategies->learningRate = learningRateScaled/parameterScale;
+
+        NKEditFloatPropertyWithTooltip(ctx, "Blur Radius", "How fast will genes adapt", 
+                1.0, &assets->blurShaderInstance->radius, 100, 0.1, 0.1);
 
         if(nk_tree_push(ctx, NK_TREE_TAB, "Properties", NK_MINIMIZED))
         {
@@ -578,8 +594,9 @@ InitFakeWorldScreen(AppState *appState,
         r32 learningRate)
 {
     screen->renderTools = CreateBasicRenderTools(arena, appState, assets);
-    ui32 shadowResolution = 1024;
-    screen->frameBuffer = CreateFrameBuffer(arena, shadowResolution, shadowResolution);
+    ui32 shadowResolution = 512;
+    screen->frameBuffer0 = CreateFrameBuffer(arena, shadowResolution, shadowResolution);
+    screen->frameBuffer1 = CreateFrameBuffer(arena, shadowResolution, shadowResolution);
 
     screen->stepsPerFrame = 1;
     screen->generation = 0;

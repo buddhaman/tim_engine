@@ -704,7 +704,6 @@ UpdateCreatureEditorScreen(AppState *appState,
     FontRenderer *fontRenderer = assets->fontRenderer;
     TextureAtlas *defaultAtlas = assets->defaultAtlas;
     TextureAtlas *creatureAtlas = assets->creatureTextureAtlas;
-    Shader *spriteShader = assets->spriteShader;
     CreatureDefinition *def = editor->creatureDefinition;
 
     RenderGroup *worldRenderGroup = renderTools->worldRenderGroup;
@@ -1002,8 +1001,8 @@ UpdateCreatureEditorScreen(AppState *appState,
         glEnable(GL_STENCIL_TEST);
         SpriteBatch *batch = assets->batch;
         
-        SetupSpriteBatch(batch, camera, spriteShader);
         glBindTexture(GL_TEXTURE_2D, assets->defaultAtlas->textureHandle);
+        BeginShaderInstance(worldShader);
 
         BeginStencilShape();
 
@@ -1029,8 +1028,7 @@ UpdateCreatureEditorScreen(AppState *appState,
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 
         DrawDirectRect(batch, 
-                camera, 
-                spriteShader, 
+                worldShader,
                 vec2(camera->pos.x-camera->size.x/2.0, camera->pos.y-camera->size.y/2.0),
                 camera->size,
                 defaultAtlas->textureHandle,
@@ -1126,7 +1124,6 @@ UpdateCreatureEditorScreen(AppState *appState,
     {
         CameraStopDragging(camera);
     }
-
 
     // Begin UI
     if(nk_begin(ctx, "Editor", nk_rect(5, 5, 300, 600), 

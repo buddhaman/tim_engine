@@ -8,7 +8,8 @@ typedef struct
     MemoryArena *evolutionArena;
     BasicRenderTools *renderTools;
 
-    FrameBuffer *frameBuffer;
+    FrameBuffer *frameBuffer0;
+    FrameBuffer *frameBuffer1;
 
     b32 isPaused;
     ui32 stepsPerFrame;
