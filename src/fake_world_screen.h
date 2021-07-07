@@ -2,14 +2,12 @@
 #ifndef FAKE_WORLD_SCREEN_H
 #define FAKE_WORLD_SCREEN_H
 
-
 typedef struct
 {
     FakeWorld *world;
     MemoryArena *evolutionArena;
+    BasicRenderTools *renderTools;
 
-    RenderGroup *worldRenderGroup;
-    RenderGroup *screenRenderGroup;
     FrameBuffer *frameBuffer;
 
     b32 isPaused;
@@ -23,8 +21,6 @@ typedef struct
     r32 avgFitness;
     Vec2 target;
 
-    Camera2D *camera;
-    
     BodyPart *hitBodyPart;
     Creature *selectedCreature;
     BodyPart *selectedBodyPart;
@@ -35,6 +31,16 @@ typedef struct
     b32 isDragVisible;
 
 } FakeWorldScreen;
+
+void 
+InitFakeWorldScreen(AppState *appState, 
+        FakeWorldScreen *screen, 
+        MemoryArena *arena, 
+        Assets *assets,
+        CreatureDefinition *def,
+        ui32 nGenes,
+        r32 dev,
+        r32 learningRate);
 
 #endif
 

@@ -404,16 +404,17 @@ LoadCreatureDefinition(CreatureEditorScreen *editor,
 
 void 
 EditBodypartDefinition(CreatureEditorScreen *editor, 
-        Assets *assets, 
         BodyPartDefinition *part, 
         char *info)
 {
     Gui *gui = editor->gui;
+    BasicRenderTools *renderTools = editor->renderTools;
     CreatureDefinition *def = editor->creatureDefinition;
-    RenderGroup *renderGroup = editor->worldRenderGroup;
+    RenderGroup *renderGroup = renderTools->worldRenderGroup;
+    Assets *assets = renderTools->assets;
     //AtlasRegion *circleRegion = renderContext->defaultAtlas->regions+0;
     AtlasRegion *squareRegion = assets->defaultAtlas->regions+1;
-    Camera2D *camera = editor->camera;
+    Camera2D *camera = renderTools->camera;
     r32 lineWidth = 2.0*camera->scale;
     r32 buttonRadius = 10*camera->scale;
 
@@ -694,19 +695,22 @@ DrawBodyPartWithOverhang(SpriteBatch *batch,
 void
 UpdateCreatureEditorScreen(AppState *appState, 
         CreatureEditorScreen *editor, 
-        Assets *assets, 
         struct nk_context *ctx) 
 {
-    Camera2D *camera = editor->camera;
-    Camera2D *screenCamera = appState->screenCamera;    // Mildly confusing
+    BasicRenderTools *renderTools = editor->renderTools;
+    Camera2D *camera = renderTools->camera;
+    Camera2D *screenCamera = renderTools->screenCamera;
+    Assets *assets = renderTools->assets;
     FontRenderer *fontRenderer = assets->fontRenderer;
     TextureAtlas *defaultAtlas = assets->defaultAtlas;
     TextureAtlas *creatureAtlas = assets->creatureTextureAtlas;
     Shader *spriteShader = assets->spriteShader;
     CreatureDefinition *def = editor->creatureDefinition;
 
-    RenderGroup *worldRenderGroup = editor->worldRenderGroup;
-    RenderGroup *screenRenderGroup = editor->screenRenderGroup;
+    RenderGroup *worldRenderGroup = renderTools->worldRenderGroup;
+    RenderGroup *screenRenderGroup = renderTools->screenRenderGroup;
+    ShaderInstance *worldShader = renderTools->worldShader;
+    ShaderInstance *screenShader = renderTools->screenShader;
 
     AtlasRegion *circleRegion = defaultAtlas->regions+0;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
@@ -744,8 +748,6 @@ UpdateCreatureEditorScreen(AppState *appState,
             vec2(20, 20),
             circleRegion,
             vec4(1,1,1,0.1));
-
-    // TODO: Fix grid. DrawGrid(batch, camera, 50, 2.0, squareRegion);
 
     if(def->drawSolidColor)
     {
@@ -842,7 +844,7 @@ UpdateCreatureEditorScreen(AppState *appState,
     if(editor->selectedId && editor->editState!=EDIT_CREATURE_DRAW)
     {
         BodyPartDefinition *part = GetBodyPartById(def, editor->selectedId);
-        EditBodypartDefinition(editor, assets, part, info);
+        EditBodypartDefinition(editor, part, info);
     }
 
     if(editor->editState==EDIT_CREATURE_NONE)
@@ -1104,8 +1106,8 @@ UpdateCreatureEditorScreen(AppState *appState,
         Push2DTextColored(screenRenderGroup, fontRenderer, screenCamera->mousePos, info, vec4(1,1,1,1));
     }
 
-    ExecuteAndFlushRenderGroup(worldRenderGroup, assets, camera, spriteShader);
-    ExecuteAndFlushRenderGroup(screenRenderGroup, assets, screenCamera, spriteShader);
+    ExecuteAndFlushRenderGroup(worldRenderGroup, assets, worldShader);
+    ExecuteAndFlushRenderGroup(screenRenderGroup, assets, screenShader);
 
     GuiUpdate(editor->gui, screenCamera, camera);
 
@@ -1325,7 +1327,7 @@ UpdateCreatureEditorScreen(AppState *appState,
             }
             if(nk_button_label(ctx, "Start Simulation"))
             {
-                StartFakeWorld(appState, def, editor->nGenes, editor->deviation, editor->learningRate);
+                StartFakeWorld(appState, def, assets, editor->nGenes, editor->deviation, editor->learningRate);
             }
             nk_tree_pop(ctx);
         }
@@ -1425,22 +1427,16 @@ InitCreatureEditorScreen(AppState *appState,
         Assets *assets,
         MemoryArena *arena)
 {
-    editor->camera = PushStruct(arena, Camera2D);
-    InitCamera2D(editor->camera);
-    editor->camera->isYUp = 1;
-
+    editor->renderTools = CreateBasicRenderTools(arena, appState, assets);
     editor->creatureDefinition = PushStruct(arena, CreatureDefinition);
     *editor->creatureDefinition = (CreatureDefinition){};
     GenerateRandomName(editor->creatureDefinition->name, MAX_CREATURE_NAME_LENGTH);
 
-    editor->screenRenderGroup = PushStruct(arena, RenderGroup);
-    InitRenderGroup(arena, editor->screenRenderGroup, 1024);
-
-    editor->worldRenderGroup = PushStruct(arena, RenderGroup);
-    InitRenderGroup(arena, editor->worldRenderGroup, 1024);
-    
+    BasicRenderTools *renderTools = editor->renderTools;
     editor->gui = PushStruct(arena, Gui);
-    InitGui(editor->gui, arena, appState, editor->camera, assets);
+    InitGui(editor->gui, arena, appState, 
+            renderTools->camera, assets, renderTools->worldShader, 
+            renderTools->screenShader);
 
     editor->dimSnapResolution = 10;
     editor->isDimSnapEnabled = 1;

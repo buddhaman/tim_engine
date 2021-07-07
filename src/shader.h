@@ -10,3 +10,12 @@ typedef struct
     char *vertexSource;
 } Shader;
 
+typedef struct
+{
+    Shader *shader;
+
+    ui32 transformLocation;
+    Mat3 *transform;
+
+} ShaderInstance;
+

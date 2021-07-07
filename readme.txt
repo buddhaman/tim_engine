@@ -15,7 +15,6 @@ Nice: Do competition. 150 dollars for best creature.
 Decide what to do next:
 
 IMPORTANT FIRST:
-- Rendergroups. Abstract rendering a bit. Should make things easier for the future. Collect rendercommands.
 - Use rendergroups in personal ui library.
 - Better asset loading.
 - Single atlas for entire ui. 
@@ -48,15 +47,13 @@ LATER:
 - 2D lighting.
 - Training mode: Get body close to ball. Implement with tournaments just like football simulation.
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
+- Improve gui library. Current solution is very ugly.
+- RenderGroup statistics. Debug window.
 
 NOW:
-- LineRectangle rendering.
-- SemiCircle rendering.
-- Line semicircle rendering.
-- Reimplement Clipping.
-- RenderGroup in simulation screen
-- Implement render target (FBO).
-- Use rendergroups to draw shadow.
+
+- Two pass blur filter with bigger kernel.
+- Use right aspect ratio for shadows.
 
 BRAIN EDIT SCREEN:
 - Refactor edit code. Make multiple states, one for brain, one for body.
@@ -70,6 +67,15 @@ BRAIN EDIT SCREEN:
 
 DONE:
 
+- Play with multiple shaders. Post process effects. Gaussian blur shadow.
+- Use rendergroups to draw shadow.
+- Implement render target (FBO).
+- RenderGroup in simulation screen
+- Reimplement stencil buffers.
+- Rendergroups. Abstract rendering a bit. Should make things easier for the future. Collect rendercommands.
+- Line semicircle rendering.
+- LineRectangle rendering.
+- SemiCircle rendering.
 - Create assets. remove rendercontext.
 - Training mode: Walk with gravity.
 - Add walking scenario.
@@ -309,7 +315,8 @@ FUN:
     Also make a competition and give a reward of 150 dollars to someone who makes the
     most creative creature.
 
-    IDEA: Export creature texture as image. Tag bodyparts (manualy in editor). put your own body on it in gimp.
+    IDEA: Export creature texture as image. Tag bodyparts (manualy in editor).
+          put your own body on it in gimp. (Done)
     IDEA: @ Lex Fridman in mijn volgende tweets. En @openai over hun ES paper. Denk groots
     IDEA: Schrijf website waar gedeeltes van ecosystemen gedownload kunnen worden. Animeer creatures in javascript.
  

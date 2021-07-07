@@ -98,6 +98,7 @@ TimLoadImage(char *path)
 #include "evolution_strategies.h"
 #include "world.h"
 #include "camera.h"
+#include "basic_render_tools.h"
 #include "app_state.h"
 #include "tim_ui.h"
 #include "serialize.h"
@@ -121,6 +122,7 @@ TimLoadImage(char *path)
 #include "creature.c"
 #include "app_state.c"
 #include "camera.c"
+#include "basic_render_tools.c"
 #include "tim_ui.c"
 #include "serialize.c"
 #include "fake_world_screen.c"
@@ -362,12 +364,12 @@ main(int argc, char**argv)
 
         case SCREEN_FAKE_WORLD:
         {
-            UpdateFakeWorldScreen(appState, appState->fakeWorldScreen, assets, ctx);
+            UpdateFakeWorldScreen(appState, appState->fakeWorldScreen, ctx);
         } break;
 
         case SCREEN_CREATURE_EDITOR:
         {
-            UpdateCreatureEditorScreen(appState, creatureEditorScreen, assets, ctx);
+            UpdateCreatureEditorScreen(appState, creatureEditorScreen, ctx);
         } break;
 
         }

@@ -9,11 +9,11 @@ InitAssets(Assets *assets, MemoryArena *arena)
     assets->creatureTextureAtlas = MakeRandomTextureAtlas(arena);
 
     assets->spriteShader = PushStruct(arena, Shader);
-    InitShader(assets->spriteShader, "assets/shaders/sprite.vert", "assets/shaders/sprite.frag");
+    InitShader(arena, assets->spriteShader, "assets/shaders/sprite.vert", "assets/shaders/sprite.frag");
     LoadShader(assets->spriteShader);
 
     assets->blurShader = PushStruct(arena, Shader);
-    InitShader(assets->blurShader, "assets/shaders/sprite.vert", "assets/shaders/blur.frag");
+    InitShader(arena, assets->blurShader, "assets/shaders/sprite.vert", "assets/shaders/blur.frag");
     LoadShader(assets->blurShader);
 
     assets->fontRenderer = PushStruct(arena, FontRenderer);

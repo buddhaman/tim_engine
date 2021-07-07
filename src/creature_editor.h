@@ -21,10 +21,7 @@ typedef enum
 typedef struct
 {
     CreatureDefinition *creatureDefinition;
-    Camera2D *camera;
-
-    RenderGroup *screenRenderGroup;
-    RenderGroup *worldRenderGroup;
+    BasicRenderTools *renderTools;
 
     Gui *gui;
     b32 isInputCaptured;

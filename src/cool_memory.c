@@ -45,6 +45,15 @@ PushAndZeroMemory_(MemoryArena *arena, size_t size)
     (type *)PushAndZeroMemory_(arena, sizeof(type)*nElements); \
     //DebugOut(""#type" : %p", (void*)(arena->base+arena->used))
 
+internal inline char *
+PushString(MemoryArena *arena, const char *string)
+{
+    size_t len = strlen(string);
+    char *stringMemory = PushArray(arena, char, len+1);
+    strcpy(stringMemory, string);
+    return stringMemory;
+}
+
 MemoryArena *
 CreateSubArena(MemoryArena *parent, size_t sizeInBytes)
 {

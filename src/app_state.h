@@ -24,9 +24,10 @@ typedef enum
     SCREEN_FAKE_WORLD
 } ScreenType;
 
+typedef struct AppState AppState;
+
 #include "fake_world_screen.h"
 
-typedef struct AppState AppState;
 struct AppState
 {
     MemoryArena *fakeWorldArena;
@@ -49,15 +50,11 @@ struct AppState
     b32 wasActionDown[NUM_KEY_ACTIONS];
 };
 
-void 
-InitFakeWorldScreen(AppState *appState, 
-        FakeWorldScreen *screen, 
-        MemoryArena *arena, 
-        CreatureDefinition *def,
-        ui32 nGenes,
-        r32 dev,
-        r32 learningRate);
-
 void
-StartFakeWorld(AppState *appState, CreatureDefinition *definition, ui32 nGenes, r32 dev, r32 learningRate);
+StartFakeWorld(AppState *appState, 
+        CreatureDefinition *definition, 
+        Assets *assets, 
+        ui32 nGenes, 
+        r32 dev, 
+        r32 learningRate);
 

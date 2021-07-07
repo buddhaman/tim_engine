@@ -239,9 +239,9 @@ GuiUpdate(Gui *gui, Camera2D *screenCamera, Camera2D *worldCamera)
         }
     }
     ExecuteAndFlushRenderGroup(gui->worldRenderGroup, 
-            gui->assets, worldCamera, gui->assets->spriteShader);
+            gui->assets, gui->worldShader);
     ExecuteAndFlushRenderGroup(gui->screenRenderGroup, 
-            gui->assets, screenCamera, gui->assets->spriteShader);
+            gui->assets, gui->screenShader);
 }
 
 void
@@ -249,11 +249,15 @@ InitGui(Gui *gui,
         MemoryArena *arena,
         AppState *appState, 
         Camera2D *camera,
-        Assets *assets)
+        Assets *assets,
+        ShaderInstance *worldShader,
+        ShaderInstance *screenShader)
 {
     gui->appState = appState;
     gui->camera = camera;
     gui->assets = assets;
+    gui->worldShader = worldShader;
+    gui->screenShader = screenShader;
     gui->defaultColor = vec4(0.6, 0.3, 0.3, 1.0);
     gui->hitColor = vec4(0.8, 0.5, 0.5, 1.0);
     gui->pressedColor = vec4(0.4, 0.2, 0.2, 1.0);

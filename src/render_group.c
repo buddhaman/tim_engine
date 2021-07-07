@@ -6,17 +6,14 @@ FlushRenderGroup(RenderGroup *renderGroup)
 }
 
 void 
-ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, Camera2D *camera, Shader *shader)
+ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *shaderInstance)
 {
-    glUseProgram(shader->program);
 
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // TODO: Better way to implement uniform location lookup with shaders.
-    int matLocation = glGetUniformLocation(shader->program, "transform");
-    glUniformMatrix3fv(matLocation, 1, 0, (GLfloat *)&camera->transform);
+    BeginShaderInstance(shaderInstance);
 
     SpriteBatch *batch = assets->batch;
     BeginSpritebatch(batch);
@@ -116,9 +113,9 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, Camera2D *camera, S
 }
 
 void 
-ExecuteAndFlushRenderGroup(RenderGroup *renderGroup, Assets *assets, Camera2D *camera, Shader *shader)
+ExecuteAndFlushRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *shaderInstance)
 {
-    ExecuteRenderGroup(renderGroup, assets, camera, shader);
+    ExecuteRenderGroup(renderGroup, assets, shaderInstance);
     FlushRenderGroup(renderGroup);
 }
 

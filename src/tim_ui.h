@@ -12,8 +12,10 @@ typedef struct
     // TODO: Clean all this. This is messy.
     Camera2D *camera;
     Assets *assets;
-    RenderGroup *screenRenderGroup;
     RenderGroup *worldRenderGroup;
+    RenderGroup *screenRenderGroup;
+    ShaderInstance *worldShader;
+    ShaderInstance *screenShader;
 
     Vec4 defaultColor;
     Vec4 hitColor;

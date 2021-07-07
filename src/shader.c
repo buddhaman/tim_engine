@@ -51,14 +51,11 @@ CreateAndLinkShaderProgram(ui32 vertexShader, ui32 fragmentShader)
     return shaderProgram;
 }
 
-//TODO: store in own memory
 void
-InitShader(Shader *shader, const char *vertexPath, const char *fragmentPath)
+InitShader(MemoryArena *arena, Shader *shader, const char *vertexPath, const char *fragmentPath)
 {
-    shader->fragmentSourcePath = malloc(sizeof(char)*(strlen(fragmentPath)+1));
-    shader->vertexSourcePath = malloc(sizeof(char)*(strlen(vertexPath)+1));
-    strcpy(shader->fragmentSourcePath, fragmentPath);
-    strcpy(shader->vertexSourcePath, vertexPath);
+    shader->fragmentSourcePath = PushString(arena, fragmentPath);
+    shader->vertexSourcePath = PushString(arena, vertexPath);
 }
 
 void
@@ -80,5 +77,28 @@ UnloadShader(Shader *shader)
     glDeleteProgram(shader->program);
     free(shader->fragmentSource);
     free(shader->vertexSource);
+}
+
+void
+InitShaderInstance(ShaderInstance *instance, Shader *shader)
+{
+    instance->shader = shader;
+    instance->transformLocation = glGetUniformLocation(shader->program, "transform");
+}
+
+void 
+InitSpriteShaderInstance(ShaderInstance *instance,
+        Shader *shader,
+        Mat3 *transform)
+{
+    InitShaderInstance(instance, shader);
+    instance->transform = transform;
+}
+
+void
+BeginShaderInstance(ShaderInstance *shaderInstance)
+{
+    glUseProgram(shaderInstance->shader->program);
+    glUniformMatrix3fv(shaderInstance->transformLocation, 1, 0, (GLfloat *)shaderInstance->transform);
 }
 

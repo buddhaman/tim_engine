@@ -210,14 +210,15 @@ DrawFakeWorld(FakeWorldScreen *screen,
 void
 UpdateFakeWorldScreen(AppState *appState, 
         FakeWorldScreen *screen, 
-        Assets *assets, 
         struct nk_context *ctx) 
 {
-    Camera2D *camera = screen->camera;
-    Camera2D *screenCamera = appState->screenCamera;    // Mildly confusing
+    BasicRenderTools *renderTools = screen->renderTools;
+    Camera2D *camera = renderTools->camera;
+    Camera2D *screenCamera = renderTools->screenCamera;
+    Assets *assets = renderTools->assets;
 
-    RenderGroup *worldRenderGroup = screen->worldRenderGroup;
-    RenderGroup *screenRenderGroup = screen->screenRenderGroup;
+    RenderGroup *worldRenderGroup = renderTools->worldRenderGroup;
+    RenderGroup *screenRenderGroup = renderTools->screenRenderGroup;
 
     FontRenderer *fontRenderer = assets->fontRenderer;
     FakeWorld *world = screen->world;
@@ -228,8 +229,8 @@ UpdateFakeWorldScreen(AppState *appState,
     memset(toolTip, 0, sizeof(toolTip));
     (void)toolTip;
 
-    AtlasRegion *circleRegion = defaultAtlas->regions;
-    AtlasRegion *squareRegion = defaultAtlas->regions+1;
+    AtlasRegion *circleRegion = assets->defaultAtlas->regions;
+    AtlasRegion *squareRegion = assets->defaultAtlas->regions+1;
 
     screen->isInputCaptured = nk_window_is_any_hovered(ctx);
 
@@ -454,7 +455,7 @@ UpdateFakeWorldScreen(AppState *appState,
     }
 
     Camera2D shadowCamera;
-    Vec2 shadowOffset = vec2(-10, -10);
+    Vec2 shadowOffset = vec2(-5, -5);
     shadowCamera.pos = v2_sub(camera->pos, shadowOffset);
     shadowCamera.scale = camera->scale;
     shadowCamera.isYUp = camera->isYUp;
@@ -466,7 +467,9 @@ UpdateFakeWorldScreen(AppState *appState,
     glViewport(0, 0, frameBuffer->width, frameBuffer->height);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-    ExecuteRenderGroup(worldRenderGroup, assets, &shadowCamera, spriteShader);
+    renderTools->worldShader->transform = &shadowCamera.transform;
+    ExecuteRenderGroup(worldRenderGroup, assets, renderTools->worldShader);
+    renderTools->worldShader->transform = &camera->transform;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glViewport(0, 0, appState->screenWidth, appState->screenHeight);
@@ -481,8 +484,8 @@ UpdateFakeWorldScreen(AppState *appState,
             vec2(1,1),
             vec4(0, 0, 0, 0.3));
 
-    ExecuteAndFlushRenderGroup(worldRenderGroup, assets, camera, spriteShader);
-    ExecuteAndFlushRenderGroup(screenRenderGroup, assets, screenCamera, spriteShader);
+    ExecuteAndFlushRenderGroup(worldRenderGroup, assets, renderTools->worldShader);
+    ExecuteAndFlushRenderGroup(screenRenderGroup, assets, renderTools->screenShader);
 
     // Begin UI
     if(nk_begin(ctx, "Simulation", nk_rect(50, 50, 280, 400),
@@ -568,17 +571,13 @@ void
 InitFakeWorldScreen(AppState *appState, 
         FakeWorldScreen *screen, 
         MemoryArena *arena, 
+        Assets *assets,
         CreatureDefinition *def,
         ui32 nGenes,
         r32 dev,
         r32 learningRate)
 {
-    screen->worldRenderGroup = PushStruct(arena, RenderGroup);
-
-    InitRenderGroup(arena, screen->worldRenderGroup, 1024);
-    screen->screenRenderGroup = PushStruct(arena, RenderGroup);
-    InitRenderGroup(arena, screen->screenRenderGroup, 4096);
-
+    screen->renderTools = CreateBasicRenderTools(arena, appState, assets);
     ui32 shadowResolution = 1024;
     screen->frameBuffer = CreateFrameBuffer(arena, shadowResolution, shadowResolution);
 
@@ -591,12 +590,6 @@ InitFakeWorldScreen(AppState *appState,
     // Settings
     screen->isPopulationVisible = 0;
     screen->isDragVisible = 0;
-
-    // Camera
-    screen->camera = PushStruct(arena, Camera2D);
-    InitCamera2D(screen->camera);
-    screen->camera->isYUp = 1;
-    screen->camera->scale = 1.0;
 
     // Init fake world
     screen->world = PushStruct(arena, FakeWorld);
