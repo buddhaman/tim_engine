@@ -11,6 +11,12 @@ typedef struct
 {
     Vec2 pos;
     Vec2 dims;
+} Rect2;
+
+typedef struct
+{
+    Vec2 pos;
+    Vec2 dims;
     r32 angle;
 } OrientedBox;
 

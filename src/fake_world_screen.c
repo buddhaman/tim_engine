@@ -245,7 +245,9 @@ UpdateFakeWorldScreen(AppState *appState,
 
     if(!screen->isInputCaptured)
     {
-        UpdateCameraInput(appState, camera);
+        UpdateCameraDragInput(appState, camera);
+        UpdateCameraScrollInput(appState, camera);
+        UpdateCameraKeyMovementInput(appState, camera);
     }
 
     if(!IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT))
@@ -472,8 +474,10 @@ UpdateFakeWorldScreen(AppState *appState,
     glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer1->fbo);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    r32 invScreenX = 1.0/camera->size.x;
+    r32 invScreenY = 1.0/camera->size.y;
     blurShaderInstance->mat3Transform = &camera->transform;
-    blurShaderInstance->dir2 = vec2(1.0/camera->size.x,0);
+    blurShaderInstance->dir2 = vec2(invScreenX, invScreenY);
     blurShaderInstance->radius = 1800;
     DrawDirectRect(assets->batch,
             blurShaderInstance,
@@ -482,12 +486,12 @@ UpdateFakeWorldScreen(AppState *appState,
             frameBuffer0->colorTexture,
             vec2(0,1),
             vec2(1,-1),
-            vec4(1, 1, 1, 0.4));
+            vec4(1, 1, 1, 1.0));
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, appState->screenWidth, appState->screenHeight);
 
-    blurShaderInstance->dir2 = vec2(0, 1.0/camera->size.y);
+    blurShaderInstance->dir2 = vec2(-invScreenY, invScreenX);
     DrawDirectRect(assets->batch,
             blurShaderInstance,
             vec2(camera->pos.x-camera->size.x/2, camera->pos.y-camera->size.y/2),
@@ -495,7 +499,7 @@ UpdateFakeWorldScreen(AppState *appState,
             frameBuffer1->colorTexture,
             vec2(0,1),
             vec2(1,-1),
-            vec4(0, 0, 0, 1));
+            vec4(0, 0, 0, 0.4));
 
     ExecuteAndFlushRenderGroup(worldRenderGroup, assets, renderTools->worldShader);
     ExecuteAndFlushRenderGroup(screenRenderGroup, assets, renderTools->screenShader);
@@ -538,9 +542,6 @@ UpdateFakeWorldScreen(AppState *appState,
         NKEditFloatPropertyWithTooltip(ctx, "Learning Rate", "How fast will genes adapt", 
                 1.0, &learningRateScaled, parameterScale, 1.0, 1.0);
         world->strategies->learningRate = learningRateScaled/parameterScale;
-
-        NKEditFloatPropertyWithTooltip(ctx, "Blur Radius", "How fast will genes adapt", 
-                1.0, &assets->blurShaderInstance->radius, 100, 0.1, 0.1);
 
         if(nk_tree_push(ctx, NK_TREE_TAB, "Properties", NK_MINIMIZED))
         {

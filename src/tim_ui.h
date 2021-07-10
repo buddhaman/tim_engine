@@ -1,21 +1,19 @@
 
-typedef struct
-{
-    char *text;
-    Vec2 pos;
-    Vec4 color;
-} GuiLabel;
+typedef ui32 GuiId;
 
 typedef struct
 {
     AppState *appState;
-    // TODO: Clean all this. This is messy.
-    Camera2D *camera;
-    Assets *assets;
-    RenderGroup *worldRenderGroup;
-    RenderGroup *screenRenderGroup;
-    ShaderInstance *worldShader;
-    ShaderInstance *screenShader;
+    BasicRenderTools *renderTools;
+
+    b32 isMouseDown;
+    b32 isMouseJustReleased;
+
+    GuiId active;
+    GuiId prevActive;
+    GuiId hot;
+    GuiId prevHot;
+    GuiId nWidgetsInCurrentContext;
 
     Vec4 defaultColor;
     Vec4 hitColor;
@@ -24,13 +22,6 @@ typedef struct
     b32 isRadialMenuActive;
     Vec2 radialMenuPos;
     r32 radialTimer;
-    
-    char *labelBuffer;
-    size_t labelBufferSize;
-    size_t maxLabelBufferSize;
-
-    ui32 nLabels;
-    ui32 maxLabels;
-    GuiLabel *labels;
 } Gui;
+
 

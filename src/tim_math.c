@@ -47,6 +47,14 @@ GetZIntersection(Vec3 rayPos, Vec3 rayDir, r32 z)
 }
 
 internal inline b32
+BoxPoint2Intersect(Vec2 pos, Vec2 dims, Vec2 point)
+{
+    r32 xDiff = point.x-pos.x-dims.x/2;
+    r32 yDiff = point.y-pos.y-dims.y/2;
+    return (fabsf(xDiff) < dims.x/2 && fabsf(yDiff) < dims.y/2);
+}
+
+internal inline b32
 OrientedBoxPoint2Intersect(Vec2 pos, Vec2 dims, r32 angle, Vec2 point)
 {
     // Project onto axes see if dot < dims

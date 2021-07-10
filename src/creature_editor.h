@@ -1,13 +1,14 @@
 
 typedef enum
 {
+    EDIT_PHASE_BODY,
+    EDIT_PHASE_BRAIN,
+} EditPhase;
+
+typedef enum
+{
     EDIT_CREATURE_NONE,
-    EDIT_CREATURE_WIDTH,
-    EDIT_CREATURE_HEIGHT,
-    EDIT_CREATURE_ROTATION,
-    EDIT_CREATURE_ROTATION_AND_LENGTH,
-    EDIT_CREATURE_MIN_ANGLE,
-    EDIT_CREATURE_MAX_ANGLE,
+    EDIT_CREATURE_BODYPART,
     EDIT_ADD_BODYPART_PLACE,
     EDIT_CREATURE_DRAW,
 } EditCreatureState;
@@ -22,6 +23,8 @@ typedef struct
 {
     CreatureDefinition *creatureDefinition;
     BasicRenderTools *renderTools;
+
+    EditPhase editPhase;
 
     Gui *gui;
     b32 isInputCaptured;
@@ -57,6 +60,7 @@ typedef struct
     b32 isBrushColorPickerVisible;
 
     b32 canMoveCameraWithMouse;
+    b32 canScrollCameraWithMouse;
 
     b32 isErasing;
     r32 brushSize;

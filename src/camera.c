@@ -41,7 +41,7 @@ CameraToScreenPos(Camera2D *camera, AppState *appState, Vec2 pos)
 }
 
 void
-UpdateCameraInput(AppState *appState, Camera2D *camera)
+UpdateCameraKeyMovementInput(AppState *appState, Camera2D *camera)
 {
     r32 zoomSpeed = 0.98;
     r32 camSpeed = 8.0 * camera->scale;
@@ -51,11 +51,21 @@ UpdateCameraInput(AppState *appState, Camera2D *camera)
     if(IsKeyActionDown(appState, ACTION_DOWN)) { camera->pos.y-=camSpeed; }
     if(IsKeyActionDown(appState, ACTION_LEFT)) { camera->pos.x-=camSpeed; }
     if(IsKeyActionDown(appState, ACTION_RIGHT)) { camera->pos.x+=camSpeed; }
+}
+
+void
+UpdateCameraScrollInput(AppState *appState, Camera2D *camera)
+{
     if(appState->mouseScrollY)
     {
         r32 zoomFactor = pow(0.9, appState->mouseScrollY);
         camera->scale*=zoomFactor;
     }
+}
+
+void
+UpdateCameraDragInput(AppState *appState, Camera2D *camera)
+{
     if(camera->isDragging)
     {
         camera->pos.x-=appState->dx*camera->scale;
@@ -72,5 +82,4 @@ CameraStopDragging(Camera2D *camera)
 {
     camera->isDragging = 0;
 }
-
 

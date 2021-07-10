@@ -107,6 +107,7 @@ TimLoadImage(char *path)
 
 #include "cool_memory.c"
 #include "tim_math.c"
+#include "nuklear_wrappers.c"
 #include "linalg.c"
 #include "shader.c"
 #include "neural_net.c"

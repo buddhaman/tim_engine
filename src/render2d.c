@@ -398,12 +398,12 @@ EndStencilShape()
     glStencilMask(0x00);
 }
 
-Vec2
-GetStringSize(FontRenderer *fontRenderer, char *sequence)
+Rect2
+GetStringSize(FontRenderer *fontRenderer, char *sequence, Vec2 pos)
 {
     stbtt_aligned_quad q;
-    r32 x = 0.0;
-    r32 y = 0.0;
+    r32 x = pos.x;
+    r32 y = pos.y;
     r32 minY = 10000.0;
     r32 maxY = -10000.0;
     ui32 w = fontRenderer->atlas->width;
@@ -416,7 +416,7 @@ GetStringSize(FontRenderer *fontRenderer, char *sequence)
         maxY = Max(maxY, q.y1);
         sequence++;
     }
-    return vec2(x, maxY-minY);
+    return (Rect2){vec2(pos.x, minY), vec2(x-pos.x, maxY-minY)};
 }
 
 void

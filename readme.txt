@@ -15,22 +15,35 @@ Nice: Do competition. 150 dollars for best creature.
 Decide what to do next:
 
 IMPORTANT FIRST:
-- Use rendergroups in personal ui library.
-- Better asset loading.
-- Single atlas for entire ui. 
-- Render to framebuffer.
+- Write juicy button.
 - OPTIONAL: save icons for creatures and select.
 - LATER: Replace entire ui with own ui.
 - LATER: abstract entre rendering out and make reusable. Make another simple game with engine.
 
-- Fancy rendering with shadows.
+- Fancy rendering with shadows. Directional shadow casting.
 - Fancy rendering with normal/specular mapping. Generate 3d textures.
 - More training scenarios: Walking upright with gravity. (Hard)
 - Save brain results: requires some designing.
 - Create world where creatures can interact with eachother. Work towards ecosystem.
 - Store multiple brains in a creature.
 - Design the entire look and feel. Create your own ui library for smooth juicy ui.
-- Multithreading for training.
+- Multithreading for training. (Might require own physics engine).
+- Inputs in new screen: add orientation as normalized vector.
+
+NOW:
+
+- Make multiple edit steps: 
+1 ) Body editor + drawing.
+2 ) Brain editor. 
+
+Make both juicy: 
+- For body editor: Make creature feel alive. Move limbs after editing a la Spore.
+- For brain editor: Show brain with connections. Use springs.
+- Start adding sound!. Growing sound after attaching limbs. Sound when hitting the floor. Pop sound when attaching or removing limbs.
+- Particle system. Add particles when attaching/removing limbs.
+
+TODO:
+- Requires refactoring entire editor. Lots of work. 
 
 LATER: 
 
@@ -48,7 +61,6 @@ LATER:
 - Improve gui library. Current solution is very ugly.
 - RenderGroup statistics. Debug window.
 
-
 BRAIN EDIT SCREEN:
 - Refactor edit code. Make multiple states, one for brain, one for body.
 - Make buttons inside creature 
@@ -61,6 +73,10 @@ BRAIN EDIT SCREEN:
 
 DONE:
 
+- Use rendergroups in personal ui library.
+- Write basic button.
+- Render to framebuffer.
+- Better asset loading.
 - Gaussian blur.
 - Shadow in 2d (simple). Use gaussian blur on shadow.
 - Two pass blur filter with bigger kernel.
