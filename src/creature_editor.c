@@ -727,6 +727,34 @@ DrawBodyPartWithOverhang(SpriteBatch *batch,
 }
 
 void
+EditorDoGui(AppState *appState, CreatureEditorScreen *editor)
+{
+    EditorDefaultParameters(editor);
+    Gui *gui = editor->gui;
+
+    r32 screenWidth = appState->screenWidth;
+    Vec2 buttonDims = vec2(180, 40);
+    ui32 nButtons = 2;
+
+    r32 atX = screenWidth/2.0-buttonDims.x*nButtons/2.0;
+    r32 atY = 0.0;
+    GuiBeginContext(gui, "top bar");
+    if(DoTabBarRadioButton(gui, "Edit Body", vec2(atX, atY), buttonDims, 
+                editor->editPhase==EDIT_PHASE_BODY))
+    {
+        editor->editPhase = EDIT_PHASE_BODY;
+    }
+    atX+=buttonDims.x;
+    if(DoTabBarRadioButton(gui, "Edit Brain", vec2(atX, atY), buttonDims,
+                editor->editPhase==EDIT_PHASE_BRAIN))
+    {
+        editor->editPhase = EDIT_PHASE_BRAIN;
+    }
+    DoLabelButton(gui, "lsk fljs" , vec2(100, 100), vec2(100, 200));
+    GuiEndContext(gui);
+}
+
+void
 UpdateCreatureEditorScreen(AppState *appState, 
         CreatureEditorScreen *editor, 
         struct nk_context *ctx) 
@@ -760,14 +788,6 @@ UpdateCreatureEditorScreen(AppState *appState,
         editor->editState = EDIT_CREATURE_NONE;
     }
 
-    if(DoLabelButton(editor->gui, "eyooo", vec2(300, 300)))
-    {
-        DebugOut("hellooooo");
-    }
-    DoLabelButton(editor->gui, "e2ooo", vec2(380, 380));
-    DoLabelButton(editor->gui, "eyo2o", vec2(380, 300));
-    DoLabelButton(editor->gui, "eyo2o thims", vec2(0,0));
-    
     if(EditorIsJustReleased(appState, editor, ACTION_DELETE))
     {
         if(editor->selectedId > 1)
@@ -775,6 +795,8 @@ UpdateCreatureEditorScreen(AppState *appState,
             EditorRemoveBodyPart(editor, editor->selectedId);
         }
     }
+
+    EditorDoGui(appState, editor);
 
     UpdateCamera2D(camera, appState);
     Vec2 mousePos = camera->mousePos;

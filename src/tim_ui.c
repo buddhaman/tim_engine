@@ -8,10 +8,12 @@
     AtlasRegion *squareRegion = assets->defaultAtlas->regions+1;(void)squareRegion;\
     FontRenderer *fontRenderer = assets->fontRenderer;(void)fontRenderer;
 
+global_variable ui32 default_hash_seed = 5381;
+
 internal inline GuiId
-GuiHash(const ui8 *input, ui32 lengthInBytes)
+GuiHash(const ui8 *input, ui32 lengthInBytes, ui32 seed)
 {
-    ui32 hash = 5381;
+    ui32 hash = seed;
     ui32 c;
     for(ui32 i = 0; i < lengthInBytes; i++)
     {
@@ -22,36 +24,56 @@ GuiHash(const ui8 *input, ui32 lengthInBytes)
 }
 
 internal inline GuiId
-GuiHashCString(char *string)
+GuiHashCString(char *string, ui32 seed)
 {
     ui32 length = (ui32)strlen(string);
-    return GuiHash((ui8*)string, length);
+    return GuiHash((ui8*)string, length, seed);
 }
 
 internal inline GuiId
 GuiHashI32(i32 value)
 {
-    return GuiHash((ui8*)&value, 4);
+    return GuiHash((ui8*)&value, 4, default_hash_seed);
 }
 
 internal inline GuiId
 GuiHashTupleI32(i32 value1, i32 value2)
 {
     i32 values[2] = {value1, value2};
-    return GuiHash((ui8 *)values, 8);
+    return GuiHash((ui8 *)values, 8, default_hash_seed);
 }
 
 internal inline GuiId
 GuiHashPointer(void *pointer)
 {
-    return GuiHash((ui8 *)&pointer, sizeof(void*));
+    return GuiHash((ui8 *)&pointer, sizeof(void*), default_hash_seed);
+}
+
+internal inline GuiId
+GuiGetCurrentContextId(Gui *gui)
+{
+    if(gui->contextStackDepth)
+    {
+        return gui->contextStack[gui->contextStackDepth-1];
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 internal inline GuiId
 GuiGetNameHash(Gui *gui, char *name)
 {
-    // TODO: Use current context in hash to ensure uniequeness.
-    return GuiHashCString(name);
+    GuiId currentContextId = GuiGetCurrentContextId(gui);
+    if(currentContextId)
+    {
+        return GuiHashCString(name, currentContextId);
+    }
+    else
+    {
+        return GuiHashCString(name, default_hash_seed);
+    }
 }
 
 b32
@@ -130,27 +152,133 @@ DoCircularButtonOnPress(Gui *gui, GuiId id, Vec2 pos, r32 screenRadius)
     return hit & IsKeyActionDown(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
 }
 
+void
+GuiEndContext(Gui *gui)
+{
+    Assert(gui->contextStackDepth > 0);
+    gui->contextStackDepth--;
+}
+
+void
+GuiBeginContext(Gui *gui, char *name)
+{
+    Assert(gui->contextStackDepth < MAX_CONTEXT_STACK_SIZE);
+    GuiId contextId = GuiGetNameHash(gui, name);
+    gui->contextStack[gui->contextStackDepth++] = contextId;
+}
+
+void
+GetLabelLayout(Gui *gui, 
+        char *text, Vec2 pos, 
+        r32 minWidth, 
+        r32 minHeight, 
+        Rect2 *bounds, 
+        Vec2 *textPos)
+{
+    GuiDefaultParameters(gui);
+    *bounds = GetStringSize(fontRenderer, text, pos);
+    // text offset
+    r32 dx = 0;
+    r32 dy = pos.y-bounds->pos.y; 
+    r32 H = 0;
+    r32 W = 0;
+    if(minHeight > bounds->dims.y)
+    {
+        H = minHeight-bounds->dims.y;
+    }
+    if(minWidth > bounds->dims.x)
+    {
+        W = minWidth-bounds->dims.x;
+    }
+    dx+=W/2;
+    dy+=H/2;
+    bounds->width+=W;
+    bounds->height+=H;
+    bounds->pos.y = pos.y;
+    *textPos = vec2(pos.x+dx, pos.y+dy);
+}
+
+void
+GuiPushBottomRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, r32 radius, Vec4 color)
+{
+    GuiDefaultParameters(gui);
+    Push2DRectColored(renderTools->screenRenderGroup, pos, 
+            vec2(dims.x, dims.y-radius), squareRegion, color);
+    Push2DRectColored(renderTools->screenRenderGroup,
+            vec2(pos.x+radius, pos.y+dims.y-radius*2), 
+            vec2(dims.x-radius*2, radius*2), squareRegion, color);
+    Push2DCircleColored(renderTools->screenRenderGroup, 
+            vec2(pos.x+radius, pos.y+dims.y-radius),
+            radius, circleRegion, color);
+    Push2DCircleColored(renderTools->screenRenderGroup, 
+            vec2(pos.x+dims.x-radius, pos.y+dims.y-radius),
+            radius, circleRegion, color);
+}
+
+Rect2
+DoLabel(Gui *gui, char *text, Vec2 pos, Vec2 minDims)
+{
+    GuiDefaultParameters(gui);
+    Rect2 textRect;
+    Vec2 textPos;
+    GetLabelLayout(gui, text, pos, minDims.x, minDims.y, &textRect, &textPos);
+    Push2DText(renderTools->screenRenderGroup, fontRenderer, textPos, text);
+    return textRect;
+}
+
+Rect2
+DoLabelWithBackground(Gui *gui, char *text, Vec2 pos, Vec2 minDims, Vec4 backgroundColor)
+{
+    GuiDefaultParameters(gui);
+    Rect2 textRect;
+    Vec2 textPos;
+    GetLabelLayout(gui, text, pos, minDims.x, minDims.y, &textRect, &textPos);
+    Push2DRectColored(renderTools->screenRenderGroup, textRect.pos, textRect.dims, squareRegion, backgroundColor);
+    Push2DTextColored(renderTools->screenRenderGroup, fontRenderer, textPos, text, vec4(0,0,0,1));
+    Push2DText(renderTools->screenRenderGroup, fontRenderer, v2_add(textPos, vec2(2, -2)), text);
+    return textRect;
+}
+
 b32
-DoLabelButton(Gui *gui, char *label, Vec2 pos)
+DoLabelButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims)
 {
     GuiDefaultParameters(gui);
     GuiId id = GuiGetNameHash(gui, label);
 
-    Rect2 textRect = GetStringSize(fontRenderer, label, pos);
-    Rect2 rect = textRect;
-    r32 dy = pos.y-rect.pos.y;
-    rect.pos.y+=dy;
+    //Vec4 color = GetDe
+    Rect2 textRect = DoLabelWithBackground(gui, label, pos, minDims, gui->defaultColor);
 
-    b32 hit = BoxPoint2Intersect(rect.pos, rect.dims, screenCamera->mousePos);
+    b32 hit = BoxPoint2Intersect(textRect.pos, textRect.dims, screenCamera->mousePos);
     DoButtonLogic(gui, id, hit);
-    Vec4 color = GetButtonColor(gui, id);
+    //Vec4 color = GetButtonColor(gui, id);
 
-    Push2DRectColored(renderTools->screenRenderGroup, rect.pos, rect.dims, squareRegion, color);
-    Push2DText(renderTools->screenRenderGroup, fontRenderer, 
-            vec2(pos.x, pos.y+dy), label);
-    Push2DCircleColored(renderTools->screenRenderGroup, pos, 1, circleRegion, vec4(1,0,0,1));
+    //Push2DRectColored(renderTools->screenRenderGroup, textRect.pos, textRect.dims, squareRegion, color);
+    //Push2DText(renderTools->screenRenderGroup, fontRenderer, 
+    //vec2(pos.x, pos.y+dy), label);
+    ///Push2DCircleColored(renderTools->screenRenderGroup, pos, 1, circleRegion, vec4(1,0,0,1));
 
-    return gui->isMouseJustReleased && GuiIsHot(gui, id);
+    return gui->isMouseJustReleased && GuiIsActive(gui, id);
+}
+
+b32
+DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 active)
+{
+    GuiDefaultParameters(gui);
+
+    r32 shade = 0.5;
+    r32 elevation = 8.0;
+
+    Vec4 color = gui->defaultColor;
+    Vec4 bgColor = vec4(color.x*shade, color.y*shade, color.z*shade, color.w);
+
+    minDims.y = active ? minDims.y*2 : minDims.y;
+
+    GuiPushBottomRoundedRect(gui, pos, minDims, 10, bgColor);
+    GuiPushBottomRoundedRect(gui, pos, vec2(minDims.x, minDims.y-elevation), 10, color);
+
+    DoLabel(gui, label, pos, minDims);
+
+    return 0;
 }
 
 // Returns true if dragging
@@ -346,6 +474,8 @@ GuiUpdate(Gui *gui)
     gui->hot = 0;
     gui->isMouseJustReleased = IsKeyActionJustReleased(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
     gui->isMouseDown = IsKeyActionDown(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
+
+    Assert(gui->contextStackDepth==0);
 }
 
 void

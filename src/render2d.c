@@ -416,7 +416,7 @@ GetStringSize(FontRenderer *fontRenderer, char *sequence, Vec2 pos)
         maxY = Max(maxY, q.y1);
         sequence++;
     }
-    return (Rect2){vec2(pos.x, minY), vec2(x-pos.x, maxY-minY)};
+    return (Rect2){.x = pos.x, .y = minY, .width = x-pos.x, .height = maxY-minY};
 }
 
 void

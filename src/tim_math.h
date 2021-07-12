@@ -9,8 +9,21 @@ typedef struct
 
 typedef struct
 {
-    Vec2 pos;
-    Vec2 dims;
+    union
+    {
+        struct
+        {
+            r32 x;
+            r32 y;
+            r32 width;
+            r32 height;
+        };
+        struct
+        {
+            Vec2 pos;
+            Vec2 dims;
+        };
+    };
 } Rect2;
 
 typedef struct

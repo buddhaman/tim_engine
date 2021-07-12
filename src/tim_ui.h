@@ -1,4 +1,6 @@
 
+#define MAX_CONTEXT_STACK_SIZE 8
+
 typedef ui32 GuiId;
 
 typedef struct
@@ -13,7 +15,10 @@ typedef struct
     GuiId prevActive;
     GuiId hot;
     GuiId prevHot;
-    GuiId nWidgetsInCurrentContext;
+
+    ui32 contextStackDepth;
+    GuiId contextStack[MAX_CONTEXT_STACK_SIZE];
+    ui32 nWidgetsInCurrentContext;
 
     Vec4 defaultColor;
     Vec4 hitColor;
