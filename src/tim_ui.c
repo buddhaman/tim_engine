@@ -94,79 +94,6 @@ GuiHasCapturedInput(Gui *gui)
     return !!gui->prevActive;
 }
 
-b32
-GuiMouseEnteredWidget(Gui *gui, GuiId id)
-{
-    return gui->mouseEnteredWidget==id;
-}
-
-GuiAnimation *
-GuiGetAnimation(Gui *gui, GuiId id, b32 findActive)
-{
-    for(ui32 hashTry = 0;
-            hashTry < MAX_GUI_ANIMATIONS;
-            hashTry++)
-    {
-        ui32 hashMask = MAX_GUI_ANIMATIONS-1;
-        ui32 animationHashIndex = id & hashMask;
-        GuiAnimation *animation = gui->animations+animationHashIndex;
-        if(!animation->isActive)
-        {
-            if(findActive)
-            {
-                return NULL;
-            }
-            else
-            {
-                return animation;
-            }
-        }
-        else
-        {
-            if(animation->id==id)
-            {
-                return animation;
-            }
-        }
-    }
-    Assert(0);
-    return NULL;
-}
-
-GuiAnimation *
-TriggerAnimation(Gui *gui, GuiId id, r32 durationInSeconds)
-{
-    r32 fps = 60.0;
-    // TODO: solve hash collisions.
-    GuiAnimation *animation = GuiGetAnimation(gui, id, 0);
-    animation->id = id;
-    animation->t = 0;
-    animation->updateStep = 1.0/(fps*durationInSeconds);
-    animation->isActive = 1;
-    return animation;
-}
-
-r32
-UpdateAnimation(Gui *gui, GuiId id)
-{
-    GuiAnimation *animation = GuiGetAnimation(gui, id, 1);
-    if(animation)
-    {
-        Assert(animation->isActive);
-        animation->t+=animation->updateStep;
-        if(animation->t >= 1.0) 
-        {
-            animation->isActive = 0;
-            animation->t = 1.0;
-        }
-        return animation->t;
-    }
-    else
-    {
-        return 1.0;
-    }
-}
-
 internal inline void
 GuiPushWorldCircle(Gui *gui, Vec2 worldPos, r32 screenRadius, Vec4 color)
 {
@@ -179,7 +106,7 @@ GuiPushWorldCircle(Gui *gui, Vec2 worldPos, r32 screenRadius, Vec4 color)
             color);
 }
 
-b32 
+void 
 DoButtonLogic(Gui *gui, GuiId id, b32 hit)
 {
     b32 isActive = GuiIsActive(gui, id);
@@ -192,7 +119,6 @@ DoButtonLogic(Gui *gui, GuiId id, b32 hit)
             gui->active = id;
         }
     }
-    return gui->isMouseJustReleased && GuiIsActive(gui, id);
 }
 
 Vec4
@@ -335,40 +261,24 @@ DoLabelButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims)
 }
 
 b32
-DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 selected)
+DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 active)
 {
     GuiDefaultParameters(gui);
-    GuiId id = GuiGetNameHash(gui, label);
 
-    b32 hot = GuiIsHot(gui, id);
-    b32 active = GuiIsActive(gui, id);
     r32 shade = 0.5;
-    r32 elevation = active ? 6 : 8;
-    Vec4 color = GetButtonColor(gui, id);
+    r32 elevation = 8.0;
 
+    Vec4 color = gui->defaultColor;
     Vec4 bgColor = vec4(color.x*shade, color.y*shade, color.z*shade, color.w);
 
-    r32 heightFactor = 1.0;
-    if(!selected && GuiMouseEnteredWidget(gui, id))
-    {
-        //DebugOut("Triggering animation");
-        TriggerAnimation(gui, id, 0.15);
-    }
-    r32 t = UpdateAnimation(gui, id);
-    if(!selected && hot)
-    {
-        heightFactor = (1.0-t) + 1.5*t;
-    }
-
-    minDims.y = selected ? minDims.y*2 : (hot ? minDims.y*heightFactor : minDims.y);
-    b32 hit = BoxPoint2Intersect(pos, minDims, screenCamera->mousePos);
+    minDims.y = active ? minDims.y*2 : minDims.y;
 
     GuiPushBottomRoundedRect(gui, pos, minDims, 10, bgColor);
     GuiPushBottomRoundedRect(gui, pos, vec2(minDims.x, minDims.y-elevation), 10, color);
 
-    DoLabel(gui, label, vec2(pos.x, pos.y+minDims.y-elevation-24), vec2(minDims.x, 24));
+    DoLabel(gui, label, pos, minDims);
 
-    return DoButtonLogic(gui, id, hit);
+    return 0;
 }
 
 // Returns true if dragging
@@ -558,14 +468,6 @@ GuiUpdate(Gui *gui)
             assets, renderTools->worldShader);
     ExecuteAndFlushRenderGroup(renderTools->screenRenderGroup, 
             assets, renderTools->screenShader);
-    if(gui->prevHot!=gui->hot)
-    {
-        gui->mouseEnteredWidget = gui->hot;
-    }
-    else
-    {
-        gui->mouseEnteredWidget = 0;
-    }
     gui->prevActive = gui->active;
     gui->prevHot = gui->hot;
     gui->active = 0;
@@ -591,8 +493,6 @@ InitGui(Gui *gui,
     gui->defaultColor = vec4(0.6, 0.3, 0.3, 1.0);
     gui->hitColor = vec4(0.8, 0.5, 0.5, 1.0);
     gui->pressedColor = vec4(0.4, 0.2, 0.2, 1.0);
-
-    gui->nAnimations = 0;
 }
 
 #undef GuiDefaultParameters
