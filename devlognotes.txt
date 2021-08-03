@@ -17,7 +17,7 @@ Hobby project in spare time.
     - Memory management is a feature. Not a hassle: Brain vectors.
     - Did it for educational reasons. Actually boosted my productivity.
 
-- "Soon" own physics engine. Got a lot of ideas already. 
+- "Soon" own physics engine. Got a lot of ideas already.  Do this for multithreading and more efficient physics. Can design your own world. 
 
 - Showcase game:
 
@@ -29,6 +29,7 @@ Hobby project in spare time.
     - Own ui engine. Will be next thing thats gonna be replaced. 
     - Start adding multiple brains. Do this in a hassle free way.
     - Better look and feel. Feels very stale. Like you're using excel or something.
+    - Create some nice backgrounds. Nicer rendering.
 
 Next devlog in a month or 3.
 

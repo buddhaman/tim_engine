@@ -38,6 +38,12 @@ v2_polar(r32 angle, r32 length)
     return vec2(cosf(angle)*length, sinf(angle)*length);
 }
 
+internal inline r32 
+Lerp(r32 a, r32 b, r32 factor)
+{
+    return (1.0-factor)*a+factor*b;
+}
+
 Vec3 
 GetZIntersection(Vec3 rayPos, Vec3 rayDir, r32 z)
 {

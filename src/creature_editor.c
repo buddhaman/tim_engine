@@ -750,7 +750,6 @@ EditorDoGui(AppState *appState, CreatureEditorScreen *editor)
     {
         editor->editPhase = EDIT_PHASE_BRAIN;
     }
-    DoLabelButton(gui, "lsk fljs" , vec2(100, 100), vec2(100, 200));
     GuiEndContext(gui);
 }
 

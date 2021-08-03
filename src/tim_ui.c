@@ -76,22 +76,83 @@ GuiGetNameHash(Gui *gui, char *name)
     }
 }
 
-b32
+internal inline GuiAnimation*
+GuiGetAnimation(Gui *gui, GuiId id, b32 findNew)
+{
+    ui32 mask = MAX_GUI_ANIMATIONS-1;   
+    ui32 startIdx = id & mask;
+    for(ui32 animationSlotOffset = 0;
+            animationSlotOffset < MAX_GUI_ANIMATIONS;
+            animationSlotOffset++)
+    {
+        ui32 animationIdx = (animationSlotOffset+startIdx) & mask;
+        GuiAnimation *animation = gui->animations+animationIdx;
+        if(animation->widgetId==id)
+        {
+            return animation;
+        }
+        else if(findNew && !animation->isActive)
+        {
+            return animation;
+        }
+        return animation;
+    }
+    return NULL;
+}
+
+internal inline void
+GuiTriggerAnimation(Gui *gui, GuiId id, r32 duration)
+{
+    r32 FPS = 60.0;     // TODO: Replace, read from somewhere
+    GuiAnimation *animation = GuiGetAnimation(gui, id, 1);
+    animation->timeFactor = 0;
+    animation->timeStep = 1.0f/(duration*FPS);
+    animation->isActive = 1;
+}
+
+internal inline r32
+UpdateAnimation(Gui *gui, GuiId id)
+{
+    GuiAnimation *animation = GuiGetAnimation(gui, id, 0);
+
+    if(animation && animation->isActive)
+    {
+        animation->timeFactor+=animation->timeStep;
+        if(animation->timeFactor >= 1.0)
+        {
+            animation->timeFactor = 1.0;
+            animation->isActive = 0;
+        }
+        return animation->timeFactor;
+    }
+    else
+    {
+        return 1.0;
+    }
+}
+
+internal inline b32
 GuiIsHot(Gui *gui, GuiId id)
 {
     return gui->prevHot==id;
 }
 
-b32
+internal inline b32
 GuiIsActive(Gui *gui, GuiId id)
 {
     return gui->prevActive==id;
 }
 
-b32
+internal inline b32
 GuiHasCapturedInput(Gui *gui)
 {
     return !!gui->prevActive;
+}
+
+internal inline b32
+GuiMouseEnteredWidget(Gui *gui, GuiId widgetId)
+{
+    return widgetId==gui->mouseEnteredWidgetId;
 }
 
 internal inline void
@@ -261,24 +322,59 @@ DoLabelButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims)
 }
 
 b32
-DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 active)
+DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 isEnabled)
 {
     GuiDefaultParameters(gui);
 
-    r32 shade = 0.5;
-    r32 elevation = 8.0;
+    GuiId id = GuiGetNameHash(gui, label);
+    b32 mouseEntered = GuiMouseEnteredWidget(gui, id);
+    b32 isActive = GuiIsActive(gui, id);
+    b32 isHot = GuiIsHot(gui, id);
 
-    Vec4 color = gui->defaultColor;
+    r32 shade = 0.5;
+    r32 elevation = isActive ? 4.0 : 8.0;
+    r32 hotFactor = 1.5f;
+    r32 enabledFactor = 2.0f;
+    r32 heightFactor = 1.0f;
+    r32 animationDuration = 0.1;
+    b32 justPressed = gui->isMouseJustReleased && isActive;
+
+    if(!isEnabled)
+    {
+        if(mouseEntered)
+        {
+            GuiTriggerAnimation(gui, id, animationDuration);
+        }
+        if(isHot)
+        {
+            r32 animation = UpdateAnimation(gui, id);
+            heightFactor = Lerp(1.0, hotFactor, animation);
+        }
+        // Trigger animation if just enabled
+        if(justPressed)
+        {
+            GuiTriggerAnimation(gui, id, animationDuration);
+        }
+    }
+    else
+    {
+        r32 animation = UpdateAnimation(gui, id);
+        heightFactor = Lerp(hotFactor, enabledFactor, animation);
+    }
+
+    Vec4 color = isActive ? gui->pressedColor : (isHot ? gui->hitColor : gui->defaultColor);
     Vec4 bgColor = vec4(color.x*shade, color.y*shade, color.z*shade, color.w);
 
-    minDims.y = active ? minDims.y*2 : minDims.y;
+    minDims.y*=heightFactor;
 
     GuiPushBottomRoundedRect(gui, pos, minDims, 10, bgColor);
     GuiPushBottomRoundedRect(gui, pos, vec2(minDims.x, minDims.y-elevation), 10, color);
 
-    DoLabel(gui, label, pos, minDims);
+    b32 hit = BoxPoint2Intersect(pos, minDims, screenCamera->mousePos);
 
-    return 0;
+    DoLabel(gui, label, vec2(pos.x, pos.y+minDims.y-32), vec2(minDims.x, 16));
+    DoButtonLogic(gui, id, hit);
+    return justPressed;
 }
 
 // Returns true if dragging
@@ -468,12 +564,21 @@ GuiUpdate(Gui *gui)
             assets, renderTools->worldShader);
     ExecuteAndFlushRenderGroup(renderTools->screenRenderGroup, 
             assets, renderTools->screenShader);
+    if(gui->prevHot != gui->hot)
+    {
+        gui->mouseEnteredWidgetId = gui->hot;
+    }
+    else
+    {
+        gui->mouseEnteredWidgetId = 0;
+    }
     gui->prevActive = gui->active;
     gui->prevHot = gui->hot;
     gui->active = 0;
     gui->hot = 0;
     gui->isMouseJustReleased = IsKeyActionJustReleased(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
     gui->isMouseDown = IsKeyActionDown(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
+
 
     Assert(gui->contextStackDepth==0);
 }
