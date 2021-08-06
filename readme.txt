@@ -14,8 +14,16 @@ Nice: Do competition. 150 dollars for best creature.
 
 Decide what to do next:
 
+SOON !!!!!: FUN STUFF::::
+- Write juicy button.   V
+- Replace interface with own interface  
+- Directional shadows.
+- Multiple layers, "ambient occlusion" on previous layer.
+- Day night cycle when learning to walk.
+- Water shader to make swimming look prettier.
+- Normal maps to give depth to creatures.
+
 IMPORTANT FIRST:
-- Write juicy button.
 - OPTIONAL: save icons for creatures and select.
 - LATER: Replace entire ui with own ui.
 - LATER: abstract entre rendering out and make reusable. Make another simple game with engine.
@@ -29,6 +37,15 @@ IMPORTANT FIRST:
 - Design the entire look and feel. Create your own ui library for smooth juicy ui.
 - Multithreading for training. (Might require own physics engine).
 - Inputs in new screen: add orientation as normalized vector.
+
+Big ui tasks:
+
+- TextEdit field.
+- Background for window. (Resizeable? try not to).
+- Int picker.
+- Float picker.
+- Layout management (very minimal).
+- Color picker (fun).
 
 NOW:
 

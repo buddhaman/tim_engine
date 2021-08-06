@@ -260,20 +260,57 @@ GetLabelLayout(Gui *gui,
 }
 
 void
-GuiPushBottomRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, r32 radius, Vec4 color)
+GuiPushRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, r32 radius, Vec4 color)
 {
     GuiDefaultParameters(gui);
-    Push2DRectColored(renderTools->screenRenderGroup, pos, 
-            vec2(dims.x, dims.y-radius), squareRegion, color);
+
+#if 1
+    Push2DRectColored(renderTools->screenRenderGroup, 
+            vec2(pos.x, pos.y+radius), vec2(dims.x, dims.y-radius*2),
+            squareRegion, color);
     Push2DRectColored(renderTools->screenRenderGroup,
-            vec2(pos.x+radius, pos.y+dims.y-radius*2), 
-            vec2(dims.x-radius*2, radius*2), squareRegion, color);
+            vec2(pos.x+radius, pos.y), vec2(dims.x-radius*2, dims.y), 
+            squareRegion, color);
+#endif
+
+    Push2DCircleColored(renderTools->screenRenderGroup, 
+            vec2(pos.x+radius, pos.y+radius),
+            radius, circleRegion, color);
+    Push2DCircleColored(renderTools->screenRenderGroup, 
+            vec2(pos.x+dims.x-radius, pos.y+radius),
+            radius, circleRegion, color);
     Push2DCircleColored(renderTools->screenRenderGroup, 
             vec2(pos.x+radius, pos.y+dims.y-radius),
             radius, circleRegion, color);
     Push2DCircleColored(renderTools->screenRenderGroup, 
             vec2(pos.x+dims.x-radius, pos.y+dims.y-radius),
             radius, circleRegion, color);
+}
+
+void
+GuiPushBottomRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, r32 radius, Vec4 color)
+{
+    GuiDefaultParameters(gui);
+
+    Push2DRectColored(renderTools->screenRenderGroup, pos, 
+            vec2(dims.x, dims.y-radius), squareRegion, color);
+    Push2DRectColored(renderTools->screenRenderGroup,
+            vec2(pos.x+radius, pos.y+dims.y-radius*2), 
+            vec2(dims.x-radius*2, radius*2), squareRegion, color);
+
+    Push2DCircleColored(renderTools->screenRenderGroup, 
+            vec2(pos.x+radius, pos.y+dims.y-radius),
+            radius, circleRegion, color);
+    Push2DCircleColored(renderTools->screenRenderGroup, 
+            vec2(pos.x+dims.x-radius, pos.y+dims.y-radius),
+            radius, circleRegion, color);
+}
+
+void
+GuiPushRect(Gui *gui, Vec2 pos, Vec2 dims, Vec4 color)
+{
+    GuiDefaultParameters(gui);
+    Push2DRectColored(renderTools->screenRenderGroup, pos, dims, squareRegion, color);
 }
 
 Rect2
@@ -375,6 +412,18 @@ DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 isEnabled
     DoLabel(gui, label, vec2(pos.x, pos.y+minDims.y-32), vec2(minDims.x, 16));
     DoButtonLogic(gui, id, hit);
     return justPressed;
+}
+
+void
+DoTextField(Gui *gui, char *name, char *text, Vec2 pos, Vec2 minDims)
+{
+    GuiDefaultParameters(gui);
+
+    Vec4 bgColor = gui->defaultColor;
+
+    strcat(text, gui->textInput);
+    GuiPushRoundedRect(gui, pos, minDims, 4, bgColor);
+    DoLabel(gui, text, pos, vec2(0,minDims.y));
 }
 
 // Returns true if dragging
@@ -578,7 +627,7 @@ GuiUpdate(Gui *gui)
     gui->hot = 0;
     gui->isMouseJustReleased = IsKeyActionJustReleased(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
     gui->isMouseDown = IsKeyActionDown(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
-
+    strcpy(gui->textInput, gui->appState->textInput);
 
     Assert(gui->contextStackDepth==0);
 }

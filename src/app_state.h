@@ -48,6 +48,8 @@ struct AppState
 
     b32 isActionDown[NUM_KEY_ACTIONS];
     b32 wasActionDown[NUM_KEY_ACTIONS];
+
+    char textInput[128];
 };
 
 void

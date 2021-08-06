@@ -3,12 +3,15 @@
 Hobby project in spare time.
 
 - Broad overview of game.
+
+- How did i get here: show bug game, show intermediate neural network thing in 3d. Show transition to 2d.
 - Next target: Multiple training modes. 1)moving towards target in water and 2)walking on land
 
 - New engine in c:
+- Used to use Java, didnt work: too slow and most features make code needlessly complex.
 
 - Rationale for writing own engine:
-    - "Digging down" is annoying for me. 
+    - "Digging down" is annoying for me. Isnt always the best, and isnt specifically for what you want to do. 
     - Wayy more satisfying, fun and educational.
 
 - Rationale for C:
@@ -31,6 +34,18 @@ Hobby project in spare time.
     - Better look and feel. Feels very stale. Like you're using excel or something.
     - Create some nice backgrounds. Nicer rendering.
 
+Other games which had done something like this, but not everything has been explored by far.
+Not a lot of games based on ai and neural networks. 
+
+Roadmaps big milestones:
+
+1) implementing a linear algebra library and neural network library.
+2) Setting up the physics engine 
+
+
 Next devlog in a month or 3.
 
+Further notes:
+ - Charls carrol
+ - Download the sapling.
 

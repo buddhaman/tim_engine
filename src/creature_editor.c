@@ -751,6 +751,11 @@ EditorDoGui(AppState *appState, CreatureEditorScreen *editor)
         editor->editPhase = EDIT_PHASE_BRAIN;
     }
     GuiEndContext(gui);
+
+    GuiBeginContext(gui, "test context");
+    local_persist char text[128];
+    DoTextField(gui, "name", text, vec2(400, 200), vec2(200, 24));
+    GuiEndContext(gui);
 }
 
 void

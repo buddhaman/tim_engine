@@ -41,6 +41,7 @@ typedef struct
     Vec2 radialMenuPos;
     r32 radialTimer;
 
+    char textInput[128];
     GuiAnimation animations[MAX_GUI_ANIMATIONS];
 } Gui;
 

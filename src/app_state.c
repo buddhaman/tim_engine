@@ -25,6 +25,12 @@ MapKeyCodeToAction(SDL_Keycode code)
 }
 
 void
+RegisterTextInput(AppState *appState, char *text)
+{
+    strcpy(appState->textInput, text);
+}
+
+void
 RegisterKeyAction(AppState *appState, KeyAction action, b32 down)
 {
     appState->isActionDown[action] = down;
@@ -35,6 +41,7 @@ ResetKeyActions(AppState *appState)
 {
     appState->mouseScrollY = 0;
     memcpy(appState->wasActionDown, appState->isActionDown, sizeof(appState->isActionDown));
+    memset(appState->textInput, 0, sizeof(appState->textInput));
 }
 
 b32

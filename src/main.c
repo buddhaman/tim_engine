@@ -318,6 +318,11 @@ main(int argc, char**argv)
                 RegisterKeyAction(appState, MapKeyCodeToAction(event.key.keysym.sym), 1);
             } break;
 
+            case SDL_TEXTINPUT:
+            {
+                RegisterTextInput(appState, event.text.text);
+            } break;
+
             case SDL_QUIT:
             {
                 done = 1;
