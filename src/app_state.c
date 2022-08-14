@@ -37,11 +37,42 @@ RegisterKeyAction(AppState *appState, KeyAction action, b32 down)
 }
 
 void
-ResetKeyActions(AppState *appState)
+AppStateInputBegin(AppState *appState)
 {
     appState->mouseScrollY = 0;
     memcpy(appState->wasActionDown, appState->isActionDown, sizeof(appState->isActionDown));
     memset(appState->textInput, 0, sizeof(appState->textInput));
+}
+
+void
+AppStateInputEnd(AppState *appState)
+{
+}
+
+void
+HandleSDLEvent(AppState *appState, SDL_Event *event)
+{
+    switch(event->type)
+    {
+
+    case SDL_MOUSEBUTTONUP:
+    case SDL_MOUSEBUTTONDOWN:
+    {
+        KeyAction mouseButton;
+        switch(event->button.button)
+        {
+        case SDL_BUTTON_LEFT: mouseButton = ACTION_MOUSE_BUTTON_LEFT; break;
+        case SDL_BUTTON_RIGHT: mouseButton = ACTION_MOUSE_BUTTON_RIGHT; break;
+        default: mouseButton = ACTION_UNKNOWN;
+        }
+        if(mouseButton)
+        {
+            b32 down = event->type==SDL_MOUSEBUTTONDOWN;
+            appState->isActionDown[mouseButton] = down;
+        }
+    } break;
+
+    }
 }
 
 b32

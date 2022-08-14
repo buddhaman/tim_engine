@@ -6,15 +6,11 @@
 #include <stdio.h>
 
 // Special file.
-#include "tim_types.h"
-#include "math_2d.h"
 
-// My own math typedefs.
-typedef vec2_t Vec2;
-typedef vec3_t Vec3;
-typedef vec4_t Vec4;
-typedef mat4_t Mat4;
-typedef mat3_t Mat3;
+#define TIM_MATH_IMPLEMENTATION
+#include "tim_vector_math.h"
+
+#include "tim_types.h"
 
 #define MAX_VERTEX_MEMORY 512*1024
 #define MAX_ELEMENT_MEMORY 128*1024
@@ -272,10 +268,11 @@ main(int argc, char**argv)
     {
         SDL_Event event;
         nk_input_begin(ctx);
-        ResetKeyActions(appState);
+        AppStateInputBegin(appState);
         while(SDL_PollEvent(&event))
         {
             nk_sdl_handle_event(&event);
+            HandleSDLEvent(appState, &event);
             switch(event.type)
             {
 
@@ -340,6 +337,7 @@ main(int argc, char**argv)
 
             }
         }
+        AppStateInputEnd(appState);
         nk_input_end(ctx);
         // Set Appstate
 

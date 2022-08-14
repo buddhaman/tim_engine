@@ -16,7 +16,7 @@ evodraw: $(SRC)
 	$(CC) src/main.c -L./. -l:chipmunk_lib.a -lm -ldl -o evodraw -g -Iinclude_chipmunk -Iinclude -I/usr/local/include/SDL2 -Bstatic -lSDL2 -Wall -pthread external.o -Lchipmunk_lib 
 
 evodraw_win: $(OBJ_WIN)
-	$(CC_WIN) src/main.c -lm -o evodraw_win externalWin.o -g -Iinclude_chipmunk -Iinclude -I../SDL2/include -L../SDL2/lib -Wall -lmingw32-pthreads\
+	$(CC_WIN) src/main.c -lm -o evodraw_win externalWin.o -g -Iinclude_chipmunk -Iinclude -I../SDL2/include -L../SDL2/lib -Wall \
 		-static -lmingw32 -lSDL2main -lSDL2 -mwindows -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lsetupapi -lhid -lwinmm -limm32 -lole32 -loleaut32 -lshell32 -lversion -luuid -static-libgcc -lopengl32 $^
 
 external:

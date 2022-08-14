@@ -170,8 +170,8 @@ Push2DCircleColored(RenderGroup* renderGroup,
         Vec4 color)
 {
     Push2DTexRectColored(renderGroup,
-            vec2(center.x-radius, center.y-radius),
-            vec2(radius*2, radius*2),
+            V2(center.x-radius, center.y-radius),
+            V2(radius*2, radius*2),
             texture->atlas->textureHandle,
             texture->pos,
             texture->size, 
@@ -265,12 +265,12 @@ Push2DOrientedLineRectangleColored(RenderGroup *renderGroup,
 {
     r32 c = cosf(angle);
     r32 s = sinf(angle);
-    Vec2 axis0 = vec2(c*dims.x/2.0, s*dims.x/2.0);
-    Vec2 axis1 = vec2(s*dims.y/2.0, -c*dims.y/2.0);
-    Vec2 p00 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, -1)));
-    Vec2 p10 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, -1)));
-    Vec2 p11 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, 1)));
-    Vec2 p01 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, 1)));
+    Vec2 axis0 = V2(c*dims.x/2.0, s*dims.x/2.0);
+    Vec2 axis1 = V2(s*dims.y/2.0, -c*dims.y/2.0);
+    Vec2 p00 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, -1)));
+    Vec2 p10 = V2Add(pos, V2Add(V2MulS(axis0, 1), V2MulS(axis1, -1)));
+    Vec2 p11 = V2Add(pos, V2Add(V2MulS(axis0, 1), V2MulS(axis1, 1)));
+    Vec2 p01 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, 1)));
     Push2DLineColored(renderGroup, p00, p10, lineWidth, texture, color);
     Push2DLineColored(renderGroup, p10, p11, lineWidth, texture, color);
     Push2DLineColored(renderGroup, p11, p01, lineWidth, texture, color);
@@ -296,11 +296,11 @@ Push2DTextColored(RenderGroup *renderGroup,
     {
         stbtt_GetPackedQuad(fontRenderer->charData, w, h, *sequence-32, &x, &y, &q, 0);
         Push2DTexRectColored(renderGroup, 
-                vec2(q.x0, q.y0), 
-                vec2(q.x1-q.x0, q.y1-q.y0), 
+                V2(q.x0, q.y0), 
+                V2(q.x1-q.x0, q.y1-q.y0), 
                 textureHandle, 
-                vec2(q.s0, q.t1), 
-                vec2(q.s1-q.s0, q.t0-q.t1), 
+                V2(q.s0, q.t1), 
+                V2(q.s1-q.s0, q.t0-q.t1), 
                 color);
         sequence++;
     }
@@ -316,7 +316,7 @@ Push2DText(RenderGroup *renderGroup,
             fontRenderer,
             pos, 
             sequence,
-            vec4(1,1,1,1));
+            V4(1,1,1,1));
 }
 
 internal inline void
@@ -332,7 +332,7 @@ Push2DSemiCircleColored(RenderGroup *renderGroup,
     RenderCommand *command = PushRenderCommand(renderGroup, RENDER_2D_SEMICIRCLE);
     command->pos = pos;
     command->radius = radius;
-    command->range = vec2(fromAngle, toAngle);
+    command->range = V2(fromAngle, toAngle);
     command->nPoints = nPoints;
     command->textureHandle = texture->atlas->textureHandle;
     command->uvPos = texture->pos;

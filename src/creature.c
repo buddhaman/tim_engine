@@ -11,7 +11,7 @@ CreatureAddBodyPart(FakeWorld *world,
     RigidBody *body = AddDynamicRectangle(world, pos, size.x, size.y, angle, creature->physicsGroup);
 
     part->body = body;
-    part->color = vec4(RandomR32(0, 1), RandomR32(0,1), RandomR32(0,1),  0.5);
+    part->color = V4(RandomR32(0, 1), RandomR32(0,1), RandomR32(0,1),  0.5);
 
     return part;
 }
@@ -100,8 +100,8 @@ BuildCreature(FakeWorld *world,
 {
     BodyPart *part = CreatureAddBodyPart(world, 
             creature, 
-            v2_add(pos, partDef->pos),
-            vec2(partDef->width, partDef->height),
+            V2Add(pos, partDef->pos),
+            V2(partDef->width, partDef->height),
             partDef->angle);
     part->def = partDef;
     ui32 subDefs[def->nBodyParts];
@@ -123,7 +123,7 @@ BuildCreature(FakeWorld *world,
         r32 angleOffset = -angleA;
         r32 edgeAngle = GetAbsoluteEdgeAngle(parentPartDef, partDef->xEdge, partDef->yEdge);
         RotaryMuscle *muscle = CreatureAddRotaryMuscle(world, creature, a, b, 
-                v2_add(pos, partDef->pivotPoint), 
+                V2Add(pos, partDef->pivotPoint), 
                 edgeAngle+partDef->minAngle+angleOffset,
                 edgeAngle+partDef->maxAngle+angleOffset);
         part->rotaryMuscle = muscle;
@@ -152,7 +152,7 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
     creature->nRotaryMuscles = 0;
     creature->rotaryMuscles = world->rotaryMuscles+world->nRotaryMuscles;
 
-    creature->solidColor = vec3(def->solidColor.x, def->solidColor.y, def->solidColor.z);
+    creature->solidColor = V3(def->solidColor.x, def->solidColor.y, def->solidColor.z);
     creature->drawSolidColor = def->drawSolidColor;
 
     creature->nInternalClocks = def->nInternalClocks;
@@ -180,8 +180,8 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
         BodyPartDefinition *partDef = def->bodyParts+bodyPartIdx;
         CreatureAddBodyPart(world, 
                 creature, 
-                v2_add(pos, partDef->pos),
-                vec2(partDef->width, partDef->height),
+                V2Add(pos, partDef->pos),
+                V2(partDef->width, partDef->height),
                 partDef->angle);
 
         RotaryMuscleDefinition *muscleDef = def->rotaryMuscles+muscleIdx;
@@ -190,7 +190,7 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
         r32 angleA = cpBodyGetAngle(a->body->body);
         r32 angleB = cpBodyGetAngle(b->body->body);
         CreatureAddRotaryMuscle(world, creature, a, b, 
-                v2_add(pos, muscleDef->pivotPoint), 
+                V2Add(pos, muscleDef->pivotPoint), 
                 muscleDef->minAngle+angleB-angleA, 
                 muscleDef->maxAngle+angleB-angleA);
     }
@@ -220,7 +220,7 @@ Vec2
 GetBodyPartCenter(BodyPart *part)
 {
     cpVect bodyPos= cpBodyGetPosition(part->body->body);
-    return vec2(bodyPos.x, bodyPos.y);
+    return V2(bodyPos.x, bodyPos.y);
 }
 
 void
@@ -283,7 +283,7 @@ UpdateCreature(FakeWorld *world, Creature *creature)
         }
         if(part->def->hasAngleTowardsTargetInput)
         {
-            Vec2 diff = v2_sub(world->target, pos);
+            Vec2 diff = V2Sub(world->target, pos);
             r32 tAngle = atan2f(diff.y, diff.x);
             r32 activation = GetNormalizedAngDiff(angle, tAngle);
             brain->x.v[part->def->angleTowardsTargetInputIdx] = activation;

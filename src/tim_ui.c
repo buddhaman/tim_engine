@@ -256,7 +256,7 @@ GetLabelLayout(Gui *gui,
     bounds->width+=W;
     bounds->height+=H;
     bounds->pos.y = pos.y;
-    *textPos = vec2(pos.x+dx, pos.y+dy);
+    *textPos = V2(pos.x+dx, pos.y+dy);
 }
 
 void
@@ -266,24 +266,24 @@ GuiPushRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, r32 radius, Vec4 color)
 
 #if 1
     Push2DRectColored(renderTools->screenRenderGroup, 
-            vec2(pos.x, pos.y+radius), vec2(dims.x, dims.y-radius*2),
+            V2(pos.x, pos.y+radius), V2(dims.x, dims.y-radius*2),
             squareRegion, color);
     Push2DRectColored(renderTools->screenRenderGroup,
-            vec2(pos.x+radius, pos.y), vec2(dims.x-radius*2, dims.y), 
+            V2(pos.x+radius, pos.y), V2(dims.x-radius*2, dims.y), 
             squareRegion, color);
 #endif
 
     Push2DCircleColored(renderTools->screenRenderGroup, 
-            vec2(pos.x+radius, pos.y+radius),
+            V2(pos.x+radius, pos.y+radius),
             radius, circleRegion, color);
     Push2DCircleColored(renderTools->screenRenderGroup, 
-            vec2(pos.x+dims.x-radius, pos.y+radius),
+            V2(pos.x+dims.x-radius, pos.y+radius),
             radius, circleRegion, color);
     Push2DCircleColored(renderTools->screenRenderGroup, 
-            vec2(pos.x+radius, pos.y+dims.y-radius),
+            V2(pos.x+radius, pos.y+dims.y-radius),
             radius, circleRegion, color);
     Push2DCircleColored(renderTools->screenRenderGroup, 
-            vec2(pos.x+dims.x-radius, pos.y+dims.y-radius),
+            V2(pos.x+dims.x-radius, pos.y+dims.y-radius),
             radius, circleRegion, color);
 }
 
@@ -293,16 +293,16 @@ GuiPushBottomRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, r32 radius, Vec4 color)
     GuiDefaultParameters(gui);
 
     Push2DRectColored(renderTools->screenRenderGroup, pos, 
-            vec2(dims.x, dims.y-radius), squareRegion, color);
+            V2(dims.x, dims.y-radius), squareRegion, color);
     Push2DRectColored(renderTools->screenRenderGroup,
-            vec2(pos.x+radius, pos.y+dims.y-radius*2), 
-            vec2(dims.x-radius*2, radius*2), squareRegion, color);
+            V2(pos.x+radius, pos.y+dims.y-radius*2), 
+            V2(dims.x-radius*2, radius*2), squareRegion, color);
 
     Push2DCircleColored(renderTools->screenRenderGroup, 
-            vec2(pos.x+radius, pos.y+dims.y-radius),
+            V2(pos.x+radius, pos.y+dims.y-radius),
             radius, circleRegion, color);
     Push2DCircleColored(renderTools->screenRenderGroup, 
-            vec2(pos.x+dims.x-radius, pos.y+dims.y-radius),
+            V2(pos.x+dims.x-radius, pos.y+dims.y-radius),
             radius, circleRegion, color);
 }
 
@@ -332,8 +332,8 @@ DoLabelWithBackground(Gui *gui, char *text, Vec2 pos, Vec2 minDims, Vec4 backgro
     Vec2 textPos;
     GetLabelLayout(gui, text, pos, minDims.x, minDims.y, &textRect, &textPos);
     Push2DRectColored(renderTools->screenRenderGroup, textRect.pos, textRect.dims, squareRegion, backgroundColor);
-    Push2DTextColored(renderTools->screenRenderGroup, fontRenderer, textPos, text, vec4(0,0,0,1));
-    Push2DText(renderTools->screenRenderGroup, fontRenderer, v2_add(textPos, vec2(2, -2)), text);
+    Push2DTextColored(renderTools->screenRenderGroup, fontRenderer, textPos, text, V4(0,0,0,1));
+    Push2DText(renderTools->screenRenderGroup, fontRenderer, V2Add(textPos, V2(2, -2)), text);
     return textRect;
 }
 
@@ -352,8 +352,8 @@ DoLabelButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims)
 
     //Push2DRectColored(renderTools->screenRenderGroup, textRect.pos, textRect.dims, squareRegion, color);
     //Push2DText(renderTools->screenRenderGroup, fontRenderer, 
-    //vec2(pos.x, pos.y+dy), label);
-    ///Push2DCircleColored(renderTools->screenRenderGroup, pos, 1, circleRegion, vec4(1,0,0,1));
+    //V2(pos.x, pos.y+dy), label);
+    ///Push2DCircleColored(renderTools->screenRenderGroup, pos, 1, circleRegion, V4(1,0,0,1));
 
     return gui->isMouseJustReleased && GuiIsActive(gui, id);
 }
@@ -400,16 +400,16 @@ DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 isEnabled
     }
 
     Vec4 color = isActive ? gui->pressedColor : (isHot ? gui->hitColor : gui->defaultColor);
-    Vec4 bgColor = vec4(color.x*shade, color.y*shade, color.z*shade, color.w);
+    Vec4 bgColor = V4(color.x*shade, color.y*shade, color.z*shade, color.w);
 
     minDims.y*=heightFactor;
 
     GuiPushBottomRoundedRect(gui, pos, minDims, 10, bgColor);
-    GuiPushBottomRoundedRect(gui, pos, vec2(minDims.x, minDims.y-elevation), 10, color);
+    GuiPushBottomRoundedRect(gui, pos, V2(minDims.x, minDims.y-elevation), 10, color);
 
     b32 hit = BoxPoint2Intersect(pos, minDims, screenCamera->mousePos);
 
-    DoLabel(gui, label, vec2(pos.x, pos.y+minDims.y-32), vec2(minDims.x, 16));
+    DoLabel(gui, label, V2(pos.x, pos.y+minDims.y-32), V2(minDims.x, 16));
     DoButtonLogic(gui, id, hit);
     return justPressed;
 }
@@ -423,7 +423,7 @@ DoTextField(Gui *gui, char *name, char *text, Vec2 pos, Vec2 minDims)
 
     strcat(text, gui->textInput);
     GuiPushRoundedRect(gui, pos, minDims, 4, bgColor);
-    DoLabel(gui, text, pos, vec2(0,minDims.y));
+    DoLabel(gui, text, pos, V2(0,minDims.y));
 }
 
 // Returns true if dragging
@@ -458,13 +458,13 @@ DoAngleLengthButton(Gui *gui,
         r32 screenRadius)
 {
     GuiDefaultParameters(gui);
-    Vec2 pos = v2_add(center, v2_polar(*angle, *length));
+    Vec2 pos = V2Add(center, V2Polar(*angle, *length));
     b32 isDragging = DoDragCircularButtonOnPress(gui, name, pos, screenRadius);
     if(isDragging)
     {
         Vec2 mousePos = camera->mousePos;
         *angle = atan2f(mousePos.y-center.y, mousePos.x-center.x);
-        *length = v2_dist(center, mousePos);
+        *length = V2Dist(center, mousePos);
     }
     return isDragging;
 }
@@ -479,7 +479,7 @@ DoRotationDragButton(Gui *gui,
 {
     GuiDefaultParameters(gui);
     Vec2 mousePos = camera->mousePos;
-    Vec2 pos = v2_add(center, v2_polar(*angle, length));
+    Vec2 pos = V2Add(center, V2Polar(*angle, length));
     b32 isDragging = DoDragCircularButtonOnPress(gui, name, pos, screenRadius);
 
     if(isDragging)
@@ -500,7 +500,7 @@ DoRotationDragButtonWithLine(Gui *gui,
 {
     GuiDefaultParameters(gui);
     r32 lineWidth = 2.0 *camera->scale;
-    Vec2 to = v2_add(center, v2_polar(*angle, length));
+    Vec2 to = V2Add(center, V2Polar(*angle, length));
     Push2DLineColored(renderTools->worldRenderGroup, center, to, lineWidth, squareRegion, lineColor);
     return DoRotationDragButton(gui, name, center, angle, length, screenRadius);
 }
@@ -515,13 +515,13 @@ DoDragButtonAlongAxis(Gui *gui,
 {
     GuiDefaultParameters(gui);
     Vec2 mousePos = camera->mousePos;
-    Vec2 pos = v2_add(axisOrigin, v2_muls(axis, *length));
+    Vec2 pos = V2Add(axisOrigin, V2MulS(axis, *length));
 
     b32 isDragging = DoDragCircularButtonOnPress(gui, name, pos, screenRadius);
     if(isDragging)
     {
-        r32 dotPos = v2_dot(axis, mousePos);
-        r32 dotOffset = v2_dot(axis, axisOrigin);
+        r32 dotPos = V2Dot(axis, mousePos);
+        r32 dotOffset = V2Dot(axis, axisOrigin);
         *length = dotPos-dotOffset;
     }
     return isDragging;
@@ -565,12 +565,12 @@ DoRadialMenuV(Gui *gui, Vec2 center, b32 isActive, int nItems, va_list args)
             }
 
             char *text = va_arg(args, char*);
-            Vec2 dims = GetStringSize(assets->fontRenderer, text, vec2(0,0)).dims;
+            Vec2 dims = GetStringSize(assets->fontRenderer, text, V2(0,0)).dims;
             Push2DTextColored(renderGroup, 
                     fontRenderer, 
-                    vec2(gui->radialMenuPos.x+c*renderRadius-dims.x/2, gui->radialMenuPos.y+s*renderRadius+dims.y/2), 
+                    V2(gui->radialMenuPos.x+c*renderRadius-dims.x/2, gui->radialMenuPos.y+s*renderRadius+dims.y/2), 
                     text,
-                    hit ? vec4(1,1,0,1) : vec4(1,1,1,1));
+                    hit ? V4(1,1,0,1) : V4(1,1,1,1));
         }
     }
     if(!gui->isRadialMenuActive && isActive)
@@ -644,9 +644,9 @@ InitGui(Gui *gui,
     gui->renderTools = PushStruct(arena, BasicRenderTools);
     InitRenderTools(arena, gui->renderTools, assets, camera, appState->screenCamera);
 
-    gui->defaultColor = vec4(0.6, 0.3, 0.3, 1.0);
-    gui->hitColor = vec4(0.8, 0.5, 0.5, 1.0);
-    gui->pressedColor = vec4(0.4, 0.2, 0.2, 1.0);
+    gui->defaultColor = V4(0.6, 0.3, 0.3, 1.0);
+    gui->hitColor = V4(0.8, 0.5, 0.5, 1.0);
+    gui->pressedColor = V4(0.4, 0.2, 0.2, 1.0);
 }
 
 #undef GuiDefaultParameters

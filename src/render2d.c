@@ -195,9 +195,9 @@ void
 PushQuad2(SpriteBatch *batch, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, Vec2 texSize)
 {
     ui16 lastIdx = batch->nVertices;
-    PushVertex2(batch, p0, vec2(texOrig.x, texOrig.y+texSize.y), batch->colorState);
-    PushVertex2(batch, p1, vec2(texOrig.x+texSize.x, texOrig.y+texSize.y), batch->colorState);
-    PushVertex2(batch, p2, vec2(texOrig.x+texSize.x, texOrig.y), batch->colorState);
+    PushVertex2(batch, p0, V2(texOrig.x, texOrig.y+texSize.y), batch->colorState);
+    PushVertex2(batch, p1, V2(texOrig.x+texSize.x, texOrig.y+texSize.y), batch->colorState);
+    PushVertex2(batch, p2, V2(texOrig.x+texSize.x, texOrig.y), batch->colorState);
     PushVertex2(batch, p3, texOrig, batch->colorState);
     PushIndex(batch, lastIdx);
     PushIndex(batch, lastIdx+1);
@@ -225,7 +225,7 @@ PushSemiCircle2(SpriteBatch *batch,
             atPoint++)
     {
         r32 angle = minAngle+angDiff*atPoint;
-        Vec2 point = v2_add(pos, v2_polar(angle, radius));
+        Vec2 point = V2Add(pos, V2Polar(angle, radius));
         PushVertex2(batch, point, tex->pos, batch->colorState); 
     }
     for(ui32 atPoint = 0;
@@ -259,11 +259,11 @@ PushLineCircle2(SpriteBatch *batch,
         r32 c = cosf(angle);
         r32 s = sinf(angle);
         PushVertex2(batch, 
-                vec2(center.x+c*innerRadius, center.y+s*innerRadius),
+                V2(center.x+c*innerRadius, center.y+s*innerRadius),
                 tex->pos, 
                 batch->colorState);
         PushVertex2(batch, 
-                vec2(center.x+c*outerRadius, center.y+s*outerRadius),
+                V2(center.x+c*outerRadius, center.y+s*outerRadius),
                 tex->pos, 
                 batch->colorState);
     }
@@ -291,9 +291,9 @@ PushRect2(SpriteBatch *batch, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
 {
     PushQuad2(batch, 
             orig, 
-            vec2(orig.x+size.x, orig.y), 
-            vec2(orig.x+size.x, orig.y+size.y),
-            vec2(orig.x, orig.y+size.y),
+            V2(orig.x+size.x, orig.y), 
+            V2(orig.x+size.x, orig.y+size.y),
+            V2(orig.x, orig.y+size.y),
             texOrig, 
             texSize);
 }
@@ -301,21 +301,21 @@ PushRect2(SpriteBatch *batch, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
 void
 PushLineRect2(SpriteBatch *batch, Vec2 origin, Vec2 size, Vec2 texOrig, Vec2 texSize, r32 lineWidth)
 {
-    PushRect2(batch, origin, vec2(size.x, lineWidth), texOrig, texSize);
-    PushRect2(batch, origin, vec2(lineWidth, size.y), texOrig, texSize);
-    PushRect2(batch, vec2(origin.x+size.x-lineWidth, origin.y), vec2(lineWidth, size.y), texOrig, texSize);
-    PushRect2(batch, vec2(origin.x, origin.y+size.y-lineWidth), vec2(size.x, lineWidth), texOrig, texSize);
+    PushRect2(batch, origin, V2(size.x, lineWidth), texOrig, texSize);
+    PushRect2(batch, origin, V2(lineWidth, size.y), texOrig, texSize);
+    PushRect2(batch, V2(origin.x+size.x-lineWidth, origin.y), V2(lineWidth, size.y), texOrig, texSize);
+    PushRect2(batch, V2(origin.x, origin.y+size.y-lineWidth), V2(size.x, lineWidth), texOrig, texSize);
 }
 
 void
 PushLine2(SpriteBatch *batch, Vec2 from, Vec2 to, r32 lineWidth, Vec2 texOrig, Vec2 texSize)
 {
-    Vec2 diff = v2_sub(to, from);
-    r32 invl = 1.0/v2_length(diff);
-    Vec2 perp = vec2(diff.y*invl*lineWidth/2.0, -diff.x*invl*lineWidth/2.0);
+    Vec2 diff = V2Sub(to, from);
+    r32 invl = 1.0/V2Len(diff);
+    Vec2 perp = V2(diff.y*invl*lineWidth/2.0, -diff.x*invl*lineWidth/2.0);
     PushQuad2(batch,
-            v2_add(from, perp), v2_add(to, perp),
-            v2_sub(to, perp), v2_sub(from, perp),
+            V2Add(from, perp), V2Add(to, perp),
+            V2Sub(to, perp), V2Sub(from, perp),
             texOrig,
             texSize);
 }
@@ -330,12 +330,12 @@ PushOrientedRectangle2(SpriteBatch *batch,
 {
     r32 c = cosf(angle);
     r32 s = sinf(angle);
-    Vec2 axis0 = vec2(c*width/2.0, s*width/2.0);
-    Vec2 axis1 = vec2(s*height/2.0, -c*height/2.0);
-    Vec2 p00 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, -1)));
-    Vec2 p10 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, -1)));
-    Vec2 p11 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, 1)));
-    Vec2 p01 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, 1)));
+    Vec2 axis0 = V2(c*width/2.0, s*width/2.0);
+    Vec2 axis1 = V2(s*height/2.0, -c*height/2.0);
+    Vec2 p00 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, -1)));
+    Vec2 p10 = V2Add(pos, V2Add(V2MulS(axis0, 1), V2MulS(axis1, -1)));
+    Vec2 p11 = V2Add(pos, V2Add(V2MulS(axis0, 1), V2MulS(axis1, 1)));
+    Vec2 p01 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, 1)));
 
     PushQuad2(batch, p00, p10, p11, p01, texture->pos, texture->size);
 }
@@ -351,12 +351,12 @@ PushOrientedLineRectangle2(SpriteBatch *batch,
 {
     r32 c = cosf(angle);
     r32 s = sinf(angle);
-    Vec2 axis0 = vec2(c*width/2.0, s*width/2.0);
-    Vec2 axis1 = vec2(s*height/2.0, -c*height/2.0);
-    Vec2 p00 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, -1)));
-    Vec2 p10 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, -1)));
-    Vec2 p11 = v2_add(pos, v2_add(v2_muls(axis0, 1), v2_muls(axis1, 1)));
-    Vec2 p01 = v2_add(pos, v2_add(v2_muls(axis0, -1), v2_muls(axis1, 1)));
+    Vec2 axis0 = V2(c*width/2.0, s*width/2.0);
+    Vec2 axis1 = V2(s*height/2.0, -c*height/2.0);
+    Vec2 p00 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, -1)));
+    Vec2 p10 = V2Add(pos, V2Add(V2MulS(axis0, 1), V2MulS(axis1, -1)));
+    Vec2 p11 = V2Add(pos, V2Add(V2MulS(axis0, 1), V2MulS(axis1, 1)));
+    Vec2 p01 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, 1)));
 
     PushLine2(batch, p00, p10, lineWidth, texture->pos, texture->size);
     PushLine2(batch, p10, p11, lineWidth, texture->pos, texture->size);
@@ -367,13 +367,13 @@ PushOrientedLineRectangle2(SpriteBatch *batch,
 void
 PushCircle2(SpriteBatch *batch, Vec2 center, r32 size, AtlasRegion *tex)
 {
-    PushRect2(batch, vec2(center.x-size, center.y-size), vec2(size*2, size*2), tex->pos, tex->size);
+    PushRect2(batch, V2(center.x-size, center.y-size), V2(size*2, size*2), tex->pos, tex->size);
 }
 
 internal inline Vec2
 Lerp2(Vec2 from, Vec2 to, r32 lambda)
 {
-    return v2_add(v2_muls(from, 1.0-lambda), v2_muls(to, lambda));
+    return V2Add(V2MulS(from, 1.0-lambda), V2MulS(to, lambda));
 }
 
 // Stencil Buffer Uitls
@@ -431,8 +431,8 @@ DrawString2D(SpriteBatch *batch, FontRenderer *fontRenderer, Vec2 pos, char *seq
     while(*sequence)
     {
         stbtt_GetPackedQuad(fontRenderer->charData, w, h, *sequence-32, &x, &y, &q, 0);
-        PushRect2(batch, vec2(q.x0, q.y0), vec2(q.x1-q.x0, q.y1-q.y0), 
-                vec2(q.s0, q.t1), vec2(q.s1-q.s0, q.t0-q.t1));
+        PushRect2(batch, V2(q.x0, q.y0), V2(q.x1-q.x0, q.y1-q.y0), 
+                V2(q.s0, q.t1), V2(q.s1-q.s0, q.t0-q.t1));
         sequence++;
     }
 }

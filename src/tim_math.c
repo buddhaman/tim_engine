@@ -29,13 +29,13 @@ RandomNormalPair()
         s = x*x + y*y;
     } while(s > 1.0);
     r32 factor = sqrtf(-2*logf(s)/s);
-    return vec2(factor*x, factor*y);
+    return V2(factor*x, factor*y);
 }
 
 internal inline Vec2
-v2_polar(r32 angle, r32 length)
+V2Polar(r32 angle, r32 length)
 {
-    return vec2(cosf(angle)*length, sinf(angle)*length);
+    return V2(cosf(angle)*length, sinf(angle)*length);
 }
 
 internal inline r32 
@@ -49,7 +49,7 @@ GetZIntersection(Vec3 rayPos, Vec3 rayDir, r32 z)
 {
     r32 zDiff = z-rayPos.z;
     r32 s = zDiff/rayDir.z;
-    return v3_add(rayPos, v3_muls(rayDir, s));
+    return V3Add(rayPos, V3MulS(rayDir, s));
 }
 
 internal inline b32
@@ -82,14 +82,14 @@ GetCoordinateInBox(Vec2 pos, Vec2 dims, r32 angle, Vec2 point)
     r32 yDiff = point.y-pos.y;
     r32 xProj = c*xDiff + s*yDiff;
     r32 yProj = -s*xDiff + c*yDiff;
-    return vec2(xProj/dims.x+0.5, yProj/dims.y+0.5);
+    return V2(xProj/dims.x+0.5, yProj/dims.y+0.5);
 }
 
 internal inline b32
 CirclePointIntersect(Vec2 pos, r32 radius, Vec2 point)
 {
-    Vec2 diff = v2_sub(point, pos);
-    return v2_length2(diff) <= radius*radius;
+    Vec2 diff = V2Sub(point, pos);
+    return V2Len2(diff) <= radius*radius;
 }
 
 // Ignores points inside the rectangle.
@@ -100,7 +100,7 @@ GetNearestBoxEdgeLocation(Vec2 pos, Vec2 dims, r32 angle, Vec2 point, BoxEdgeLoc
     r32 s = sinf(angle);
     r32 xDiff = point.x-pos.x;
     r32 yDiff = point.y-pos.y;
-    Vec2 p = vec2(c*xDiff + s*yDiff, -s*xDiff + c*yDiff);   // point coordinates seen from box transform.
+    Vec2 p = V2(c*xDiff + s*yDiff, -s*xDiff + c*yDiff);   // point coordinates seen from box transform.
 
     r32 result = -1.0;
     *location = (BoxEdgeLocation){};
@@ -113,7 +113,7 @@ GetNearestBoxEdgeLocation(Vec2 pos, Vec2 dims, r32 angle, Vec2 point, BoxEdgeLoc
         {
             int sign = Sign(p.y);
             r32 yPos = sign*dims.y/2.0;
-            location->pos = vec2(p.x, yPos);
+            location->pos = V2(p.x, yPos);
             location->yEdge = sign;
             location->offset = 1.0-sign*(p.x+sign*dims.x/2)/dims.x;
             result = fabsf(p.y-yPos);
@@ -127,7 +127,7 @@ GetNearestBoxEdgeLocation(Vec2 pos, Vec2 dims, r32 angle, Vec2 point, BoxEdgeLoc
     {
         int sign = Sign(p.x);
         r32 xPos = sign*dims.x/2.0;
-        location->pos = vec2(xPos, p.y);
+        location->pos = V2(xPos, p.y);
         location->xEdge = sign;
         location->offset = sign*(p.y+sign*dims.y/2)/dims.y;
         result = fabsf(p.x-xPos);
@@ -136,16 +136,16 @@ GetNearestBoxEdgeLocation(Vec2 pos, Vec2 dims, r32 angle, Vec2 point, BoxEdgeLoc
     {
         int xSign = Sign(p.x);
         int ySign = Sign(p.y);
-        Vec2 corner = vec2(xSign*dims.x/2.0, ySign*dims.y/2.0);
+        Vec2 corner = V2(xSign*dims.x/2.0, ySign*dims.y/2.0);
         location->pos = corner;
         location->xEdge = xSign==ySign ? xSign : 0;
         location->yEdge = xSign==ySign ? 0 : ySign;
         location->offset = 1.0;
-        result = v2_dist(corner, p);
+        result = V2Dist(corner, p);
     }
 
     // Transform result back to rotated rectangle.
-    location->pos = vec2(
+    location->pos = V2(
             pos.x + c*location->pos.x - s*location->pos.y,
             pos.y + s*location->pos.x + c*location->pos.y
             );
@@ -170,14 +170,14 @@ GetBoxEdgePosition(Vec2 pos, Vec2 dims, r32 angle, int xEdge, int yEdge, r32 off
         result.y = yEdge*dims.y/2;
     }
     // Transform to rotated rectangle.
-    result = v2_add(pos, v2_rotate(result, angle));
+    result = V2Add(pos, V2Rotate(result, angle));
     return result;
 }
 
 internal inline Vec4
 RGBAToVec4(ui32 hex)
 {
-    return vec4( (hex >> 24 & 255)/255.0f,
+    return V4( (hex >> 24 & 255)/255.0f,
             (hex >> 16 & 255)/255.0f,
             (hex >> 8 & 255)/255.0f,
             (hex & 255)/255.0f);

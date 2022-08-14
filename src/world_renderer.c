@@ -10,7 +10,7 @@ DrawBodyPartWithTexture(RenderGroup *renderGroup,
 {
     Push2DTexOrientedRectangleColored(renderGroup,
             pos,
-            vec2(part->width+textureOverhang*2, part->height+textureOverhang*2),
+            V2(part->width+textureOverhang*2, part->height+textureOverhang*2),
             angle,
             textureHandle,
             part->uvPos,
@@ -41,13 +41,13 @@ DrawGrid(SpriteBatch *batch,
     {
         r32 fade = (maxLines-mostLines)/((r32)(maxLines-fadeAfter));
         if(fade > 1.0) fade = 1.0;
-        batch->colorState = vec4(1.0, 1.0, 1.0, fade*alpha);
+        batch->colorState = V4(1.0, 1.0, 1.0, fade*alpha);
         for(ui32 xIdx = 0; xIdx < nXLines; xIdx++)
         {
             r32 x = xStart+xIdx*gridResolution;
             PushRect2(batch, 
-                    vec2(x-gridLineWidth/2.0, minY), 
-                    vec2(gridLineWidth, maxY-minY), 
+                    V2(x-gridLineWidth/2.0, minY), 
+                    V2(gridLineWidth, maxY-minY), 
                     texture->pos, 
                     texture->size);
         }
@@ -55,8 +55,8 @@ DrawGrid(SpriteBatch *batch,
         {
             r32 y = yStart+yIdx*gridResolution;
             PushRect2(batch, 
-                    vec2(minX, y-gridLineWidth/2.0),
-                    vec2(maxX-minX, gridLineWidth), 
+                    V2(minX, y-gridLineWidth/2.0),
+                    V2(maxX-minX, gridLineWidth), 
                     texture->pos, 
                     texture->size);
         }

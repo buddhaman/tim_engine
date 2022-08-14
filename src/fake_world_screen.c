@@ -33,7 +33,7 @@ DrawSolidRigidBody(RenderGroup *renderGroup,
 
     Push2DOrientedRectangleColored(renderGroup, 
             pos,
-            vec2(body->width, body->height),
+            V2(body->width, body->height),
             angle,
             texture,
             color);
@@ -49,7 +49,7 @@ DrawBodyPart(RenderGroup *renderGroup,
 {
     RigidBody *body = part->body;
     r32 shade = GetBodyPartShade(part, dragColorIntensity);
-    Vec4 color = vec4(shade*creatureColor.x, 
+    Vec4 color = V4(shade*creatureColor.x, 
             shade*creatureColor.y, 
             shade*creatureColor.z, 
             alpha);
@@ -71,10 +71,10 @@ DrawVecR32(RenderGroup *renderGroup,
     for(ui32 i = 0; i < vec->n; i++)
     {
         r32 v = fabsf(vec->v[i])/maxAbs;
-        Vec4 color = vec->v[i] < 0 ? vec4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
-            : vec4(positiveColor.x*v, positiveColor.y*v, positiveColor.z*v, 1.0);
-        Push2DRectColored(renderGroup, vec2(pos.x+i*xDir*size, pos.y+i*yDir*size), 
-                vec2(size, size), texture, color);
+        Vec4 color = vec->v[i] < 0 ? V4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
+            : V4(positiveColor.x*v, positiveColor.y*v, positiveColor.z*v, 1.0);
+        Push2DRectColored(renderGroup, V2(pos.x+i*xDir*size, pos.y+i*yDir*size), 
+                V2(size, size), texture, color);
     }
 }
 
@@ -93,27 +93,27 @@ DrawMatR32(RenderGroup *renderGroup,
     {
         r32 m = mat->m[i+mat->w*j];
         r32 v = fabsf(m)/maxAbs;
-        Vec4 color =  m < 0 ? vec4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
-            : vec4(positiveColor.x*v, positiveColor.y*v, positiveColor.z*v, 1.0);
-        Push2DRectColored(renderGroup, vec2(pos.x+i*size, pos.y+j*size), 
-                vec2(size, size), texture, color);
+        Vec4 color =  m < 0 ? V4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
+            : V4(positiveColor.x*v, positiveColor.y*v, positiveColor.z*v, 1.0);
+        Push2DRectColored(renderGroup, V2(pos.x+i*size, pos.y+j*size), 
+                V2(size, size), texture, color);
     }
 }
 
 internal inline Vec2
 DrawBrainVector(RenderGroup *renderGroup, VecR32 *vec, Vec2 pos, r32 size, r32 maxAbs, int xDir, int yDir, AtlasRegion *texture)
 {
-    DrawVecR32(renderGroup, vec, pos, size, vec3(1,0,0), vec3(0,1,0), maxAbs, xDir, yDir, texture);
+    DrawVecR32(renderGroup, vec, pos, size, V3(1,0,0), V3(0,1,0), maxAbs, xDir, yDir, texture);
     r32 w = xDir!=0 ? vec->n*size*xDir : size;
     r32 h = yDir!=0 ? vec->n*size*yDir : size;
-    return vec2(pos.x+w, pos.y+h);
+    return V2(pos.x+w, pos.y+h);
 }
 
 internal inline Vec2
 DrawBrainMatrix(RenderGroup *renderGroup, MatR32 *mat, Vec2 pos, r32 size, r32 maxAbs, AtlasRegion *texture)
 {
-    DrawMatR32(renderGroup, mat, pos, size, vec3(1,0,0), vec3(0,1,0), maxAbs, texture);
-    return vec2(pos.x+mat->w*size, pos.y+mat->h*size);
+    DrawMatR32(renderGroup, mat, pos, size, V3(1,0,0), V3(0,1,0), maxAbs, texture);
+    return V2(pos.x+mat->w*size, pos.y+mat->h*size);
 }
 
 void
@@ -128,13 +128,13 @@ DrawClock(RenderGroup *renderGroup,
     r32 c = cosf(radians);
     r32 s = sinf(radians);
 
-    Push2DCircleColored(renderGroup, pos, radius+lineWidth, circleTexture, vec4(0,0,0,1));
-    Push2DCircleColored(renderGroup, pos, radius, circleTexture, vec4(0.5, 0.5, 0.5, 1.0));
+    Push2DCircleColored(renderGroup, pos, radius+lineWidth, circleTexture, V4(0,0,0,1));
+    Push2DCircleColored(renderGroup, pos, radius, circleTexture, V4(0.5, 0.5, 0.5, 1.0));
     Push2DLineColored(renderGroup, 
             pos, 
-            v2_add(pos, vec2(c*radius, s*radius)), 
+            V2Add(pos, V2(c*radius, s*radius)), 
             lineWidth, 
-            squareTexture, vec4(0, 0, 0, 1));
+            squareTexture, V4(0, 0, 0, 1));
 }
 
 void
@@ -148,7 +148,7 @@ DrawFakeWorld(FakeWorldScreen *screen,
     AtlasRegion *circleRegion = defaultAtlas->regions;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
 
-    Push2DCircleColored(renderGroup, vec2(0, 0), 3, circleRegion, vec4(1,1,1,0.5));
+    Push2DCircleColored(renderGroup, V2(0, 0), 3, circleRegion, V4(1,1,1,0.5));
 
     if(screen->isPopulationVisible)
     {
@@ -174,7 +174,7 @@ DrawFakeWorld(FakeWorldScreen *screen,
             floorIdx++)
     {
         RigidBody *floor = world->staticBodies[floorIdx];
-        DrawSolidRigidBody(renderGroup, floor, squareRegion, vec4(0.5, 0.5, 0.5, 1.0));
+        DrawSolidRigidBody(renderGroup, floor, squareRegion, V4(0.5, 0.5, 0.5, 1.0));
     }
 
     // Draw first creature
@@ -201,7 +201,7 @@ DrawFakeWorld(FakeWorldScreen *screen,
         Vec2 pos = GetBodyPos(body);
         r32 angle = GetBodyAngle(body);
         r32 shade = screen->isDragVisible ? GetBodyPartShade(part, 1.0) : 1.0;
-        Vec4 color = vec4(shade, shade, shade, 1.0);
+        Vec4 color = V4(shade, shade, shade, 1.0);
         DrawBodyPartWithTexture(renderGroup, part->def, pos, angle, world->def.textureOverhang, 
                 creatureTextureAtlas->textureHandle, color);
     }
@@ -297,7 +297,7 @@ UpdateFakeWorldScreen(AppState *appState,
 
     if(world->trainingType==TRAIN_DISTANCE_TARGET)
     {
-        Vec4 circleColor = vec4(1.0, 1.0, 0.0, 1.0);
+        Vec4 circleColor = V4(1.0, 1.0, 0.0, 1.0);
         Push2DCircleColored(worldRenderGroup, world->target, 10, circleRegion, circleColor);
     }
 
@@ -308,16 +308,16 @@ UpdateFakeWorldScreen(AppState *appState,
     r32 bottomBarHeight = 50;
 
     Push2DRectColored(screenRenderGroup,
-            vec2(0,screenHeight-bottomBarHeight),
-            vec2(screenWidth, bottomBarHeight),
+            V2(0,screenHeight-bottomBarHeight),
+            V2(screenWidth, bottomBarHeight),
             squareRegion,
             appState->clearColor);
 
     Push2DRectColored(screenRenderGroup,
-            vec2(0, screenHeight-bottomBarHeight),
-            vec2(screenWidth, 2),
+            V2(0, screenHeight-bottomBarHeight),
+            V2(screenWidth, 2),
             squareRegion,
-            vec4(1,1,1,1));
+            V4(1,1,1,1));
 
     if(screen->selectedCreature)
     {
@@ -334,36 +334,36 @@ UpdateFakeWorldScreen(AppState *appState,
         r32 maxRowY = 0;
         Vec2 lastPos;
 
-        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Wf, vec2(atX, atY), size, maxAbs, squareRegion);
+        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Wf, V2(atX, atY), size, maxAbs, squareRegion);
         atX = lastPos.x+pad;
         maxRowY = Max(maxRowY, lastPos.y);
 
-        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Uf, vec2(atX, atY), size, maxAbs, squareRegion);
+        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Uf, V2(atX, atY), size, maxAbs, squareRegion);
         atX = lastPos.x+pad;
         maxRowY = Max(maxRowY, lastPos.y);
 
-        lastPos = DrawBrainVector(screenRenderGroup, &brain->bf, vec2(atX, atY), size, maxAbs, 0, 1, squareRegion);
+        lastPos = DrawBrainVector(screenRenderGroup, &brain->bf, V2(atX, atY), size, maxAbs, 0, 1, squareRegion);
         atX = leftX;
         atY = maxRowY+pad;
         maxRowY = 0;
 
-        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Wh, vec2(atX, atY), size, maxAbs, squareRegion);
+        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Wh, V2(atX, atY), size, maxAbs, squareRegion);
         atX = lastPos.x+pad;
         maxRowY = Max(maxRowY, lastPos.y);
 
-        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Uh, vec2(atX, atY), size, maxAbs, squareRegion);
+        lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Uh, V2(atX, atY), size, maxAbs, squareRegion);
         atX = lastPos.x+pad;
         maxRowY = Max(maxRowY, lastPos.y);
 
-        lastPos = DrawBrainVector(screenRenderGroup, &brain->bh, vec2(atX, atY), size, maxAbs, 0, 1, squareRegion);
+        lastPos = DrawBrainVector(screenRenderGroup, &brain->bh, V2(atX, atY), size, maxAbs, 0, 1, squareRegion);
         atX = leftX;
         atY = maxRowY+pad;
         maxRowY = 0;
 
-        DrawBrainVector(screenRenderGroup, &brain->x, vec2(atX, atY), size, 1.0, 1, 0, squareRegion);
-        DrawBrainVector(screenRenderGroup, &brain->h, vec2(atX, atY+size), size, 1.0, 1, 0, squareRegion);
-        DrawBrainVector(screenRenderGroup, &brain->hc, vec2(atX, atY+size*2), size, 1.0, 1, 0, squareRegion);
-        DrawBrainVector(screenRenderGroup, &brain->f, vec2(atX, atY+size*3), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(screenRenderGroup, &brain->x, V2(atX, atY), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(screenRenderGroup, &brain->h, V2(atX, atY+size), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(screenRenderGroup, &brain->hc, V2(atX, atY+size*2), size, 1.0, 1, 0, squareRegion);
+        DrawBrainVector(screenRenderGroup, &brain->f, V2(atX, atY+size*3), size, 1.0, 1, 0, squareRegion);
         atY+=size*4+pad*3;
 
         // Draw clocks
@@ -373,7 +373,7 @@ UpdateFakeWorldScreen(AppState *appState,
         {
             r32 radians = GetInternalClockValue(creature, clockIdx);
             r32 radius = 20;
-            DrawClock(screenRenderGroup, vec2(atX+radius+radius*2*clockIdx+pad*2*clockIdx, atY+radius), 
+            DrawClock(screenRenderGroup, V2(atX+radius+radius*2*clockIdx+pad*2*clockIdx, atY+radius), 
                     radius, radians, squareRegion, circleRegion);
         }
 
@@ -385,21 +385,21 @@ UpdateFakeWorldScreen(AppState *appState,
                 world->trainingType==TRAIN_DISTANCE_TARGET)
         {
             r32 angle = GetBodyAngle(selectedBodyPart->body);
-            Vec2 dir = v2_polar(-angle, 100.0);
+            Vec2 dir = V2Polar(-angle, 100.0);
             Vec2 pos = CameraToScreenPos(camera, appState, GetBodyPos(selectedBodyPart->body));
             Vec2 targetPos = CameraToScreenPos(camera, appState, world->target);
-            Vec2 to = v2_add(pos, dir);
+            Vec2 to = V2Add(pos, dir);
             Push2DLineColored(screenRenderGroup, 
                     pos, 
                     to, 
                     lineWidth,
-                    squareRegion, vec4(1, 0, 0, 1));
+                    squareRegion, V4(1, 0, 0, 1));
             Push2DLineColored(screenRenderGroup, 
                     pos, 
                     targetPos,
                     lineWidth,
                     squareRegion,
-                    vec4(0, 1, 0, 1));
+                    V4(0, 1, 0, 1));
         }
     }
 
@@ -411,7 +411,7 @@ UpdateFakeWorldScreen(AppState *appState,
             screen->tick, 
             screen->ticksPerGeneration, 
             screen->avgFitness);
-    Push2DText(screenRenderGroup, fontRenderer, vec2(20, screenHeight-bottomBarHeight/2+8), info);
+    Push2DText(screenRenderGroup, fontRenderer, V2(20, screenHeight-bottomBarHeight/2+8), info);
 
     // Draw tooltip
     if(toolTip[0])
@@ -454,8 +454,8 @@ UpdateFakeWorldScreen(AppState *appState,
 
     ShaderInstance *blurShaderInstance = assets->blurShaderInstance;
     Camera2D shadowCamera;
-    Vec2 shadowOffset = vec2(-5, -5);
-    shadowCamera.pos = v2_sub(camera->pos, shadowOffset);
+    Vec2 shadowOffset = V2(-5, -5);
+    shadowCamera.pos = V2Sub(camera->pos, shadowOffset);
     shadowCamera.scale = camera->scale;
     shadowCamera.isYUp = camera->isYUp;
     UpdateCamera2D(&shadowCamera, appState);
@@ -477,29 +477,29 @@ UpdateFakeWorldScreen(AppState *appState,
     r32 invScreenX = 1.0/camera->size.x;
     r32 invScreenY = 1.0/camera->size.y;
     blurShaderInstance->mat3Transform = &camera->transform;
-    blurShaderInstance->dir2 = vec2(invScreenX, invScreenY);
+    blurShaderInstance->dir2 = V2(invScreenX, invScreenY);
     blurShaderInstance->radius = 1800;
     DrawDirectRect(assets->batch,
             blurShaderInstance,
-            vec2(camera->pos.x-camera->size.x/2, camera->pos.y-camera->size.y/2),
+            V2(camera->pos.x-camera->size.x/2, camera->pos.y-camera->size.y/2),
             camera->size,
             frameBuffer0->colorTexture,
-            vec2(0,1),
-            vec2(1,-1),
-            vec4(1, 1, 1, 1.0));
+            V2(0,1),
+            V2(1,-1),
+            V4(1, 1, 1, 1.0));
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, appState->screenWidth, appState->screenHeight);
 
-    blurShaderInstance->dir2 = vec2(-invScreenY, invScreenX);
+    blurShaderInstance->dir2 = V2(-invScreenY, invScreenX);
     DrawDirectRect(assets->batch,
             blurShaderInstance,
-            vec2(camera->pos.x-camera->size.x/2, camera->pos.y-camera->size.y/2),
+            V2(camera->pos.x-camera->size.x/2, camera->pos.y-camera->size.y/2),
             camera->size,
             frameBuffer1->colorTexture,
-            vec2(0,1),
-            vec2(1,-1),
-            vec4(0, 0, 0, 0.4));
+            V2(0,1),
+            V2(1,-1),
+            V4(0, 0, 0, 0.4));
 
     ExecuteAndFlushRenderGroup(worldRenderGroup, assets, renderTools->worldShader);
     ExecuteAndFlushRenderGroup(screenRenderGroup, assets, renderTools->screenShader);

@@ -67,7 +67,7 @@ internal inline Vec2
 GetBodyPos(RigidBody *body)
 {
     cpVect pos = cpBodyGetPosition(body->body);
-    return vec2(pos.x, pos.y);
+    return V2(pos.x, pos.y);
 }
 
 internal inline r32
@@ -81,7 +81,7 @@ GetRigidBodyBox(RigidBody *body)
 {
     cpVect pos = cpBodyGetPosition(body->body);
     r32 angle = GetBodyAngle(body);
-    return (OrientedBox){vec2(pos.x, pos.y), vec2(body->width, body->height), angle};
+    return (OrientedBox){V2(pos.x, pos.y), V2(body->width, body->height), angle};
 }
 
 internal r32
@@ -106,7 +106,7 @@ FitnessDistanceTarget(FakeWorld *world, Creature *creature)
 {
     // Position of main bodypart
     Vec2 creaturePos = GetBodyPos(creature->bodyParts->body);
-    r32 dist = v2_dist(creaturePos, world->target);
+    r32 dist = V2Dist(creaturePos, world->target);
     return -dist;
 }
 
@@ -206,11 +206,11 @@ RestartFakeWorld(FakeWorld *world)
     if(world->trainingType==TRAIN_DISTANCE_TARGET)
     {
         r32 randomAngle = RandomR32(-M_PI, M_PI);
-        world->target = v2_polar(randomAngle, 500.0);
+        world->target = V2Polar(randomAngle, 500.0);
     }
     else if(world->trainingType==TRAIN_WALK_RIGHT)
     {
-        AddStaticRectangle(world, vec2(0,-150.0), 3200.0, 40.0, 0.0);
+        AddStaticRectangle(world, V2(0,-150.0), 3200.0, 40.0, 0.0);
         cpSpaceSetGravity(world->space, cpv(0, -1200.0));
     }
 
@@ -223,9 +223,9 @@ RestartFakeWorld(FakeWorld *world)
         VecR32 *gene = world->strategies->genes+creatureIdx;
         r32 *state = PushAndZeroArray(world->transientMemory, r32, transientStateSize);
         InitMinimalGatedUnit(brain, def->nInputs, def->nOutputs, def->nHidden, gene, state);
-        AddCreature(world, vec2(RandomR32(-startXDev, startXDev), 0), &world->def, brain);
+        AddCreature(world, V2(RandomR32(-startXDev, startXDev), 0), &world->def, brain);
     }
-    //AddStaticRectangle(world, vec2(0,0), 1600.0, 40, 0.0);
+    //AddStaticRectangle(world, V2(0,0), 1600.0, 40, 0.0);
 }
 
 void

@@ -45,7 +45,7 @@ internal inline b32
 BodyPartTexturePoint2Intersect(BodyPartDefinition *part, r32 textureOverhang, Vec2 point)
 {
     return OrientedBoxPoint2Intersect(part->pos,
-            vec2(part->width+textureOverhang*2, part->height+textureOverhang*2), part->angle, point);
+            V2(part->width+textureOverhang*2, part->height+textureOverhang*2), part->angle, point);
 }
 
 ui32
@@ -99,14 +99,14 @@ RecalculateSubNodeBodyParts(CreatureDefinition *def,
         BodyPartDefinition *subPart = parts[bodyPartIdx];
         subPart->degree = parent->degree+1;
         Vec2 pivotPoint = GetBoxEdgePosition(parent->pos, 
-                vec2(parent->width, parent->height),
+                V2(parent->width, parent->height),
                 parent->angle,
                 subPart->xEdge,
                 subPart->yEdge,
                 subPart->offset);
         r32 edgeAngle = atan2f(subPart->yEdge, subPart->xEdge);
         r32 totalAngle = NormalizeAngle(parent->angle + edgeAngle) + subPart->localAngle;
-        Vec2 center = v2_add(pivotPoint, v2_polar(totalAngle, subPart->width/2));
+        Vec2 center = V2Add(pivotPoint, V2Polar(totalAngle, subPart->width/2));
 
         subPart->pivotPoint = pivotPoint;
         subPart->pos = center;

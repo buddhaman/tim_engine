@@ -10,7 +10,6 @@
 #define NK_INCLUDE_FIXED_TYPES
 #include "nuklear.h"
 #include "nuklear_sdl_gl3.h"
-#include "math_3d.h"
 
 #include "stb_ds.h"
 #include "stb_image.h"

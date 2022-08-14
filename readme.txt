@@ -12,10 +12,14 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 
 Nice: Do competition. 150 dollars for best creature. 
 
-Decide what to do next:
+Next landmark:
+ - Multiple training scenarios. Walking & swimming towards target.
+ - Pretty rendering with directional shadows.
+ - Own juicy interface.
+ - Water shader.
+ - Add decals, plants, rocks ground, worms tree, wind, day night cycle. Fun stuff, make it feel alive.
 
 SOON !!!!!: FUN STUFF::::
-- Write juicy button.   V
 - Replace interface with own interface  
 - Directional shadows.
 - Multiple layers, "ambient occlusion" on previous layer.
@@ -25,8 +29,6 @@ SOON !!!!!: FUN STUFF::::
 
 IMPORTANT FIRST:
 - OPTIONAL: save icons for creatures and select.
-- LATER: Replace entire ui with own ui.
-- LATER: abstract entre rendering out and make reusable. Make another simple game with engine.
 
 - Fancy rendering with shadows. Directional shadow casting.
 - Fancy rendering with normal/specular mapping. Generate 3d textures.
@@ -60,7 +62,7 @@ Make both juicy:
 - Particle system. Add particles when attaching/removing limbs.
 
 TODO:
-- Requires refactoring entire editor. Lots of work. 
+ - Make devlog of progress so far and short roadmap.
 
 LATER: 
 
@@ -77,6 +79,7 @@ LATER:
 - Write memory manager and give block to physics engine. Makes it easier to just throw away. 
 - Improve gui library. Current solution is very ugly.
 - RenderGroup statistics. Debug window.
+- Share creatures, setup webserver, publish them online and download.
 
 BRAIN EDIT SCREEN:
 - Refactor edit code. Make multiple states, one for brain, one for body.
@@ -90,6 +93,7 @@ BRAIN EDIT SCREEN:
 
 DONE:
 
+- Write juicy button.   
 - Use rendergroups in personal ui library.
 - Write basic button.
 - Render to framebuffer.
