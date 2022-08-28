@@ -16,8 +16,8 @@ SetFakeWorldSelection(FakeWorldScreen *screen,
     screen->selectedBodyPart = part;
 }
 
-internal inline r32
-GetBodyPartShade(BodyPart *part, r32 dragColorIntensity)
+internal inline R32
+GetBodyPartShade(BodyPart *part, R32 dragColorIntensity)
 {
     return 1.0-part->body->drag*dragColorIntensity;
 }
@@ -29,7 +29,7 @@ DrawSolidRigidBody(RenderGroup *renderGroup,
         Vec4 color)
 {
     Vec2 pos = GetBodyPos(body);
-    r32 angle = GetBodyAngle(body);
+    R32 angle = GetBodyAngle(body);
 
     Push2DOrientedRectangleColored(renderGroup, 
             pos,
@@ -43,12 +43,12 @@ void
 DrawBodyPart(RenderGroup *renderGroup,
         BodyPart *part,
         Vec3 creatureColor,
-        r32 alpha,
-        r32 dragColorIntensity,
+        R32 alpha,
+        R32 dragColorIntensity,
         AtlasRegion *texture)
 {
     RigidBody *body = part->body;
-    r32 shade = GetBodyPartShade(part, dragColorIntensity);
+    R32 shade = GetBodyPartShade(part, dragColorIntensity);
     Vec4 color = V4(shade*creatureColor.x, 
             shade*creatureColor.y, 
             shade*creatureColor.z, 
@@ -60,17 +60,17 @@ internal inline void
 DrawVecR32(RenderGroup *renderGroup,
         VecR32 *vec,
         Vec2 pos, 
-        r32 size,
+        R32 size,
         Vec3 negativeColor,
         Vec3 positiveColor,
-        r32 maxAbs,
+        R32 maxAbs,
         int xDir,
         int yDir,
         AtlasRegion *texture)
 {
-    for(ui32 i = 0; i < vec->n; i++)
+    for(U32 i = 0; i < vec->n; i++)
     {
-        r32 v = fabsf(vec->v[i])/maxAbs;
+        R32 v = fabsf(vec->v[i])/maxAbs;
         Vec4 color = vec->v[i] < 0 ? V4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
             : V4(positiveColor.x*v, positiveColor.y*v, positiveColor.z*v, 1.0);
         Push2DRectColored(renderGroup, V2(pos.x+i*xDir*size, pos.y+i*yDir*size), 
@@ -82,17 +82,17 @@ internal inline void
 DrawMatR32(RenderGroup *renderGroup,
         MatR32 *mat,
         Vec2 pos, 
-        r32 size,
+        R32 size,
         Vec3 negativeColor,
         Vec3 positiveColor,
-        r32 maxAbs,
+        R32 maxAbs,
         AtlasRegion *texture)
 {
-    for(ui32 i = 0; i < mat->w; i++)
-    for(ui32 j = 0; j < mat->h; j++)
+    for(U32 i = 0; i < mat->w; i++)
+    for(U32 j = 0; j < mat->h; j++)
     {
-        r32 m = mat->m[i+mat->w*j];
-        r32 v = fabsf(m)/maxAbs;
+        R32 m = mat->m[i+mat->w*j];
+        R32 v = fabsf(m)/maxAbs;
         Vec4 color =  m < 0 ? V4(negativeColor.x*v, negativeColor.y*v, negativeColor.z*v, 1.0)
             : V4(positiveColor.x*v, positiveColor.y*v, positiveColor.z*v, 1.0);
         Push2DRectColored(renderGroup, V2(pos.x+i*size, pos.y+j*size), 
@@ -101,16 +101,16 @@ DrawMatR32(RenderGroup *renderGroup,
 }
 
 internal inline Vec2
-DrawBrainVector(RenderGroup *renderGroup, VecR32 *vec, Vec2 pos, r32 size, r32 maxAbs, int xDir, int yDir, AtlasRegion *texture)
+DrawBrainVector(RenderGroup *renderGroup, VecR32 *vec, Vec2 pos, R32 size, R32 maxAbs, int xDir, int yDir, AtlasRegion *texture)
 {
     DrawVecR32(renderGroup, vec, pos, size, V3(1,0,0), V3(0,1,0), maxAbs, xDir, yDir, texture);
-    r32 w = xDir!=0 ? vec->n*size*xDir : size;
-    r32 h = yDir!=0 ? vec->n*size*yDir : size;
+    R32 w = xDir!=0 ? vec->n*size*xDir : size;
+    R32 h = yDir!=0 ? vec->n*size*yDir : size;
     return V2(pos.x+w, pos.y+h);
 }
 
 internal inline Vec2
-DrawBrainMatrix(RenderGroup *renderGroup, MatR32 *mat, Vec2 pos, r32 size, r32 maxAbs, AtlasRegion *texture)
+DrawBrainMatrix(RenderGroup *renderGroup, MatR32 *mat, Vec2 pos, R32 size, R32 maxAbs, AtlasRegion *texture)
 {
     DrawMatR32(renderGroup, mat, pos, size, V3(1,0,0), V3(0,1,0), maxAbs, texture);
     return V2(pos.x+mat->w*size, pos.y+mat->h*size);
@@ -119,14 +119,14 @@ DrawBrainMatrix(RenderGroup *renderGroup, MatR32 *mat, Vec2 pos, r32 size, r32 m
 void
 DrawClock(RenderGroup *renderGroup,
         Vec2 pos, 
-        r32 radius,
-        r32 radians, 
+        R32 radius,
+        R32 radians, 
         AtlasRegion *squareTexture,
         AtlasRegion *circleTexture)
 {
-    r32 lineWidth = 4;
-    r32 c = cosf(radians);
-    r32 s = sinf(radians);
+    R32 lineWidth = 4;
+    R32 c = cosf(radians);
+    R32 s = sinf(radians);
 
     Push2DCircleColored(renderGroup, pos, radius+lineWidth, circleTexture, V4(0,0,0,1));
     Push2DCircleColored(renderGroup, pos, radius, circleTexture, V4(0.5, 0.5, 0.5, 1.0));
@@ -152,14 +152,14 @@ DrawFakeWorld(FakeWorldScreen *screen,
 
     if(screen->isPopulationVisible)
     {
-        for(ui32 creatureIdx = 1;
+        for(U32 creatureIdx = 1;
                 creatureIdx < world->nCreatures;
                 creatureIdx++)
         {
             Creature *creature = world->creatures+creatureIdx;
             Vec3 creatureColor = creature->solidColor;
-            r32 alpha = 0.2;
-            for(ui32 bodyPartIdx = 0;
+            R32 alpha = 0.2;
+            for(U32 bodyPartIdx = 0;
                     bodyPartIdx < creature->nBodyParts;
                     bodyPartIdx++)
             {
@@ -169,7 +169,7 @@ DrawFakeWorld(FakeWorldScreen *screen,
         }
     }
 
-    for(ui32 floorIdx = 0;
+    for(U32 floorIdx = 0;
             floorIdx < world->nStaticBodies;
             floorIdx++)
     {
@@ -187,7 +187,7 @@ DrawFakeWorld(FakeWorldScreen *screen,
                 bodyPartIdx--)
         {
             BodyPart *part = creature->bodyParts+bodyPartIdx;
-            r32 dragFactor = screen->isDragVisible ? 1.0 :  0.0;
+            R32 dragFactor = screen->isDragVisible ? 1.0 :  0.0;
             DrawBodyPart(renderGroup, part, creatureColor, 1.0, dragFactor, squareRegion);
         }
     }
@@ -199,8 +199,8 @@ DrawFakeWorld(FakeWorldScreen *screen,
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         RigidBody *body = part->body;
         Vec2 pos = GetBodyPos(body);
-        r32 angle = GetBodyAngle(body);
-        r32 shade = screen->isDragVisible ? GetBodyPartShade(part, 1.0) : 1.0;
+        R32 angle = GetBodyAngle(body);
+        R32 shade = screen->isDragVisible ? GetBodyPartShade(part, 1.0) : 1.0;
         Vec4 color = V4(shade, shade, shade, 1.0);
         DrawBodyPartWithTexture(renderGroup, part->def, pos, angle, world->def.textureOverhang, 
                 creatureTextureAtlas->textureHandle, color);
@@ -258,7 +258,7 @@ UpdateFakeWorldScreen(AppState *appState,
     // Do evolution
     if(!screen->isPaused)
     {
-        for(ui32 atFrameStep = 0;
+        for(U32 atFrameStep = 0;
                 atFrameStep < screen->stepsPerFrame;
                 atFrameStep++)
         {
@@ -267,7 +267,7 @@ UpdateFakeWorldScreen(AppState *appState,
             if(screen->tick >= screen->ticksPerGeneration)
             {
                 // Next Generation
-                for(ui32 geneIdx = 0;
+                for(U32 geneIdx = 0;
                         geneIdx < world->nGenes;
                         geneIdx++)
                 {
@@ -303,9 +303,9 @@ UpdateFakeWorldScreen(AppState *appState,
 
     // Render on screen
 
-    r32 screenWidth = screenCamera->size.x;
-    r32 screenHeight = screenCamera->size.y;
-    r32 bottomBarHeight = 50;
+    R32 screenWidth = screenCamera->size.x;
+    R32 screenHeight = screenCamera->size.y;
+    R32 bottomBarHeight = 50;
 
     Push2DRectColored(screenRenderGroup,
             V2(0,screenHeight-bottomBarHeight),
@@ -324,14 +324,14 @@ UpdateFakeWorldScreen(AppState *appState,
         Creature *creature = screen->selectedCreature;
         MinimalGatedUnit *brain = creature->brain;
 
-        r32 size = 10.0;
-        r32 maxAbs = 1.0;
-        r32 pad = 3.0;
-        r32 totalBrainWidth = (brain->Wf.w+brain->Uf.w+1)*size+pad*2;
-        r32 leftX = screenWidth - totalBrainWidth - 10;
-        r32 atX = leftX;
-        r32 atY = 10;
-        r32 maxRowY = 0;
+        R32 size = 10.0;
+        R32 maxAbs = 1.0;
+        R32 pad = 3.0;
+        R32 totalBrainWidth = (brain->Wf.w+brain->Uf.w+1)*size+pad*2;
+        R32 leftX = screenWidth - totalBrainWidth - 10;
+        R32 atX = leftX;
+        R32 atY = 10;
+        R32 maxRowY = 0;
         Vec2 lastPos;
 
         lastPos = DrawBrainMatrix(screenRenderGroup, &brain->Wf, V2(atX, atY), size, maxAbs, squareRegion);
@@ -367,12 +367,12 @@ UpdateFakeWorldScreen(AppState *appState,
         atY+=size*4+pad*3;
 
         // Draw clocks
-        for(ui32 clockIdx = 0;
+        for(U32 clockIdx = 0;
                 clockIdx < creature->nInternalClocks;
                 clockIdx++)
         {
-            r32 radians = GetInternalClockValue(creature, clockIdx);
-            r32 radius = 20;
+            R32 radians = GetInternalClockValue(creature, clockIdx);
+            R32 radius = 20;
             DrawClock(screenRenderGroup, V2(atX+radius+radius*2*clockIdx+pad*2*clockIdx, atY+radius), 
                     radius, radians, squareRegion, circleRegion);
         }
@@ -380,11 +380,11 @@ UpdateFakeWorldScreen(AppState *appState,
         // Draw inputs
 
         BodyPart *selectedBodyPart = screen->selectedBodyPart;
-        r32 lineWidth = 2.0;
+        R32 lineWidth = 2.0;
         if(selectedBodyPart && 
                 world->trainingType==TRAIN_DISTANCE_TARGET)
         {
-            r32 angle = GetBodyAngle(selectedBodyPart->body);
+            R32 angle = GetBodyAngle(selectedBodyPart->body);
             Vec2 dir = V2Polar(-angle, 100.0);
             Vec2 pos = CameraToScreenPos(camera, appState, GetBodyPos(selectedBodyPart->body));
             Vec2 targetPos = CameraToScreenPos(camera, appState, world->target);
@@ -438,14 +438,14 @@ UpdateFakeWorldScreen(AppState *appState,
         Vec2 bodyPartPos = CameraToScreenPos(camera, appState, GetBodyPartPos(screen->selectedBodyPart));
         if(part->def->hasAngleTowardsTargetInput)
         {
-            r32 activation = creature->brain->x.v[part->def->angleTowardsTargetInputIdx];
+            R32 activation = creature->brain->x.v[part->def->angleTowardsTargetInputIdx];
             char bodyPartInfo[128];
             sprintf(bodyPartInfo, "angle activation = %.2f", activation); 
             Push2DText(screenRenderGroup, fontRenderer, bodyPartPos, bodyPartInfo);
         } 
         else if(part->def->hasAbsoluteAngleInput)
         {
-            r32 activation = creature->brain->x.v[part->def->absoluteAngleInputIdx];
+            R32 activation = creature->brain->x.v[part->def->absoluteAngleInputIdx];
             char bodyPartInfo[128];
             sprintf(bodyPartInfo, "angle activation = %.2f", activation); 
             Push2DText(screenRenderGroup, fontRenderer, bodyPartPos, bodyPartInfo);
@@ -474,8 +474,8 @@ UpdateFakeWorldScreen(AppState *appState,
     glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer1->fbo);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    r32 invScreenX = 1.0/camera->size.x;
-    r32 invScreenY = 1.0/camera->size.y;
+    R32 invScreenX = 1.0/camera->size.x;
+    R32 invScreenY = 1.0/camera->size.y;
     blurShaderInstance->mat3Transform = &camera->transform;
     blurShaderInstance->dir2 = V2(invScreenX, invScreenY);
     blurShaderInstance->radius = 1800;
@@ -531,14 +531,14 @@ UpdateFakeWorldScreen(AppState *appState,
         seconds = nk_propertyi(ctx, "Seconds per generation", 1, seconds, 60, 1, 1);
         screen->ticksPerGeneration = seconds*60;
 
-        r32 parameterScale = 1000.0;
+        R32 parameterScale = 1000.0;
 
-        r32 deviationScaled = parameterScale * world->strategies->dev;
+        R32 deviationScaled = parameterScale * world->strategies->dev;
         NKEditFloatPropertyWithTooltip(ctx, "Dev", "How much is each creature mutated", 
                 1.0, &deviationScaled, parameterScale, 1.0, 1.0);
         world->strategies->dev = deviationScaled/parameterScale;
 
-        r32 learningRateScaled = parameterScale*world->strategies->learningRate;
+        R32 learningRateScaled = parameterScale*world->strategies->learningRate;
         NKEditFloatPropertyWithTooltip(ctx, "Learning Rate", "How fast will genes adapt", 
                 1.0, &learningRateScaled, parameterScale, 1.0, 1.0);
         world->strategies->learningRate = learningRateScaled/parameterScale;
@@ -590,12 +590,12 @@ InitFakeWorldScreen(AppState *appState,
         MemoryArena *arena, 
         Assets *assets,
         CreatureDefinition *def,
-        ui32 nGenes,
-        r32 dev,
-        r32 learningRate)
+        U32 nGenes,
+        R32 dev,
+        R32 learningRate)
 {
     screen->renderTools = CreateBasicRenderTools(arena, appState, assets);
-    ui32 shadowResolution = 512;
+    U32 shadowResolution = 512;
     screen->frameBuffer0 = CreateFrameBuffer(arena, shadowResolution, shadowResolution);
     screen->frameBuffer1 = CreateFrameBuffer(arena, shadowResolution, shadowResolution);
 

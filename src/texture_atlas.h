@@ -17,12 +17,12 @@ struct AtlasRegion
 struct TextureAtlas
 {
     // Optional
-    ui32 width;
-    ui32 height;
-    ui32 *image;
+    U32 width;
+    U32 height;
+    U32 *image;
 
     // Not optional
-    ui32 textureHandle;
+    U32 textureHandle;
     int maxRegions;
     int nRegions;
     AtlasRegion *regions;

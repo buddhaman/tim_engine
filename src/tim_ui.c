@@ -8,14 +8,14 @@
     AtlasRegion *squareRegion = assets->defaultAtlas->regions+1;(void)squareRegion;\
     FontRenderer *fontRenderer = assets->fontRenderer;(void)fontRenderer;
 
-global_variable ui32 default_hash_seed = 5381;
+global_variable U32 default_hash_seed = 5381;
 
 internal inline GuiId
-GuiHash(const ui8 *input, ui32 lengthInBytes, ui32 seed)
+GuiHash(const U8 *input, U32 lengthInBytes, U32 seed)
 {
-    ui32 hash = seed;
-    ui32 c;
-    for(ui32 i = 0; i < lengthInBytes; i++)
+    U32 hash = seed;
+    U32 c;
+    for(U32 i = 0; i < lengthInBytes; i++)
     {
         c = *input++;
         hash = ((hash << 5) + hash) + c;
@@ -24,29 +24,29 @@ GuiHash(const ui8 *input, ui32 lengthInBytes, ui32 seed)
 }
 
 internal inline GuiId
-GuiHashCString(char *string, ui32 seed)
+GuiHashCString(char *string, U32 seed)
 {
-    ui32 length = (ui32)strlen(string);
-    return GuiHash((ui8*)string, length, seed);
+    U32 length = (U32)strlen(string);
+    return GuiHash((U8*)string, length, seed);
 }
 
 internal inline GuiId
-GuiHashI32(i32 value)
+GuiHashI32(I32 value)
 {
-    return GuiHash((ui8*)&value, 4, default_hash_seed);
+    return GuiHash((U8*)&value, 4, default_hash_seed);
 }
 
 internal inline GuiId
-GuiHashTupleI32(i32 value1, i32 value2)
+GuiHashTupleI32(I32 value1, I32 value2)
 {
-    i32 values[2] = {value1, value2};
-    return GuiHash((ui8 *)values, 8, default_hash_seed);
+    I32 values[2] = {value1, value2};
+    return GuiHash((U8 *)values, 8, default_hash_seed);
 }
 
 internal inline GuiId
 GuiHashPointer(void *pointer)
 {
-    return GuiHash((ui8 *)&pointer, sizeof(void*), default_hash_seed);
+    return GuiHash((U8 *)&pointer, sizeof(void*), default_hash_seed);
 }
 
 internal inline GuiId
@@ -77,15 +77,15 @@ GuiGetNameHash(Gui *gui, char *name)
 }
 
 internal inline GuiAnimation*
-GuiGetAnimation(Gui *gui, GuiId id, b32 findNew)
+GuiGetAnimation(Gui *gui, GuiId id, B32 findNew)
 {
-    ui32 mask = MAX_GUI_ANIMATIONS-1;   
-    ui32 startIdx = id & mask;
-    for(ui32 animationSlotOffset = 0;
+    U32 mask = MAX_GUI_ANIMATIONS-1;   
+    U32 startIdx = id & mask;
+    for(U32 animationSlotOffset = 0;
             animationSlotOffset < MAX_GUI_ANIMATIONS;
             animationSlotOffset++)
     {
-        ui32 animationIdx = (animationSlotOffset+startIdx) & mask;
+        U32 animationIdx = (animationSlotOffset+startIdx) & mask;
         GuiAnimation *animation = gui->animations+animationIdx;
         if(animation->widgetId==id)
         {
@@ -101,16 +101,16 @@ GuiGetAnimation(Gui *gui, GuiId id, b32 findNew)
 }
 
 internal inline void
-GuiTriggerAnimation(Gui *gui, GuiId id, r32 duration)
+GuiTriggerAnimation(Gui *gui, GuiId id, R32 duration)
 {
-    r32 FPS = 60.0;     // TODO: Replace, read from somewhere
+    R32 FPS = 60.0;     // TODO: Replace, read from somewhere
     GuiAnimation *animation = GuiGetAnimation(gui, id, 1);
     animation->timeFactor = 0;
     animation->timeStep = 1.0f/(duration*FPS);
     animation->isActive = 1;
 }
 
-internal inline r32
+internal inline R32
 UpdateAnimation(Gui *gui, GuiId id)
 {
     GuiAnimation *animation = GuiGetAnimation(gui, id, 0);
@@ -131,32 +131,32 @@ UpdateAnimation(Gui *gui, GuiId id)
     }
 }
 
-internal inline b32
+internal inline B32
 GuiIsHot(Gui *gui, GuiId id)
 {
     return gui->prevHot==id;
 }
 
-internal inline b32
+internal inline B32
 GuiIsActive(Gui *gui, GuiId id)
 {
     return gui->prevActive==id;
 }
 
-internal inline b32
+internal inline B32
 GuiHasCapturedInput(Gui *gui)
 {
     return !!gui->prevActive;
 }
 
-internal inline b32
+internal inline B32
 GuiMouseEnteredWidget(Gui *gui, GuiId widgetId)
 {
     return widgetId==gui->mouseEnteredWidgetId;
 }
 
 internal inline void
-GuiPushWorldCircle(Gui *gui, Vec2 worldPos, r32 screenRadius, Vec4 color)
+GuiPushWorldCircle(Gui *gui, Vec2 worldPos, R32 screenRadius, Vec4 color)
 {
     RenderGroup *renderGroup = gui->renderTools->worldRenderGroup;
     Assets *assets = gui->renderTools->assets;
@@ -168,9 +168,9 @@ GuiPushWorldCircle(Gui *gui, Vec2 worldPos, r32 screenRadius, Vec4 color)
 }
 
 void 
-DoButtonLogic(Gui *gui, GuiId id, b32 hit)
+DoButtonLogic(Gui *gui, GuiId id, B32 hit)
 {
-    b32 isActive = GuiIsActive(gui, id);
+    B32 isActive = GuiIsActive(gui, id);
     if(hit)
     {
         gui->hot = id;
@@ -185,8 +185,8 @@ DoButtonLogic(Gui *gui, GuiId id, b32 hit)
 Vec4
 GetButtonColor(Gui *gui, GuiId id)
 {
-    b32 isHot = GuiIsHot(gui, id);
-    b32 isActive = GuiIsActive(gui, id);
+    B32 isHot = GuiIsHot(gui, id);
+    B32 isActive = GuiIsActive(gui, id);
     if(isActive)
     {
         return gui->pressedColor;
@@ -201,12 +201,12 @@ GetButtonColor(Gui *gui, GuiId id)
     }
 }
 
-b32
-DoCircularButtonOnPress(Gui *gui, GuiId id, Vec2 pos, r32 screenRadius)
+B32
+DoCircularButtonOnPress(Gui *gui, GuiId id, Vec2 pos, R32 screenRadius)
 {
     GuiDefaultParameters(gui);
-    r32 radius = camera->scale*screenRadius;
-    b32 hit = CirclePointIntersect(pos, radius, camera->mousePos);
+    R32 radius = camera->scale*screenRadius;
+    B32 hit = CirclePointIntersect(pos, radius, camera->mousePos);
     DoButtonLogic(gui, id, hit);
     Vec4 color = GetButtonColor(gui, id);
     GuiPushWorldCircle(gui, pos, screenRadius, color);
@@ -231,18 +231,18 @@ GuiBeginContext(Gui *gui, char *name)
 void
 GetLabelLayout(Gui *gui, 
         char *text, Vec2 pos, 
-        r32 minWidth, 
-        r32 minHeight, 
+        R32 minWidth, 
+        R32 minHeight, 
         Rect2 *bounds, 
         Vec2 *textPos)
 {
     GuiDefaultParameters(gui);
     *bounds = GetStringSize(fontRenderer, text, pos);
     // text offset
-    r32 dx = 0;
-    r32 dy = pos.y-bounds->pos.y; 
-    r32 H = 0;
-    r32 W = 0;
+    R32 dx = 0;
+    R32 dy = pos.y-bounds->pos.y; 
+    R32 H = 0;
+    R32 W = 0;
     if(minHeight > bounds->dims.y)
     {
         H = minHeight-bounds->dims.y;
@@ -260,7 +260,7 @@ GetLabelLayout(Gui *gui,
 }
 
 void
-GuiPushRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, r32 radius, Vec4 color)
+GuiPushRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, R32 radius, Vec4 color)
 {
     GuiDefaultParameters(gui);
 
@@ -288,7 +288,7 @@ GuiPushRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, r32 radius, Vec4 color)
 }
 
 void
-GuiPushBottomRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, r32 radius, Vec4 color)
+GuiPushBottomRoundedRect(Gui *gui, Vec2 pos, Vec2 dims, R32 radius, Vec4 color)
 {
     GuiDefaultParameters(gui);
 
@@ -337,7 +337,7 @@ DoLabelWithBackground(Gui *gui, char *text, Vec2 pos, Vec2 minDims, Vec4 backgro
     return textRect;
 }
 
-b32
+B32
 DoLabelButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims)
 {
     GuiDefaultParameters(gui);
@@ -346,7 +346,7 @@ DoLabelButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims)
     //Vec4 color = GetDe
     Rect2 textRect = DoLabelWithBackground(gui, label, pos, minDims, gui->defaultColor);
 
-    b32 hit = BoxPoint2Intersect(textRect.pos, textRect.dims, screenCamera->mousePos);
+    B32 hit = BoxPoint2Intersect(textRect.pos, textRect.dims, screenCamera->mousePos);
     DoButtonLogic(gui, id, hit);
     //Vec4 color = GetButtonColor(gui, id);
 
@@ -358,23 +358,23 @@ DoLabelButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims)
     return gui->isMouseJustReleased && GuiIsActive(gui, id);
 }
 
-b32
-DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 isEnabled)
+B32
+DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, B32 isEnabled)
 {
     GuiDefaultParameters(gui);
 
     GuiId id = GuiGetNameHash(gui, label);
-    b32 mouseEntered = GuiMouseEnteredWidget(gui, id);
-    b32 isActive = GuiIsActive(gui, id);
-    b32 isHot = GuiIsHot(gui, id);
+    B32 mouseEntered = GuiMouseEnteredWidget(gui, id);
+    B32 isActive = GuiIsActive(gui, id);
+    B32 isHot = GuiIsHot(gui, id);
 
-    r32 shade = 0.5;
-    r32 elevation = isActive ? 4.0 : 8.0;
-    r32 hotFactor = 1.5f;
-    r32 enabledFactor = 2.0f;
-    r32 heightFactor = 1.0f;
-    r32 animationDuration = 0.1;
-    b32 justPressed = gui->isMouseJustReleased && isActive;
+    R32 shade = 0.5;
+    R32 elevation = isActive ? 4.0 : 8.0;
+    R32 hotFactor = 1.5f;
+    R32 enabledFactor = 2.0f;
+    R32 heightFactor = 1.0f;
+    R32 animationDuration = 0.1;
+    B32 justPressed = gui->isMouseJustReleased && isActive;
 
     if(!isEnabled)
     {
@@ -384,7 +384,7 @@ DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 isEnabled
         }
         if(isHot)
         {
-            r32 animation = UpdateAnimation(gui, id);
+            R32 animation = UpdateAnimation(gui, id);
             heightFactor = Lerp(1.0, hotFactor, animation);
         }
         // Trigger animation if just enabled
@@ -395,7 +395,7 @@ DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 isEnabled
     }
     else
     {
-        r32 animation = UpdateAnimation(gui, id);
+        R32 animation = UpdateAnimation(gui, id);
         heightFactor = Lerp(hotFactor, enabledFactor, animation);
     }
 
@@ -407,7 +407,7 @@ DoTabBarRadioButton(Gui *gui, char *label, Vec2 pos, Vec2 minDims, b32 isEnabled
     GuiPushBottomRoundedRect(gui, pos, minDims, 10, bgColor);
     GuiPushBottomRoundedRect(gui, pos, V2(minDims.x, minDims.y-elevation), 10, color);
 
-    b32 hit = BoxPoint2Intersect(pos, minDims, screenCamera->mousePos);
+    B32 hit = BoxPoint2Intersect(pos, minDims, screenCamera->mousePos);
 
     DoLabel(gui, label, V2(pos.x, pos.y+minDims.y-32), V2(minDims.x, 16));
     DoButtonLogic(gui, id, hit);
@@ -427,12 +427,12 @@ DoTextField(Gui *gui, char *name, char *text, Vec2 pos, Vec2 minDims)
 }
 
 // Returns true if dragging
-b32
-DoDragCircularButtonOnPress(Gui *gui, char *name, Vec2 pos, r32 screenRadius)
+B32
+DoDragCircularButtonOnPress(Gui *gui, char *name, Vec2 pos, R32 screenRadius)
 {
-    b32 result = 0;
+    B32 result = 0;
     GuiId id = GuiGetNameHash(gui, name);
-    b32 isDragging = GuiIsActive(gui, id);
+    B32 isDragging = GuiIsActive(gui, id);
     if(isDragging)
     {
         result = IsKeyActionDown(gui->appState, ACTION_MOUSE_BUTTON_LEFT);
@@ -449,17 +449,17 @@ DoDragCircularButtonOnPress(Gui *gui, char *name, Vec2 pos, r32 screenRadius)
     return result;
 }
 
-b32
+B32
 DoAngleLengthButton(Gui *gui,
         char *name,
         Vec2 center,
-        r32 *angle,
-        r32 *length,
-        r32 screenRadius)
+        R32 *angle,
+        R32 *length,
+        R32 screenRadius)
 {
     GuiDefaultParameters(gui);
     Vec2 pos = V2Add(center, V2Polar(*angle, *length));
-    b32 isDragging = DoDragCircularButtonOnPress(gui, name, pos, screenRadius);
+    B32 isDragging = DoDragCircularButtonOnPress(gui, name, pos, screenRadius);
     if(isDragging)
     {
         Vec2 mousePos = camera->mousePos;
@@ -469,18 +469,18 @@ DoAngleLengthButton(Gui *gui,
     return isDragging;
 }
 
-b32
+B32
 DoRotationDragButton(Gui *gui, 
         char *name,
         Vec2 center, 
-        r32 *angle, 
-        r32 length,
-        r32 screenRadius)
+        R32 *angle, 
+        R32 length,
+        R32 screenRadius)
 {
     GuiDefaultParameters(gui);
     Vec2 mousePos = camera->mousePos;
     Vec2 pos = V2Add(center, V2Polar(*angle, length));
-    b32 isDragging = DoDragCircularButtonOnPress(gui, name, pos, screenRadius);
+    B32 isDragging = DoDragCircularButtonOnPress(gui, name, pos, screenRadius);
 
     if(isDragging)
     {
@@ -489,46 +489,46 @@ DoRotationDragButton(Gui *gui,
     return isDragging;
 }
 
-b32
+B32
 DoRotationDragButtonWithLine(Gui *gui,
         char *name,
         Vec2 center,
-        r32 *angle,
-        r32 length,
-        r32 screenRadius,
+        R32 *angle,
+        R32 length,
+        R32 screenRadius,
         Vec4 lineColor)
 {
     GuiDefaultParameters(gui);
-    r32 lineWidth = 2.0 *camera->scale;
+    R32 lineWidth = 2.0 *camera->scale;
     Vec2 to = V2Add(center, V2Polar(*angle, length));
     Push2DLineColored(renderTools->worldRenderGroup, center, to, lineWidth, squareRegion, lineColor);
     return DoRotationDragButton(gui, name, center, angle, length, screenRadius);
 }
 
-b32
+B32
 DoDragButtonAlongAxis(Gui *gui, 
         char *name, 
         Vec2 axisOrigin, 
         Vec2 axis, 
-        r32 *length, 
-        r32 screenRadius)
+        R32 *length, 
+        R32 screenRadius)
 {
     GuiDefaultParameters(gui);
     Vec2 mousePos = camera->mousePos;
     Vec2 pos = V2Add(axisOrigin, V2MulS(axis, *length));
 
-    b32 isDragging = DoDragCircularButtonOnPress(gui, name, pos, screenRadius);
+    B32 isDragging = DoDragCircularButtonOnPress(gui, name, pos, screenRadius);
     if(isDragging)
     {
-        r32 dotPos = V2Dot(axis, mousePos);
-        r32 dotOffset = V2Dot(axis, axisOrigin);
+        R32 dotPos = V2Dot(axis, mousePos);
+        R32 dotOffset = V2Dot(axis, axisOrigin);
         *length = dotPos-dotOffset;
     }
     return isDragging;
 }
 
 int
-DoRadialMenuV(Gui *gui, Vec2 center, b32 isActive, int nItems, va_list args)
+DoRadialMenuV(Gui *gui, Vec2 center, B32 isActive, int nItems, va_list args)
 {   
     GuiDefaultParameters(gui);
     int result = -1;
@@ -536,23 +536,23 @@ DoRadialMenuV(Gui *gui, Vec2 center, b32 isActive, int nItems, va_list args)
     {
         RenderGroup *renderGroup = renderTools->screenRenderGroup;
         FontRenderer *fontRenderer = renderTools->assets->fontRenderer;
-        r32 dAngle = 2*M_PI/nItems;
-        for(ui32 itemIdx = 0;
+        R32 dAngle = 2*M_PI/nItems;
+        for(U32 itemIdx = 0;
                 itemIdx < nItems;
                 itemIdx++)
         {
-            r32 angle = itemIdx*dAngle-M_PI/2.0;
-            r32 radius = 120.0;
-            r32 renderRadius = radius * gui->radialTimer;
-            r32 c = cosf(angle);
-            r32 s = sinf(angle);
+            R32 angle = itemIdx*dAngle-M_PI/2.0;
+            R32 radius = 120.0;
+            R32 renderRadius = radius * gui->radialTimer;
+            R32 c = cosf(angle);
+            R32 s = sinf(angle);
 
-            b32 hit = 0;
-            r32 dx = gui->appState->screenCamera->mousePos.x - gui->radialMenuPos.x;
-            r32 dy = gui->appState->screenCamera->mousePos.y - gui->radialMenuPos.y;
-            r32 mAngle = atan2f(dy, dx);
-            r32 l2 = dx*dx + dy*dy;
-            r32 angDif = fabsf(GetNormalizedAngDiff(angle, mAngle));
+            B32 hit = 0;
+            R32 dx = gui->appState->screenCamera->mousePos.x - gui->radialMenuPos.x;
+            R32 dy = gui->appState->screenCamera->mousePos.y - gui->radialMenuPos.y;
+            R32 mAngle = atan2f(dy, dx);
+            R32 l2 = dx*dx + dy*dy;
+            R32 angDif = fabsf(GetNormalizedAngDiff(angle, mAngle));
             if(angDif < dAngle/2.0 && l2 > radius*radius*0.8)
             {
                 hit = 1;
@@ -588,7 +588,7 @@ DoRadialMenuV(Gui *gui, Vec2 center, b32 isActive, int nItems, va_list args)
 }
 
 int
-DoRadialMenu(Gui *gui, Vec2 center, b32 isActive, int nItems, ...)
+DoRadialMenu(Gui *gui, Vec2 center, B32 isActive, int nItems, ...)
 {
     va_list args;
     va_start(args, nItems);

@@ -1,21 +1,21 @@
 
 internal inline void
-EvaluateBrain(MinimalGatedUnit *brain, ui32 steps, VecR32 *result)
+EvaluateBrain(MinimalGatedUnit *brain, U32 steps, VecR32 *result)
 {
-    for(ui32 i = 0; i < steps; i++)
+    for(U32 i = 0; i < steps; i++)
     {
-        brain->x.v[0] = ((r32)i)/steps;
+        brain->x.v[0] = ((R32)i)/steps;
         UpdateMinimalGatedUnit(brain);
-        r32 output = brain->h.v[brain->stateSize-1];
+        R32 output = brain->h.v[brain->stateSize-1];
         result->v[i] = output;
     }
 }
 
 void
-RunBrainFromGene(ui32 inputSize, ui32 outputSize, ui32 hiddenSize, VecR32 *gene, ui32 steps, VecR32 *target)
+RunBrainFromGene(U32 inputSize, U32 outputSize, U32 hiddenSize, VecR32 *gene, U32 steps, VecR32 *target)
 {
-    ui32 stateSize = GetMinimalGatedUnitStateSize(inputSize, outputSize, hiddenSize);
-    r32 *state = calloc(stateSize, sizeof(r32));
+    U32 stateSize = GetMinimalGatedUnitStateSize(inputSize, outputSize, hiddenSize);
+    R32 *state = calloc(stateSize, sizeof(R32));
     MinimalGatedUnit *brain = calloc(1, sizeof(MinimalGatedUnit));
     VecR32 *result = CreateVecR32(steps, malloc(SizeOfVecR32(steps)));
 
@@ -42,20 +42,20 @@ DoNeuralNetTests()
 {
     MemoryArena *arena = CreateMemoryArena(128*1024*1024);
 
-    ui32 inputSize = 1;
-    ui32 outputSize = 1;
-    ui32 hiddenSize = 1;
-    ui32 geneSize = GetMinimalGatedUnitGeneSize(inputSize, outputSize, hiddenSize);
-    ui32 nGenes = 52;
-    ui32 brainStateSize = GetMinimalGatedUnitStateSize(inputSize, outputSize, hiddenSize);
-    r32 learningRate = 0.005;
-    r32 dev = 0.05;
-    ui32 nGenerations = 1000;
+    U32 inputSize = 1;
+    U32 outputSize = 1;
+    U32 hiddenSize = 1;
+    U32 geneSize = GetMinimalGatedUnitGeneSize(inputSize, outputSize, hiddenSize);
+    U32 nGenes = 52;
+    U32 brainStateSize = GetMinimalGatedUnitStateSize(inputSize, outputSize, hiddenSize);
+    R32 learningRate = 0.005;
+    R32 dev = 0.05;
+    U32 nGenerations = 1000;
     size_t evolutionArenaSize = SizeOfEvolutionStrategies(geneSize, nGenes);
 
     // For testing evolution strategies.
 #define QuickVec(size) CreateVecR32(size, PushAndZeroMemory_(arena, SizeOfVecR32(geneSize)))
-    ui32 timeSteps = 10;
+    U32 timeSteps = 10;
     VecR32 *target = QuickVec(timeSteps);
     for(int i = 0; i < timeSteps; i++)
     {
@@ -74,7 +74,7 @@ DoNeuralNetTests()
     EvolutionStrategies *strategies = ESCreate(evolutionSubArena, geneSize, nGenes, dev, learningRate);
 
     MinimalGatedUnit *brains = PushArray(arena, MinimalGatedUnit, nGenes);
-    r32 *brainStates = PushArray(arena, r32, brainStateSize*nGenes);
+    R32 *brainStates = PushArray(arena, R32, brainStateSize*nGenes);
 
     for(int i = 0; i < strategies->geneSize; i++)
     {
@@ -89,7 +89,7 @@ DoNeuralNetTests()
 
         // Build brains
         memset(brainStates, 0, brainStateSize*nGenes);
-        for(ui32 brainIdx = 0;
+        for(U32 brainIdx = 0;
                 brainIdx < nGenes;
                 brainIdx++)
         {
@@ -102,10 +102,10 @@ DoNeuralNetTests()
                     brainStates+brainIdx*brainStateSize);
             // Run world
             EvaluateBrain(brain, timeSteps, result);
-            r32 fitness = 0;
+            R32 fitness = 0;
             for(int i = 0; i < timeSteps; i++)
             {
-                r32 diff = result->v[i]-target->v[i];
+                R32 diff = result->v[i]-target->v[i];
                 fitness-=diff*diff;
             }
             strategies->fitness->v[brainIdx] = fitness;
@@ -137,12 +137,12 @@ DoNeuralNetTests()
     VecR32 *vec = CreateVecR32(n, PushAndZeroMemory_(arena, SizeOfVecR32(n)));
     VecR32SetNormal(vec);
     VecR32TransposePrintF(vec, 7, 3);
-    r32 sum = VecR32GetSum(vec);
-    r32 avg = sum/n;
-    r32 variance = 0;
+    R32 sum = VecR32GetSum(vec);
+    R32 avg = sum/n;
+    R32 variance = 0;
     for(int i = 0; i < vec->n; i++)
     {
-        r32 dev = vec->v[i]-avg;
+        R32 dev = vec->v[i]-avg;
         variance+=(dev*dev);
     }
     variance/=n;

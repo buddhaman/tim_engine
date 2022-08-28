@@ -6,8 +6,8 @@ struct RotaryMuscle
 {
     BodyPart *bodyA;
     BodyPart *bodyB;
-    r32 minAngle;
-    r32 maxAngle;
+    R32 minAngle;
+    R32 maxAngle;
     // Control by fixing rate and setting max force by cpConstraintSetMaxForce();
     cpConstraint *motor;
     cpConstraint *rotaryLimitConstraint;
@@ -24,15 +24,15 @@ struct BodyPart
 
 typedef struct
 {
-    ui32 physicsGroup;
+    U32 physicsGroup;
 
-    b32 drawSolidColor;
+    B32 drawSolidColor;
     Vec3 solidColor;
 
-    r32 internalClock;
-    ui32 nInternalClocks;
-    r32 phases[4];
-    r32 frequencies[4];
+    R32 internalClock;
+    U32 nInternalClocks;
+    R32 phases[4];
+    R32 frequencies[4];
 
     int nBodyParts;
     BodyPart *bodyParts;

@@ -6,31 +6,31 @@
     AtlasRegion *circleRegion = defaultAtlas->regions;(void)circleRegion;\
     AtlasRegion *squareRegion = defaultAtlas->regions+1;(void)squareRegion;
 
-internal inline b32
+internal inline B32
 CreatureEditorIsEditing(CreatureEditorScreen *editor)
 {
     return editor->editState!=EDIT_CREATURE_NONE;
 }
 
-internal inline b32
+internal inline B32
 CreatureEditorWasEditing(CreatureEditorScreen *editor)
 {
     return editor->prevEditState!=EDIT_CREATURE_NONE;
 }
 
-internal inline b32 
+internal inline B32 
 EditorCanAddBodyPart(CreatureEditorScreen *editor)
 {
     return editor->creatureDefinition->nBodyParts < MAX_BODYPARTS;
 }
 
-internal inline b32
+internal inline B32
 EditorIsJustPressed(AppState *appState, CreatureEditorScreen *editor, KeyAction action)
 {
     return !editor->isInputCaptured && IsKeyActionJustDown(appState, action);
 }
 
-internal inline b32
+internal inline B32
 EditorIsJustReleased(AppState *appState, 
         CreatureEditorScreen *editor, 
         KeyAction action)
@@ -38,21 +38,21 @@ EditorIsJustReleased(AppState *appState,
     return !editor->isInputCaptured && IsKeyActionJustReleased(appState, action);
 }
 
-internal inline b32
+internal inline B32
 EditorIsMousePressed(AppState *appState, 
         CreatureEditorScreen *editor)
 {
     return !editor->isInputCaptured && IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT);
 }
 
-internal inline r32
-SnapTo(r32 value, r32 res)
+internal inline R32
+SnapTo(R32 value, R32 res)
 {
     return round(value/res)*res;
 }
 
-internal inline r32
-SnapDim(CreatureEditorScreen *editor, r32 dim)
+internal inline R32
+SnapDim(CreatureEditorScreen *editor, R32 dim)
 {
     if(editor->isDimSnapEnabled)
     {
@@ -64,8 +64,8 @@ SnapDim(CreatureEditorScreen *editor, r32 dim)
     }
 }
 
-internal inline r32
-SnapAngle(CreatureEditorScreen *editor, r32 angle)
+internal inline R32
+SnapAngle(CreatureEditorScreen *editor, R32 angle)
 {
     if(editor->isAngleSnapEnabled)
     {
@@ -77,8 +77,8 @@ SnapAngle(CreatureEditorScreen *editor, r32 angle)
     }
 }
 
-internal inline r32
-SnapEdge(CreatureEditorScreen *editor, r32 offset)
+internal inline R32
+SnapEdge(CreatureEditorScreen *editor, R32 offset)
 {
     if(editor->isEdgeSnapEnabled)
     {
@@ -90,8 +90,25 @@ SnapEdge(CreatureEditorScreen *editor, r32 offset)
     }
 }
 
+// Particles in editor
+Particle *
+AddEditorParticle(CreatureEditorScreen *editor, Vec2 pos, Vec2 vel, R32 radius, R32 lifetime)
+{
+    Particle *particle = editor->particles+editor->nParticles++;
+    Assert(editor->nParticles < MAX_EDITOR_PARTICLES);
+    *particle = (Particle){};
+
+    particle->pos      = pos;
+    particle->vel      = vel;
+    particle->r        = radius;
+    particle->lifetime = lifetime;
+    particle->time     = 0;
+
+    return particle;
+}
+
 void
-EditorRemoveBodyPart(CreatureEditorScreen *editor, ui32 id)
+EditorRemoveBodyPart(CreatureEditorScreen *editor, U32 id)
 {
     CreatureDefinition *def = editor->creatureDefinition;
     BodyPartDefinition *parent = GetBodyPartById(def, id);
@@ -99,9 +116,9 @@ EditorRemoveBodyPart(CreatureEditorScreen *editor, ui32 id)
     def->isTextureSquareOccupied[parent->texGridX+parent->texGridY*def->creatureTextureGridDivs] = 0;
     editor->selectedId = 0;
 
-    ui32 parts[def->nBodyParts];
-    ui32 nParts = GetSubNodeBodyPartsById(def, parent, parts);
-    for(ui32 bodyPartIdx = 0;
+    U32 parts[def->nBodyParts];
+    U32 nParts = GetSubNodeBodyPartsById(def, parent, parts);
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < nParts;
             bodyPartIdx++)
     {
@@ -147,11 +164,11 @@ DoDrawAtPointForBodyPart(CreatureEditorScreen *editor,
         BodyPartDefinition *partDef)
 {
     CreatureDefinition *def = editor->creatureDefinition;
-    r32 overhang = def->textureOverhang;
+    R32 overhang = def->textureOverhang;
     Vec2 texCoord = GetCoordinateInBox(partDef->pos, 
             V2(partDef->width+overhang*2, partDef->height+overhang*2), partDef->angle, point);
-    r32 radius = partDef->texScale*editor->brushSize;
-    ui32 color = Vec4ToRGBA(GetBrushColor(editor));
+    R32 radius = partDef->texScale*editor->brushSize;
+    U32 color = Vec4ToRGBA(GetBrushColor(editor));
     Vec2 creatureTexCoord = V2Add(partDef->uvPos, 
             V2(partDef->uvDims.x*texCoord.x, partDef->uvDims.y*texCoord.y));
     DrawCircleOnTexture(creatureAtlas, 
@@ -159,7 +176,7 @@ DoDrawAtPointForBodyPart(CreatureEditorScreen *editor,
             creatureTexCoord, radius, color);
 }
 
-internal b32
+internal B32
 IsInsideBodyPartTextureArea(CreatureEditorScreen *editor, Vec2 point)
 {
     CreatureDefinition *def = editor->creatureDefinition;
@@ -170,7 +187,7 @@ IsInsideBodyPartTextureArea(CreatureEditorScreen *editor, Vec2 point)
     }
     else
     {
-        for(ui32 bodyPartIdx = 0;
+        for(U32 bodyPartIdx = 0;
                 bodyPartIdx < def->nBodyParts;
                 bodyPartIdx++)
         {
@@ -195,7 +212,7 @@ DoDrawAtPoint(CreatureEditorScreen *editor, TextureAtlas *creatureAtlas, Vec2 po
     }
     else
     {
-        for(ui32 bodyPartIdx = 0;
+        for(U32 bodyPartIdx = 0;
                 bodyPartIdx < def->nBodyParts;
                 bodyPartIdx++)
         {
@@ -205,14 +222,14 @@ DoDrawAtPoint(CreatureEditorScreen *editor, TextureAtlas *creatureAtlas, Vec2 po
     }
 }
 
-b32 
+B32 
 NKEditCreatureIO(struct nk_context *ctx,
         char *label,
         char *tooltip,
-        b32 *value,
-        ui32 brainIdx)
+        B32 *value,
+        U32 brainIdx)
 {
-    b32 edited = 0;
+    B32 edited = 0;
     nk_layout_row_begin(ctx, NK_DYNAMIC, 30, 2);
     nk_layout_row_push(ctx, 0.5);
     if(nk_widget_is_hovered(ctx))
@@ -257,30 +274,30 @@ AssignTextureToBodyPartDefinition(CreatureDefinition *def, BodyPartDefinition *p
 {
     int divs = def->creatureTextureGridDivs;
     TextureGridLocation loc = UseEmptyTextureGridLocation(def);
-    part->uvPos = V2(((r32)loc.x)/divs, ((r32)loc.y)/divs);
+    part->uvPos = V2(((R32)loc.x)/divs, ((R32)loc.y)/divs);
     part->uvDims = V2(1.0/divs, 1.0/divs);
     part->texGridX = loc.x;
     part->texGridY = loc.y;
 }
 
 internal inline void
-RecalculateTextureDims(CreatureDefinition *def, r32 totalTextureSize)
+RecalculateTextureDims(CreatureDefinition *def, R32 totalTextureSize)
 {
-    r32 pix = 1.0/totalTextureSize;
-    r32 divs = def->creatureTextureGridDivs;
-    r32 overhang = def->textureOverhang;
-    for(ui32 partIdx = 0;
+    R32 pix = 1.0/totalTextureSize;
+    R32 divs = def->creatureTextureGridDivs;
+    R32 overhang = def->textureOverhang;
+    for(U32 partIdx = 0;
             partIdx < def->nBodyParts;
             partIdx++)
     {
         BodyPartDefinition *part = def->bodyParts+partIdx;
-        r32 w = part->width+overhang*2;
-        r32 h = part->height+overhang*2;
-        r32 maxDim = Max(w, h);    
+        R32 w = part->width+overhang*2;
+        R32 h = part->height+overhang*2;
+        R32 maxDim = Max(w, h);    
         part->texScale = 1.0/(maxDim*divs);
         part->uvDims = V2(part->texScale*w-pix*4, part->texScale*h-pix*4);    //-4 pixels to prevent bleeding.
-        r32 cx = (part->texGridX+0.5)/divs;
-        r32 cy = (part->texGridY+0.5)/divs;
+        R32 cx = (part->texGridX+0.5)/divs;
+        R32 cy = (part->texGridY+0.5)/divs;
         part->uvPos = V2(cx-part->uvDims.x/2.0, cy-part->uvDims.y/2.0);
     }
 }
@@ -325,7 +342,7 @@ GetToolName(CreatureEditorScreen *editor)
 }
 
 internal inline void
-SetDrawState(CreatureEditorScreen *editor, b32 isErasing, b32 keepSelection)
+SetDrawState(CreatureEditorScreen *editor, B32 isErasing, B32 keepSelection)
 {
     // If already drawing, keep selection, otherwise clear.
     if(!keepSelection)
@@ -336,16 +353,16 @@ SetDrawState(CreatureEditorScreen *editor, b32 isErasing, b32 keepSelection)
     editor->isErasing = isErasing;
 }
 
-internal inline b32
-DoColorPickerButton(struct nk_context *ctx, struct nk_colorf *color, b32 *isColorPickerVisible)
+internal inline B32
+DoColorPickerButton(struct nk_context *ctx, struct nk_colorf *color, B32 *isColorPickerVisible)
 {
-    b32 isJustPressed = 0;
-    b32 result = 0;
+    B32 isJustPressed = 0;
+    B32 result = 0;
     if(nk_button_color(ctx, (struct nk_color){
-            (ui8)(color->r*255),
-            (ui8)(color->g*255),
-            (ui8)(color->b*255),
-            (ui8)(color->a*255)}))
+            (U8)(color->r*255),
+            (U8)(color->g*255),
+            (U8)(color->b*255),
+            (U8)(color->a*255)}))
     {
         *isColorPickerVisible = 1;
         isJustPressed = 1;
@@ -360,7 +377,7 @@ DoColorPickerButton(struct nk_context *ctx, struct nk_colorf *color, b32 *isColo
         struct nk_rect bounds = nk_widget_bounds(ctx);
         bounds.x-=20;bounds.y-=20;bounds.w+=40;bounds.h+=40;
         nk_color_pick(ctx, color, NK_RGB);
-        b32 isInsideColorPicker = nk_input_is_mouse_hovering_rect(&ctx->input, bounds);
+        B32 isInsideColorPicker = nk_input_is_mouse_hovering_rect(&ctx->input, bounds);
         if(!isInsideColorPicker && !isJustPressed)
         {
             nk_popup_close(ctx);
@@ -401,7 +418,7 @@ LoadCreatureDefinition(CreatureEditorScreen *editor,
     stbi_image_free(data);
 
     editor->idCounter = 1;
-    for(ui32 partDefIdx = 0;
+    for(U32 partDefIdx = 0;
             partDefIdx < def->nBodyParts;
             partDefIdx++)
     {
@@ -413,6 +430,22 @@ LoadCreatureDefinition(CreatureEditorScreen *editor,
     DebugOut("done loading");
 }
 
+void
+SetBodyPartValuesForAnimation(BodyPartDefinition *bodyPart, R32 timeFactor)
+{
+    R32 time = timeFactor*timeFactor;
+    bodyPart->localAngle = bodyPart->localAngle+0.75f*sinf(time*20)*time;
+    bodyPart->width = bodyPart->width*(1.0f-time);
+    bodyPart->height = bodyPart->height*(1.0f-time);
+}
+
+void
+StartAnimatingBodyPart(CreatureEditorScreen *editor, BodyPartDefinition *bodyPart)
+{
+    editor->animateBodyPart = bodyPart;
+    editor->animationTime = 1.0f;
+}
+
 internal inline void
 EditorDrawBodyPartTextures(CreatureEditorScreen *editor)
 {
@@ -420,13 +453,13 @@ EditorDrawBodyPartTextures(CreatureEditorScreen *editor)
     TextureAtlas *creatureAtlas = assets->creatureTextureAtlas;
     CreatureDefinition *def = editor->creatureDefinition;
     // Draw bodypart textures
-    b32 hasFocusedBodyPart = editor->editState==EDIT_CREATURE_DRAW && editor->selectedId;
-    for(ui32 bodyPartIdx = 0; 
+    B32 hasFocusedBodyPart = editor->editState==EDIT_CREATURE_DRAW && editor->selectedId;
+    for(U32 bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
         BodyPartDefinition *part = def->drawOrder[bodyPartIdx];
-        r32 alpha = hasFocusedBodyPart ? (part->id==editor->selectedId ? 1.0 : 0.3) : 1.0;
+        R32 alpha = hasFocusedBodyPart ? (part->id==editor->selectedId ? 1.0 : 0.3) : 1.0;
         Vec4 creatureColor = V4(1,1,1, alpha);
         DrawBodyPartWithTexture(renderTools->worldRenderGroup, part, part->pos, part->angle, def->textureOverhang, creatureAtlas->textureHandle, creatureColor);
     }
@@ -450,14 +483,14 @@ EditBodypartDefinition(CreatureEditorScreen *editor,
     Gui *gui = editor->gui;
     CreatureDefinition *def = editor->creatureDefinition;
     RenderGroup *renderGroup = renderTools->worldRenderGroup;
-    r32 lineWidth = 2.0*renderTools->camera->scale;
-    r32 buttonRadius = 10;
+    R32 lineWidth = 2.0*renderTools->camera->scale;
+    R32 buttonRadius = 10;
 
-    r32 halfWidth = part->width/2;
-    r32 halfHeight = part->height/2;
-    r32 angleButtonLength = sqrtf(halfWidth*halfWidth+halfHeight*halfHeight);
-    r32 angleButtonAngle = part->angle+atan2(-halfHeight, -halfWidth);
-    b32 isEditing = 0;
+    R32 halfWidth = part->width/2;
+    R32 halfHeight = part->height/2;
+    R32 angleButtonLength = sqrtf(halfWidth*halfWidth+halfHeight*halfHeight);
+    R32 angleButtonAngle = part->angle+atan2(-halfHeight, -halfWidth);
+    B32 isEditing = 0;
 
     if(DoDragButtonAlongAxis(gui, 
             "hitHeightDragButton",
@@ -483,7 +516,7 @@ EditBodypartDefinition(CreatureEditorScreen *editor,
         }
         part->width = Max(1, SnapDim(editor, halfWidth*2));
 
-        r32 newAngle = angleButtonAngle;
+        R32 newAngle = angleButtonAngle;
         if(DoRotationDragButton(gui, 
                 "hitRotationDragButton",
                 part->pos,
@@ -500,12 +533,12 @@ EditBodypartDefinition(CreatureEditorScreen *editor,
     {
         BodyPartDefinition *parent = GetBodyPartById(def, part->connectionId);
         Vec2 pivotPoint = part->pivotPoint;
-        r32 absAngle = part->angle;
-        r32 width = part->width;
+        R32 absAngle = part->angle;
+        R32 width = part->width;
 
         // Draw nice angle thing
         Vec2 to = V2Add(pivotPoint, V2Polar(absAngle, width));
-        r32 edgeAngle = GetAbsoluteEdgeAngle(parent, part->xEdge, part->yEdge);
+        R32 edgeAngle = GetAbsoluteEdgeAngle(parent, part->xEdge, part->yEdge);
         Vec2 normalPoint = V2Add(pivotPoint, V2Polar(edgeAngle, 50));
 
         // Do length and rotation drag button
@@ -532,7 +565,7 @@ EditBodypartDefinition(CreatureEditorScreen *editor,
 #endif
 
         // Turn this into a function
-        r32 angDiff = GetNormalizedAngDiff(absAngle, edgeAngle);
+        R32 angDiff = GetNormalizedAngDiff(absAngle, edgeAngle);
         Push2DSemiCircleColored(renderGroup, 
                 pivotPoint, 
                 20.0, 
@@ -542,7 +575,7 @@ EditBodypartDefinition(CreatureEditorScreen *editor,
                 squareRegion,
                 V4(1, 1, 1, 0.4));
 
-        r32 minAngle = edgeAngle+part->minAngle;
+        R32 minAngle = edgeAngle+part->minAngle;
         Vec4 minLineColor = V4(0.8, 0.3, 0.3, 1.0);
         if(DoRotationDragButtonWithLine(gui, 
                 "hitMinAngleDragButton",
@@ -557,7 +590,7 @@ EditBodypartDefinition(CreatureEditorScreen *editor,
                     ClampF(-M_PI+0.1, part->maxAngle-0.1, GetNormalizedAngDiff(minAngle, edgeAngle)));
         }
 
-        r32 maxAngle = edgeAngle+part->maxAngle;
+        R32 maxAngle = edgeAngle+part->maxAngle;
         Vec4 maxLineColor = V4(0.3, 0.8, 0.3, 1.0);
         if(DoRotationDragButtonWithLine(gui, 
                 "hitMaxAngleDragButton",
@@ -598,11 +631,11 @@ EditBodypartDefinition(CreatureEditorScreen *editor,
 int
 BeginCenterPopup(AppState *appState, 
         struct nk_context *ctx,
-        r32 width, r32 height,
+        R32 width, R32 height,
         char *title)
 {
-    r32 x = appState->screenWidth/2-width/2;
-    r32 y = appState->screenHeight/2-height/2;
+    R32 x = appState->screenWidth/2-width/2;
+    R32 y = appState->screenHeight/2-height/2;
     return nk_begin(ctx, title, nk_rect(x, y, width, height), 
                 NK_WINDOW_TITLE | 
                 NK_WINDOW_BORDER | 
@@ -649,7 +682,7 @@ DoToolWindow(AppState *appState, CreatureEditorScreen *editor, struct nk_context
             nk_checkbox_label(ctx, "Snap Angles", &editor->isAngleSnapEnabled);
             if(editor->isAngleSnapEnabled)
             {
-                r32 res = RadToDeg(editor->angleSnapResolution);
+                R32 res = RadToDeg(editor->angleSnapResolution);
                 NKEditFloatProperty(ctx, "Angle Res", 1, &res, 100, 1.0, 1.0);
                 editor->angleSnapResolution = DegToRad(res);
             }
@@ -716,7 +749,7 @@ DoToolWindow(AppState *appState, CreatureEditorScreen *editor, struct nk_context
 internal inline void 
 DrawBodyPartWithOverhang(SpriteBatch *batch, 
         BodyPartDefinition *def, 
-        r32 overhang,
+        R32 overhang,
         AtlasRegion *tex)
 {
     PushOrientedRectangle2(batch, 
@@ -733,12 +766,13 @@ EditorDoGui(AppState *appState, CreatureEditorScreen *editor)
     EditorDefaultParameters(editor);
     Gui *gui = editor->gui;
 
-    r32 screenWidth = appState->screenWidth;
+    R32 screenWidth = appState->screenWidth;
     Vec2 buttonDims = V2(180, 40);
-    ui32 nButtons = 2;
+    U32 nButtons = 2;
 
-    r32 atX = screenWidth/2.0-buttonDims.x*nButtons/2.0;
-    r32 atY = 0.0;
+    R32 atX = screenWidth/2.0-buttonDims.x*nButtons/2.0;
+    R32 atY = 0.0;
+
     GuiBeginContext(gui, "top bar");
     if(DoTabBarRadioButton(gui, "Edit Body", V2(atX, atY), buttonDims, 
                 editor->editPhase==EDIT_PHASE_BODY))
@@ -776,10 +810,10 @@ UpdateCreatureEditorScreen(AppState *appState,
     ShaderInstance *worldShader = renderTools->worldShader;
     ShaderInstance *screenShader = renderTools->screenShader;
 
-    // TODO: DELETE! dont recalculate every frame. Assumes width=height.
+    // TODO: DELETE! dont recalculate every frame. Only when dirty. Assumes width=height.
     RecalculateTextureDims(def, creatureAtlas->width);
 
-    b32 hasLastBrushStroke = 0;
+    B32 hasLastBrushStroke = 0;
     
     // Key and mouse input
     editor->isInputCaptured = nk_window_is_any_hovered(ctx) || 
@@ -801,7 +835,8 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
 
-    EditorDoGui(appState, editor);
+    // TODO: This is my own gui, develop later.
+    // EditorDoGui(appState, editor);
 
     UpdateCamera2D(camera, appState);
     Vec2 mousePos = camera->mousePos;
@@ -812,10 +847,18 @@ UpdateCreatureEditorScreen(AppState *appState,
             circleRegion,
             V4(1,1,1,0.1));
 
+    BodyPartDefinition animateBodyPartBackup;
+    if(editor->animateBodyPart)
+    {
+        animateBodyPartBackup = *editor->animateBodyPart;
+        SetBodyPartValuesForAnimation(editor->animateBodyPart, editor->animationTime);
+        RecalculateSubNodeBodyParts(editor->creatureDefinition, editor->creatureDefinition->bodyParts);
+    }
+
     if(def->drawSolidColor)
     {
         Vec4 solidColor = V4(def->solidColor.x, def->solidColor.y, def->solidColor.z, 1.0);
-        for(ui32 bodyPartIdx = 0; 
+        for(U32 bodyPartIdx = 0; 
                 bodyPartIdx < def->nBodyParts;
                 bodyPartIdx++)
         {
@@ -831,11 +874,21 @@ UpdateCreatureEditorScreen(AppState *appState,
 
     EditorDrawBodyPartTextures(editor);
 
+    if(editor->animateBodyPart)
+    {
+        *editor->animateBodyPart = animateBodyPartBackup;
+        editor->animationTime-=(1.0f/60.0f);
+        if(editor->animationTime <= 0.0f)
+        {
+            editor->animateBodyPart = NULL;
+        }
+    }
+
     // Check intersection with bodyparts.
-    ui32 intersectId = 0;
+    U32 intersectId = 0;
     if(!CreatureEditorIsEditing(editor))
     {
-        for(ui32 bodyPartIdx = 0; 
+        for(U32 bodyPartIdx = 0; 
                 bodyPartIdx < def->nBodyParts;
                 bodyPartIdx++)
         {
@@ -847,10 +900,10 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
 
-    r32 outlineSize = 2.0 * camera->scale;
+    R32 outlineSize = 2.0 * camera->scale;
 
     // Draw creature outline
-    for(ui32 bodyPartIdx = 0; 
+    for(U32 bodyPartIdx = 0; 
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
@@ -884,18 +937,18 @@ UpdateCreatureEditorScreen(AppState *appState,
         {
             if(EditorCanAddBodyPart(editor)) 
             {
-                r32 minPlaceDistance = 20.0;
-                r32 minDist = 10000000.0;
+                R32 minPlaceDistance = 20.0;
+                R32 minDist = 10000000.0;
                 BoxEdgeLocation location = {};
                 BoxEdgeLocation minLocation = {};
-                b32 hasLocation = 0;
+                B32 hasLocation = 0;
                 BodyPartDefinition *attachTo = NULL;
-                for(ui32 bodyPartIdx = 0;
+                for(U32 bodyPartIdx = 0;
                         bodyPartIdx < def->nBodyParts;
                         bodyPartIdx++)
                 {
                     BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
-                    r32 dist = GetNearestBoxEdgeLocation(part->pos, 
+                    R32 dist = GetNearestBoxEdgeLocation(part->pos, 
                             V2(part->width, part->height), part->angle, mousePos, &location);
                     if(dist > 0 && dist < minDist)
                     {
@@ -948,11 +1001,11 @@ UpdateCreatureEditorScreen(AppState *appState,
             BoxEdgeLocation *location = &editor->bodyPartLocation;
             Vec2 from = editor->bodyPartLocation.pos;
             Vec2 to = mousePos;
-            r32 angle = atan2f(to.y-from.y, to.x-from.x);
-            r32 dist = SnapDim(editor, V2Dist(from, to));
+            R32 angle = atan2f(to.y-from.y, to.x-from.x);
+            R32 dist = SnapDim(editor, V2Dist(from, to));
             dist = fmaxf(dist, 5.0);
-            r32 edgeAngle = atan2f(location->yEdge, location->xEdge);
-            r32 localAngle = angle-part->angle - edgeAngle;
+            R32 edgeAngle = atan2f(location->yEdge, location->xEdge);
+            R32 localAngle = angle-part->angle - edgeAngle;
             localAngle = SnapAngle(editor, NormalizeAngle(localAngle));
             angle = NormalizeAngle(edgeAngle+part->angle)+localAngle;
             Vec2 center = V2Add(from, V2Polar(angle, dist/2));
@@ -1001,6 +1054,18 @@ UpdateCreatureEditorScreen(AppState *appState,
                     
                     editor->selectedId = newPart->id;
                     editor->editState=EDIT_CREATURE_NONE;
+
+                    R32 c = cosf(newPart->angle);
+                    R32 s = sinf(newPart->angle);
+                    for(int i = 0; i < 10; i++)
+                    {
+                        Vec2 pVel = V2Add(V2MulS(RandomNormalPair(), 1.5f), V2(0,RandomR32(0, 1)));
+                        pVel = V2Add(pVel, V2(c*3, s*3));
+                        pVel = V2MulS(pVel, 0.8f);
+                        AddEditorParticle(editor, newPart->pivotPoint, pVel, 8.0f, RandomR32(0.2f, 0.3f));
+                    }
+
+                    StartAnimatingBodyPart(editor, newPart);
                 }
             }
         } 
@@ -1012,12 +1077,12 @@ UpdateCreatureEditorScreen(AppState *appState,
                 hasLastBrushStroke = 1;
                 if(editor->hasLastBrushStroke)
                 {
-                    ui32 maxPoints = 8;
-                    for(ui32 pointIdx = 0;
+                    U32 maxPoints = 8;
+                    for(U32 pointIdx = 0;
                             pointIdx < maxPoints; 
                             pointIdx++)
                     {
-                        r32 factor = ((r32)pointIdx)/(maxPoints-1);
+                        R32 factor = ((R32)pointIdx)/(maxPoints-1);
                         Vec2 point = V2Lerp(editor->lastBrushStroke, mousePos, factor);
                         // Sets active texture. Dont forget to switch back.
                         DoDrawAtPoint(editor, creatureAtlas, point);
@@ -1048,7 +1113,7 @@ UpdateCreatureEditorScreen(AppState *appState,
             }
             else
             {
-                for(ui32 bodyPartIdx = 0;
+                for(U32 bodyPartIdx = 0;
                         bodyPartIdx < def->nBodyParts;
                         bodyPartIdx++)
                 {
@@ -1083,11 +1148,36 @@ UpdateCreatureEditorScreen(AppState *appState,
             editor->drawBrushInScreenCenter = 0;
         }
 
+        Vec3 solidColor = editor->creatureDefinition->solidColor;
+        // Draw and update particles
+        for(int particleIdx = editor->nParticles-1;
+                particleIdx > 0;
+                particleIdx--)
+        {
+            Particle *p = editor->particles+particleIdx;
+            p->time+=(1.0f/60.0f);
+            if(p->time >= p->lifetime)
+            {
+                editor->particles[particleIdx] = editor->particles[editor->nParticles-1];
+                editor->nParticles--;
+            }
+            R32 timeFactor = 1.0f - p->time/p->lifetime;
+
+            p->vel = V2Add(p->vel, editor->gravity);
+            p->pos = V2Add(p->pos, p->vel);
+
+            Vec2 from = V2Sub(p->pos, V2MulS(p->vel, 1.4f));
+            Vec2 to   = V2Add(p->pos, V2MulS(p->vel, 1.4f));
+            R32 shade = 0.7f;
+            Push2DLineColored(worldRenderGroup, from, to, p->r*timeFactor, circleRegion, 
+                    V4(solidColor.r*shade, solidColor.g*shade, solidColor.b*shade, 0.8f));
+        }
+
         if(editor->editState==EDIT_CREATURE_DRAW 
                 && !editor->isInputCaptured
                 && editor->isMouseInDrawArea)
         {
-            r32 brushSize = editor->brushSize/camera->scale;
+            R32 brushSize = editor->brushSize/camera->scale;
             SDL_ShowCursor(SDL_DISABLE);
             if(editor->isErasing)
             {
@@ -1107,8 +1197,8 @@ UpdateCreatureEditorScreen(AppState *appState,
             SDL_ShowCursor(SDL_ENABLE);
         }
 
-        b32 isRightButtonDown = IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_RIGHT);
-        b32 showRadialMenu = editor->rightSelectedId && isRightButtonDown;
+        B32 isRightButtonDown = IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_RIGHT);
+        B32 showRadialMenu = editor->rightSelectedId && isRightButtonDown;
         int selectedFromRadialMenu = DoRadialMenu(editor->gui, screenCamera->mousePos, showRadialMenu, 
                 3, "Draw On Bodypart", "Select", "Delete");
         if(selectedFromRadialMenu >= 0)
@@ -1149,7 +1239,7 @@ UpdateCreatureEditorScreen(AppState *appState,
     GuiUpdate(editor->gui);
 
     // Do camera handling
-    b32 stopDragging = 0;
+    B32 stopDragging = 0;
     if(!editor->isInputCaptured)
     {
         if(editor->canScrollCameraWithMouse)
@@ -1179,7 +1269,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                 NK_WINDOW_SCALABLE ))
     {
         nk_layout_row_dynamic(ctx, 30, 2);
-        b32 canAddBodyPart = EditorCanAddBodyPart(editor);
+        B32 canAddBodyPart = EditorCanAddBodyPart(editor);
         struct nk_color bodyPartTextColor = 
             canAddBodyPart ? nk_rgb(255, 255, 255) : nk_rgb(255, 0, 0);
         nk_labelf_colored(ctx, NK_TEXT_LEFT, bodyPartTextColor, 
@@ -1218,8 +1308,8 @@ UpdateCreatureEditorScreen(AppState *appState,
             if(editor->selectedId)
             {
                 BodyPartDefinition *part = GetBodyPartById(def, editor->selectedId);
-                b32 isEdited = 0;
-                b32 isBrainEdited = 0;
+                B32 isEdited = 0;
+                B32 isBrainEdited = 0;
 
                 nk_labelf(ctx, NK_TEXT_LEFT, "BodyPart %u %u", part->id, part->degree);
 
@@ -1318,9 +1408,9 @@ UpdateCreatureEditorScreen(AppState *appState,
                 int maxFiles = 64;
                 char *fileNameBuffer = malloc(sizeof(char)*maxFiles*128);
                 char *buffer = fileNameBuffer;
-                ui32 creatureCounter = 0;
+                U32 creatureCounter = 0;
                 char *creatureFiles[maxFiles];
-                ui32 textureCounter = 0;
+                U32 textureCounter = 0;
                 char *textureFiles[maxFiles];
 
                 tinydir_dir dir;
@@ -1333,7 +1423,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                     size_t l = strlen(file.name);
                     if(!file.is_dir && l < 64)
                     {
-                        b32 isValid = 0;
+                        B32 isValid = 0;
                         size_t l = strlen(file.name);
                         if(StringEndsWith(file.name, ".crdf"))
                         {
@@ -1379,12 +1469,12 @@ UpdateCreatureEditorScreen(AppState *appState,
     
     if(editor->showLoadScreen)
     {
-        r32 savedCreatureWidth = 400;
-        r32 savedCreatureHeight = 400;
+        R32 savedCreatureWidth = 400;
+        R32 savedCreatureHeight = 400;
         if(BeginCenterPopup(appState, ctx, savedCreatureWidth, savedCreatureHeight, "Load Creature"))
         {
             nk_layout_row_dynamic(ctx, 30, 1);
-            for(ui32 creatureIdx = 0;
+            for(U32 creatureIdx = 0;
                     creatureIdx < editor->nCreatureFiles;
                     creatureIdx++)
             {
@@ -1405,8 +1495,8 @@ UpdateCreatureEditorScreen(AppState *appState,
 
     if(editor->showSaveScreen)
     {
-        r32 saveScreenWidth = 400;
-        r32 saveScreenHeight = 400;
+        R32 saveScreenWidth = 400;
+        R32 saveScreenHeight = 400;
         if(BeginCenterPopup(appState, ctx, saveScreenWidth, saveScreenHeight, "Save Creature"))
         {
             nk_layout_row_dynamic(ctx, 30, 1);
@@ -1490,6 +1580,9 @@ InitCreatureEditorScreen(AppState *appState,
     editor->nGenes = 12;
     editor->learningRate = 0.03;
     editor->deviation = 0.003;
+
+    editor->gravity = V2(0, -0.1f);
+    editor->nParticles = 0;
 
     // Texture
     editor->creatureDefinition->creatureTextureGridDivs = 4;

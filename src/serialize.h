@@ -9,9 +9,9 @@ enum
 
 typedef struct
 {
-    ui32 dataVersion;
+    U32 dataVersion;
     FILE *file;
-    b32 isWriting;
+    B32 isWriting;
 } Serializer;
 
 

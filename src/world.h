@@ -10,11 +10,11 @@ struct RigidBody
     cpBody *body;
     cpShape *shape;
 
-    r32 width;
-    r32 height;
+    R32 width;
+    R32 height;
     Vec2 pos;
 
-    r32 drag;
+    R32 drag;
 };
 
 #include "creature.h"
@@ -35,11 +35,11 @@ struct FakeWorld
     MemoryArena *transientMemory;
     cpSpace *space;
 
-    ui32 nGenes;
+    U32 nGenes;
     CreatureDefinition def;
     EvolutionStrategies *strategies;
 
-    ui32 physicsGroupCounter;
+    U32 physicsGroupCounter;
 
     TrainingScenario trainingType;
     Vec2 target;

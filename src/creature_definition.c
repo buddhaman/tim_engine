@@ -1,8 +1,8 @@
 
-ui32
-GetIndexOfBodyPart(CreatureDefinition *def, ui32 id)
+U32
+GetIndexOfBodyPart(CreatureDefinition *def, U32 id)
 {
-    for(ui32 bodyPartIdx = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
@@ -13,9 +13,9 @@ GetIndexOfBodyPart(CreatureDefinition *def, ui32 id)
 }
 
 BodyPartDefinition *
-GetBodyPartById(CreatureDefinition *def, ui32 id)
+GetBodyPartById(CreatureDefinition *def, U32 id)
 {
-    for(ui32 bodyPartIdx = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
@@ -25,36 +25,36 @@ GetBodyPartById(CreatureDefinition *def, ui32 id)
     return NULL;
 }
 
-r32
+R32
 GetLocalAngleFromAbsoluteAngle(CreatureDefinition *def,
         BodyPartDefinition *part,
-        r32 absAngle)
+        R32 absAngle)
 {
-    r32 edgeAngle = atan2f(part->yEdge, part->xEdge);
+    R32 edgeAngle = atan2f(part->yEdge, part->xEdge);
     BodyPartDefinition *parent = GetBodyPartById(def, part->connectionId);
     return NormalizeAngle(absAngle - parent->angle - edgeAngle);
 }
 
-r32 
+R32 
 GetAbsoluteEdgeAngle(BodyPartDefinition *part, int xEdge, int yEdge)
 {
     return NormalizeAngle(atan2f(yEdge, xEdge)+part->angle);
 }
 
-internal inline b32
-BodyPartTexturePoint2Intersect(BodyPartDefinition *part, r32 textureOverhang, Vec2 point)
+internal inline B32
+BodyPartTexturePoint2Intersect(BodyPartDefinition *part, R32 textureOverhang, Vec2 point)
 {
     return OrientedBoxPoint2Intersect(part->pos,
             V2(part->width+textureOverhang*2, part->height+textureOverhang*2), part->angle, point);
 }
 
-ui32
+U32
 GetSubNodeBodyPartsById(CreatureDefinition *def, 
         BodyPartDefinition *parent,
-        ui32 parts[def->nBodyParts])
+        U32 parts[def->nBodyParts])
 {
-    ui32 counter = 0;
-    for(ui32 bodyPartIdx = 0;
+    U32 counter = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
@@ -67,13 +67,13 @@ GetSubNodeBodyPartsById(CreatureDefinition *def,
     return counter;
 }
 
-ui32
+U32
 GetSubNodeBodyParts(CreatureDefinition *def, 
         BodyPartDefinition *parent,
         BodyPartDefinition *parts[def->nBodyParts])
 {
-    ui32 counter = 0;
-    for(ui32 bodyPartIdx = 0;
+    U32 counter = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
@@ -91,8 +91,8 @@ RecalculateSubNodeBodyParts(CreatureDefinition *def,
         BodyPartDefinition *parent)
 {
     BodyPartDefinition *parts[def->nBodyParts];
-    ui32 nSubNodes = GetSubNodeBodyParts(def, parent, parts);
-    for(ui32 bodyPartIdx = 0;
+    U32 nSubNodes = GetSubNodeBodyParts(def, parent, parts);
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < nSubNodes;
             bodyPartIdx++)
     {
@@ -104,8 +104,8 @@ RecalculateSubNodeBodyParts(CreatureDefinition *def,
                 subPart->xEdge,
                 subPart->yEdge,
                 subPart->offset);
-        r32 edgeAngle = atan2f(subPart->yEdge, subPart->xEdge);
-        r32 totalAngle = NormalizeAngle(parent->angle + edgeAngle) + subPart->localAngle;
+        R32 edgeAngle = atan2f(subPart->yEdge, subPart->xEdge);
+        R32 totalAngle = NormalizeAngle(parent->angle + edgeAngle) + subPart->localAngle;
         Vec2 center = V2Add(pivotPoint, V2Polar(totalAngle, subPart->width/2));
 
         subPart->pivotPoint = pivotPoint;
@@ -128,7 +128,7 @@ DegreeCompareFunction(const void *p0, const void *p1)
 void
 RecalculateBodyPartDrawOrder(CreatureDefinition *def)
 {
-    for(ui32 bodyPartIdx = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < def->nBodyParts; 
             bodyPartIdx++)
     {
@@ -140,9 +140,9 @@ RecalculateBodyPartDrawOrder(CreatureDefinition *def)
 void
 AssignBrainIO(CreatureDefinition *def)
 {
-    ui32 atInputIdx = def->nInternalClocks;
-    ui32 atOutputIdx = 0;
-    for(ui32 bodyPartIdx = 0;
+    U32 atInputIdx = def->nInternalClocks;
+    U32 atOutputIdx = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
@@ -164,9 +164,9 @@ AssignBrainIO(CreatureDefinition *def)
 }
 
 void
-GenerateRandomName(char *name, ui32 maxLength)
+GenerateRandomName(char *name, U32 maxLength)
 {
-    ui32 nSyls = 0;
+    U32 nSyls = 0;
     char *syls[64];
     syls[nSyls++] = "ha"; 
     syls[nSyls++] = "hu"; 
@@ -178,13 +178,13 @@ GenerateRandomName(char *name, ui32 maxLength)
     syls[nSyls++] = "ji";
     syls[nSyls++] = "bru";
     syls[nSyls++] = "hm";
-    ui32 atChar = 0;
-    for(ui32 atSyl = 0; 
+    U32 atChar = 0;
+    for(U32 atSyl = 0; 
             atSyl < 3;
             atSyl++)
     {
         char *syl = syls[RandomUI32(0, nSyls)];
-        ui32 len = strlen(syl);
+        U32 len = strlen(syl);
         if(atChar+len < maxLength-3)
         {
             strcpy(name+atChar, syl);

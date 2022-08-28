@@ -1,6 +1,6 @@
 
 void
-BeginSerializing(Serializer *serializer, char *path, b32 write)
+BeginSerializing(Serializer *serializer, char *path, B32 write)
 {
     serializer->file = fopen(path, write ? "wb" : "rb");
     if(serializer->file)
@@ -9,11 +9,11 @@ BeginSerializing(Serializer *serializer, char *path, b32 write)
         if(serializer->isWriting)
         {
             serializer->dataVersion = LATEST_VERSION;
-            fwrite(&serializer->dataVersion, sizeof(ui32), 1, serializer->file);
+            fwrite(&serializer->dataVersion, sizeof(U32), 1, serializer->file);
         }
         else
         {
-            fread(&serializer->dataVersion, sizeof(ui32), 1, serializer->file);
+            fread(&serializer->dataVersion, sizeof(U32), 1, serializer->file);
         }
     }
     else
@@ -40,23 +40,23 @@ EndSerializing(Serializer *serializer)
     }\
 }\
 
-SerializePrimitiveTypeFunction(SerializeUI32, ui32)
-SerializePrimitiveTypeFunction(SerializeR32, r32);
+SerializePrimitiveTypeFunction(SerializeUI32, U32)
+SerializePrimitiveTypeFunction(SerializeR32, R32);
 SerializePrimitiveTypeFunction(SerializeVec2, Vec2);
 SerializePrimitiveTypeFunction(SerializeVec3, Vec3);
-SerializePrimitiveTypeFunction(SerializeI32, i32);
-SerializePrimitiveTypeFunction(SerializeB32, b32);
+SerializePrimitiveTypeFunction(SerializeI32, I32);
+SerializePrimitiveTypeFunction(SerializeB32, B32);
 
 void
-SerializeB32Array(Serializer *serializer, b32 *array, size_t len)
+SerializeB32Array(Serializer *serializer, B32 *array, size_t len)
 {
     if(serializer->isWriting)
     {
-        fwrite(array, sizeof(b32), len, serializer->file);
+        fwrite(array, sizeof(B32), len, serializer->file);
     }
     else
     {
-        fread(array, sizeof(b32), len, serializer->file);
+        fread(array, sizeof(B32), len, serializer->file);
     }
 }
 
@@ -127,7 +127,7 @@ SerializeCreatureDefinition(Serializer *serializer, CreatureDefinition *def)
     SerializeUI32(serializer, &def->creatureTextureGridDivs);
     SerializeB32Array(serializer, def->isTextureSquareOccupied, 16);
 
-    for(ui32 bodyPartIdx = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {

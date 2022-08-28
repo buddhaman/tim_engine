@@ -3,33 +3,33 @@ typedef struct
 {
     TextureAtlas *atlas;
     stbtt_packedchar charData[128];
-    ui32 firstChar;
+    U32 firstChar;
 } FontRenderer;
 
 typedef struct
 {
-    ui32 vao;
-    ui32 vbo;
-    ui32 ebo;
+    U32 vao;
+    U32 vbo;
+    U32 ebo;
 
-    ui32 nVertices;
-    ui32 maxVertices;
-    ui32 stride;
-    r32 *vertexBuffer;
+    U32 nVertices;
+    U32 maxVertices;
+    U32 stride;
+    R32 *vertexBuffer;
 
-    ui32 nIndices;
-    ui16 *indexBuffer;
+    U32 nIndices;
+    U16 *indexBuffer;
 
     Vec4 colorState;
-    b32 isDrawing;
+    B32 isDrawing;
 } SpriteBatch;
 
 typedef struct
 {
-    ui32 width;
-    ui32 height;
+    U32 width;
+    U32 height;
 
-    ui32 colorTexture;
-    ui32 fbo;
+    U32 colorTexture;
+    U32 fbo;
 } FrameBuffer;
 

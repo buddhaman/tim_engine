@@ -3,21 +3,21 @@ void
 InitFontRenderer(MemoryArena *arena, 
         FontRenderer *fontRenderer, 
         const char *pathToFont, 
-        r32 fontSize)
+        R32 fontSize)
 {
-    ui32 w = 512;
-    ui32 h = 512;
-    ui32 rangeSize = 95;
-    ui32 firstGlyph = 32;
+    U32 w = 512;
+    U32 h = 512;
+    U32 rangeSize = 95;
+    U32 firstGlyph = 32;
 
     fontRenderer->atlas = PushStruct(arena, TextureAtlas);
     InitAtlas(arena, fontRenderer->atlas, rangeSize, w, h);
 
     stbtt_pack_context packContext;
     stbtt_pack_range range = {};
-    ui8 *ttfBuffer = malloc(1<<20);
-    ui8 *tmpBitmap = malloc(sizeof(ui8)*w*h);
-    ui8 *fontTextureImage = malloc(sizeof(ui32)*w*h);
+    U8 *ttfBuffer = malloc(1<<20);
+    U8 *tmpBitmap = malloc(sizeof(U8)*w*h);
+    U8 *fontTextureImage = malloc(sizeof(U32)*w*h);
 
     FILE *handle = fopen(pathToFont, "rb");
     if(handle)
@@ -41,7 +41,7 @@ InitFontRenderer(MemoryArena *arena,
     stbtt_PackEnd(&packContext);
 
     // Turn bitmap into rgba image
-    ui32 imageSize = w*h;
+    U32 imageSize = w*h;
     for(int idx = 0; idx < imageSize; idx++)
     {
         fontTextureImage[idx*4+0] = 255;
@@ -66,7 +66,7 @@ InitFontRenderer(MemoryArena *arena,
 }
 
 FrameBuffer *
-CreateFrameBuffer(MemoryArena *arena, ui32 width, ui32 height)
+CreateFrameBuffer(MemoryArena *arena, U32 width, U32 height)
 {
     FrameBuffer *frameBuffer = PushStruct(arena, FrameBuffer);
     frameBuffer->width = width;
@@ -107,13 +107,13 @@ CreateFrameBuffer(MemoryArena *arena, ui32 width, ui32 height)
 }
 
 void
-InitSpriteBatch(SpriteBatch *batch, ui32 maxVertices, MemoryArena *arena)
+InitSpriteBatch(SpriteBatch *batch, U32 maxVertices, MemoryArena *arena)
 {
     batch->nVertices = 0;
     batch->maxVertices = maxVertices;
     batch->stride = 8;  //pos(2), tex(2), col(4)
-    batch->vertexBuffer = PushArray(arena, r32, batch->maxVertices*batch->stride);
-    batch->indexBuffer = PushArray(arena, ui16, batch->maxVertices);
+    batch->vertexBuffer = PushArray(arena, R32, batch->maxVertices*batch->stride);
+    batch->indexBuffer = PushArray(arena, U16, batch->maxVertices);
 
     glGenVertexArrays(1, &batch->vao);
     glGenBuffers(1, &batch->vbo);
@@ -126,19 +126,19 @@ InitSpriteBatch(SpriteBatch *batch, ui32 maxVertices, MemoryArena *arena)
 
     // Position
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, batch->stride*sizeof(r32), (void *)(memOffset));
-    memOffset+=2*sizeof(r32);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, batch->stride*sizeof(R32), (void *)(memOffset));
+    memOffset+=2*sizeof(R32);
 
     // Texture coords
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, batch->stride*sizeof(r32), (void *)(memOffset));
-    memOffset+=4*sizeof(r32);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, batch->stride*sizeof(R32), (void *)(memOffset));
+    memOffset+=4*sizeof(R32);
 
     // Texture coords
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, batch->stride*sizeof(r32), (void *)(memOffset));
-    memOffset+=2*sizeof(r32);
-    CheckOpenglError();
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, batch->stride*sizeof(R32), (void *)(memOffset));
+    memOffset+=2*sizeof(R32);
+    //CheckOpenglError();
 }
 
 internal inline void
@@ -157,11 +157,11 @@ EndSpritebatch(SpriteBatch *batch)
     batch->isDrawing = 0;
     glBindVertexArray(batch->vao);
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo);
-    glBufferData(GL_ARRAY_BUFFER, batch->nVertices*batch->stride*sizeof(r32), 
+    glBufferData(GL_ARRAY_BUFFER, batch->nVertices*batch->stride*sizeof(R32), 
             batch->vertexBuffer, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, batch->nIndices*sizeof(ui16), 
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, batch->nIndices*sizeof(U16), 
             batch->indexBuffer, GL_DYNAMIC_DRAW);
 
     glDrawElements(GL_TRIANGLES, batch->nIndices, GL_UNSIGNED_SHORT, 0);
@@ -170,7 +170,7 @@ EndSpritebatch(SpriteBatch *batch)
 internal inline void
 PushVertex2(SpriteBatch *batch, Vec2 pos, Vec2 texCoord, Vec4 color)
 {
-    ui32 bufferIdx = batch->nVertices*batch->stride;
+    U32 bufferIdx = batch->nVertices*batch->stride;
 
     batch->vertexBuffer[bufferIdx] = pos.x;
     batch->vertexBuffer[bufferIdx+1] = pos.y;
@@ -186,7 +186,7 @@ PushVertex2(SpriteBatch *batch, Vec2 pos, Vec2 texCoord, Vec4 color)
 }
 
 internal inline void
-PushIndex(SpriteBatch *batch, ui16 index)
+PushIndex(SpriteBatch *batch, U16 index)
 {
     batch->indexBuffer[batch->nIndices++] = index;
 }
@@ -194,7 +194,7 @@ PushIndex(SpriteBatch *batch, ui16 index)
 void
 PushQuad2(SpriteBatch *batch, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, Vec2 texSize)
 {
-    ui16 lastIdx = batch->nVertices;
+    U16 lastIdx = batch->nVertices;
     PushVertex2(batch, p0, V2(texOrig.x, texOrig.y+texSize.y), batch->colorState);
     PushVertex2(batch, p1, V2(texOrig.x+texSize.x, texOrig.y+texSize.y), batch->colorState);
     PushVertex2(batch, p2, V2(texOrig.x+texSize.x, texOrig.y), batch->colorState);
@@ -211,24 +211,24 @@ PushQuad2(SpriteBatch *batch, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, 
 void
 PushSemiCircle2(SpriteBatch *batch, 
         Vec2 pos, 
-        r32 radius, 
-        r32 minAngle, 
-        r32 maxAngle, 
-        ui32 nPoints, 
+        R32 radius, 
+        R32 minAngle, 
+        R32 maxAngle, 
+        U32 nPoints, 
         AtlasRegion *tex)
 {
-    ui16 lastIdx = batch->nVertices;
+    U16 lastIdx = batch->nVertices;
     PushVertex2(batch, pos, tex->pos, batch->colorState);
-    r32 angDiff = (maxAngle-minAngle)/(nPoints-1);
-    for(ui32 atPoint = 0;
+    R32 angDiff = (maxAngle-minAngle)/(nPoints-1);
+    for(U32 atPoint = 0;
             atPoint < nPoints;
             atPoint++)
     {
-        r32 angle = minAngle+angDiff*atPoint;
+        R32 angle = minAngle+angDiff*atPoint;
         Vec2 point = V2Add(pos, V2Polar(angle, radius));
         PushVertex2(batch, point, tex->pos, batch->colorState); 
     }
-    for(ui32 atPoint = 0;
+    for(U32 atPoint = 0;
             atPoint < nPoints-1;
             atPoint++)
     {
@@ -241,23 +241,23 @@ PushSemiCircle2(SpriteBatch *batch,
 void
 PushLineCircle2(SpriteBatch *batch,
         Vec2 center,
-        r32 radius,
-        r32 lineWidth,
+        R32 radius,
+        R32 lineWidth,
         int nPoints,
         AtlasRegion *tex)
 {
-    ui16 lastIdx = batch->nVertices;
-    r32 innerRadius = radius-lineWidth/2.0;
-    r32 outerRadius = radius+lineWidth/2.0;
-    r32 dAngle = 2*M_PI/nPoints;
+    U16 lastIdx = batch->nVertices;
+    R32 innerRadius = radius-lineWidth/2.0;
+    R32 outerRadius = radius+lineWidth/2.0;
+    R32 dAngle = 2*M_PI/nPoints;
 
     for(int atPoint = 0;
             atPoint < nPoints;
             atPoint++)
     {
-        r32 angle = atPoint * dAngle;
-        r32 c = cosf(angle);
-        r32 s = sinf(angle);
+        R32 angle = atPoint * dAngle;
+        R32 c = cosf(angle);
+        R32 s = sinf(angle);
         PushVertex2(batch, 
                 V2(center.x+c*innerRadius, center.y+s*innerRadius),
                 tex->pos, 
@@ -299,7 +299,7 @@ PushRect2(SpriteBatch *batch, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
 }
 
 void
-PushLineRect2(SpriteBatch *batch, Vec2 origin, Vec2 size, Vec2 texOrig, Vec2 texSize, r32 lineWidth)
+PushLineRect2(SpriteBatch *batch, Vec2 origin, Vec2 size, Vec2 texOrig, Vec2 texSize, R32 lineWidth)
 {
     PushRect2(batch, origin, V2(size.x, lineWidth), texOrig, texSize);
     PushRect2(batch, origin, V2(lineWidth, size.y), texOrig, texSize);
@@ -308,10 +308,10 @@ PushLineRect2(SpriteBatch *batch, Vec2 origin, Vec2 size, Vec2 texOrig, Vec2 tex
 }
 
 void
-PushLine2(SpriteBatch *batch, Vec2 from, Vec2 to, r32 lineWidth, Vec2 texOrig, Vec2 texSize)
+PushLine2(SpriteBatch *batch, Vec2 from, Vec2 to, R32 lineWidth, Vec2 texOrig, Vec2 texSize)
 {
     Vec2 diff = V2Sub(to, from);
-    r32 invl = 1.0/V2Len(diff);
+    R32 invl = 1.0/V2Len(diff);
     Vec2 perp = V2(diff.y*invl*lineWidth/2.0, -diff.x*invl*lineWidth/2.0);
     PushQuad2(batch,
             V2Add(from, perp), V2Add(to, perp),
@@ -323,13 +323,13 @@ PushLine2(SpriteBatch *batch, Vec2 from, Vec2 to, r32 lineWidth, Vec2 texOrig, V
 void
 PushOrientedRectangle2(SpriteBatch *batch, 
         Vec2 pos, 
-        r32 width, 
-        r32 height, 
-        r32 angle,
+        R32 width, 
+        R32 height, 
+        R32 angle,
         AtlasRegion *texture)
 {
-    r32 c = cosf(angle);
-    r32 s = sinf(angle);
+    R32 c = cosf(angle);
+    R32 s = sinf(angle);
     Vec2 axis0 = V2(c*width/2.0, s*width/2.0);
     Vec2 axis1 = V2(s*height/2.0, -c*height/2.0);
     Vec2 p00 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, -1)));
@@ -343,14 +343,14 @@ PushOrientedRectangle2(SpriteBatch *batch,
 void
 PushOrientedLineRectangle2(SpriteBatch *batch, 
         Vec2 pos, 
-        r32 width, 
-        r32 height, 
-        r32 angle,
-        r32 lineWidth,
+        R32 width, 
+        R32 height, 
+        R32 angle,
+        R32 lineWidth,
         AtlasRegion *texture)
 {
-    r32 c = cosf(angle);
-    r32 s = sinf(angle);
+    R32 c = cosf(angle);
+    R32 s = sinf(angle);
     Vec2 axis0 = V2(c*width/2.0, s*width/2.0);
     Vec2 axis1 = V2(s*height/2.0, -c*height/2.0);
     Vec2 p00 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, -1)));
@@ -365,13 +365,13 @@ PushOrientedLineRectangle2(SpriteBatch *batch,
 }
 
 void
-PushCircle2(SpriteBatch *batch, Vec2 center, r32 size, AtlasRegion *tex)
+PushCircle2(SpriteBatch *batch, Vec2 center, R32 size, AtlasRegion *tex)
 {
     PushRect2(batch, V2(center.x-size, center.y-size), V2(size*2, size*2), tex->pos, tex->size);
 }
 
 internal inline Vec2
-Lerp2(Vec2 from, Vec2 to, r32 lambda)
+Lerp2(Vec2 from, Vec2 to, R32 lambda)
 {
     return V2Add(V2MulS(from, 1.0-lambda), V2MulS(to, lambda));
 }
@@ -402,12 +402,12 @@ Rect2
 GetStringSize(FontRenderer *fontRenderer, char *sequence, Vec2 pos)
 {
     stbtt_aligned_quad q;
-    r32 x = pos.x;
-    r32 y = pos.y;
-    r32 minY = 10000.0;
-    r32 maxY = -10000.0;
-    ui32 w = fontRenderer->atlas->width;
-    ui32 h = fontRenderer->atlas->height;
+    R32 x = pos.x;
+    R32 y = pos.y;
+    R32 minY = 10000.0;
+    R32 maxY = -10000.0;
+    U32 w = fontRenderer->atlas->width;
+    U32 h = fontRenderer->atlas->height;
 
     while(*sequence)
     {
@@ -423,10 +423,10 @@ void
 DrawString2D(SpriteBatch *batch, FontRenderer *fontRenderer, Vec2 pos, char *sequence)
 {
     stbtt_aligned_quad q;
-    r32 x = pos.x;
-    r32 y = pos.y;
-    ui32 w = fontRenderer->atlas->width;
-    ui32 h = fontRenderer->atlas->height;
+    R32 x = pos.x;
+    R32 y = pos.y;
+    U32 w = fontRenderer->atlas->width;
+    U32 h = fontRenderer->atlas->height;
 
     while(*sequence)
     {
@@ -442,7 +442,7 @@ DrawDirectRect(SpriteBatch *batch,
         ShaderInstance *shaderInstance,
         Vec2 pos, 
         Vec2 dims, 
-        ui32 textureHandle, 
+        U32 textureHandle, 
         Vec2 uvPos, 
         Vec2 uvDims,
         Vec4 color)

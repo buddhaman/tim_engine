@@ -3,10 +3,10 @@ typedef struct
 {
     Vec2 pos;
     Vec2 size;
-    r32 scale;
-    b32 isYUp;
+    R32 scale;
+    B32 isYUp;
     Mat3 transform;
-    b32 isDragging;
+    B32 isDragging;
 
     Vec2 mousePos;  // World coordinates.
 } Camera2D;

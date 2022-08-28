@@ -16,10 +16,10 @@ typedef struct
 
 typedef struct
 {
-    ui32 inputSize;
-    ui32 hiddenSize;
-    ui32 outputSize;
-    ui32 stateSize;
+    U32 inputSize;
+    U32 hiddenSize;
+    U32 outputSize;
+    U32 stateSize;
     VecR32 *gene;
 
     VecR32 x; //input;

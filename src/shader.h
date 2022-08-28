@@ -1,7 +1,7 @@
 
 typedef struct
 {
-    ui32 program;
+    U32 program;
 
     char *fragmentSourcePath;
     char *fragmentSource;
@@ -14,18 +14,18 @@ typedef struct
 {
     Shader *shader;
 
-    ui32 transformLocation;
-    b32 hasMat3Transform;
+    U32 transformLocation;
+    B32 hasMat3Transform;
     Mat3 *mat3Transform;
-    b32 hasMat4Transform;
+    B32 hasMat4Transform;
     Mat3 *mat4Transform;
 
-    ui32 radiusLocation;
-    b32 hasRadius;
-    r32 radius;
+    U32 radiusLocation;
+    B32 hasRadius;
+    R32 radius;
 
-    ui32 dir2Location;
-    b32 hasDir2;
+    U32 dir2Location;
+    B32 hasDir2;
     Vec2 dir2;
 
 } ShaderInstance;

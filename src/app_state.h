@@ -32,22 +32,22 @@ struct AppState
 {
     MemoryArena *fakeWorldArena;
     FakeWorldScreen *fakeWorldScreen;
-    i32 screenWidth;
-    i32 screenHeight;
-    r32 ratio;
-    i32 mx;
-    i32 my;
-    i32 dx;
-    i32 dy;
-    i32 mouseScrollY;
-    r32 normalizedMX;
-    r32 normalizedMY;
+    I32 screenWidth;
+    I32 screenHeight;
+    R32 ratio;
+    I32 mx;
+    I32 my;
+    I32 dx;
+    I32 dy;
+    I32 mouseScrollY;
+    R32 normalizedMX;
+    R32 normalizedMY;
     Vec4 clearColor;
     ScreenType currentScreen;
     Camera2D *screenCamera;
 
-    b32 isActionDown[NUM_KEY_ACTIONS];
-    b32 wasActionDown[NUM_KEY_ACTIONS];
+    B32 isActionDown[NUM_KEY_ACTIONS];
+    B32 wasActionDown[NUM_KEY_ACTIONS];
 
     char textInput[128];
 };
@@ -56,7 +56,7 @@ void
 StartFakeWorld(AppState *appState, 
         CreatureDefinition *definition, 
         Assets *assets, 
-        ui32 nGenes, 
-        r32 dev, 
-        r32 learningRate);
+        U32 nGenes, 
+        R32 dev, 
+        R32 learningRate);
 

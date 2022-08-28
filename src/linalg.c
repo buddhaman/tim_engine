@@ -2,7 +2,7 @@
 size_t
 SizeOfMatR32(int w, int h)
 {
-    return w*h*sizeof(r32)+sizeof(MatR32);
+    return w*h*sizeof(R32)+sizeof(MatR32);
 }
 
 MatR32 *
@@ -16,7 +16,7 @@ CreateMatR32(int w, int h, void *memory)
 }
 
 internal inline void
-InitMatR32FromGene(MatR32 *mat, int w, int h, VecR32 *gene, r32 **atMemory)
+InitMatR32FromGene(MatR32 *mat, int w, int h, VecR32 *gene, R32 **atMemory)
 {
     mat->w = w;
     mat->h = h;
@@ -34,7 +34,7 @@ InitVecR32(VecR32 *vec, int n, void *memory)
 size_t
 SizeOfVecR32(int n)
 {
-    return n*sizeof(r32)+sizeof(VecR32);
+    return n*sizeof(R32)+sizeof(VecR32);
 }
 
 VecR32 *
@@ -47,7 +47,7 @@ CreateVecR32(int n, void *memory)
 };
 
 internal inline void
-InitVecR32FromGene(VecR32 *vec, int n, VecR32 *gene, r32 **atMemory)
+InitVecR32FromGene(VecR32 *vec, int n, VecR32 *gene, R32 **atMemory)
 {
     vec->n = n;
     vec->v = *atMemory;
@@ -59,7 +59,7 @@ InitVecR32FromGene(VecR32 *vec, int n, VecR32 *gene, r32 **atMemory)
 void
 MatR32ClearToZero(MatR32 *mat)
 {
-    memset(mat->m, 0, mat->w*mat->h*sizeof(r32));
+    memset(mat->m, 0, mat->w*mat->h*sizeof(R32));
 }
 
 void
@@ -80,7 +80,7 @@ MultiplyMatVecR32(VecR32 *result, MatR32 *mat, VecR32 *vec)
 {
     for(int y = 0; y < mat->h; y++)
     {
-        r32 dp = 0.0;
+        R32 dp = 0.0;
         for(int x = 0; x < mat->w; x++)
         {
             dp += vec->v[x]*MAT_VAL(mat, x, y);
@@ -99,7 +99,7 @@ VecR32Add(VecR32 *result, VecR32 *a, VecR32 *b)
 }
 
 void
-VecR32AddScaled(VecR32 *result, VecR32 *a, VecR32 *b, r32 factor)
+VecR32AddScaled(VecR32 *result, VecR32 *a, VecR32 *b, R32 factor)
 {
     for(int i = 0; i < a->n; i++)
     {
@@ -108,7 +108,7 @@ VecR32AddScaled(VecR32 *result, VecR32 *a, VecR32 *b, r32 factor)
 }
 
 void
-VecR32SetS(VecR32 *result,  r32 value)
+VecR32SetS(VecR32 *result,  R32 value)
 {
     for(int i = 0; i < result->n; i++)
     {
@@ -129,7 +129,7 @@ VecR32Set(VecR32 *result, VecR32 *vec)
 // doesnt follow the normal convention of having a result vector for some reason.
 // but whatever.
 void
-VecR32MulS(VecR32 *result, VecR32 *vec, r32 s)
+VecR32MulS(VecR32 *result, VecR32 *vec, R32 s)
 {
     for(int i = 0; i < vec->n; i++)
     {
@@ -138,7 +138,7 @@ VecR32MulS(VecR32 *result, VecR32 *vec, r32 s)
 }
 
 void
-VecR32AddS(VecR32 *result, VecR32 *vec, r32 s)
+VecR32AddS(VecR32 *result, VecR32 *vec, R32 s)
 {
     for(int i = 0; i < vec->n; i++)
     {
@@ -157,11 +157,11 @@ VecR32Hadamard(VecR32 *result, VecR32 *a, VecR32 *b)
 }
 
 void
-VecR32SetNormal(VecR32 *vec, r32 dev)
+VecR32SetNormal(VecR32 *vec, R32 dev)
 {
-    ui32 pairs = (vec->n)/2;
+    U32 pairs = (vec->n)/2;
 
-    for(ui32 atPair = 0;
+    for(U32 atPair = 0;
             atPair < pairs;
             atPair++)
     {
@@ -175,11 +175,11 @@ VecR32SetNormal(VecR32 *vec, r32 dev)
     }
 }
 
-internal inline r32
+internal inline R32
 VecR32Sum(VecR32 *vec)
 {
-    r32 sum = 0;
-    for(ui32 idx = 0;
+    R32 sum = 0;
+    for(U32 idx = 0;
             idx < vec->n;
             idx++)
     {
@@ -188,32 +188,32 @@ VecR32Sum(VecR32 *vec)
     return sum;
 }
 
-r32
+R32
 VecR32Average(VecR32 *vec)
 {
-    r32 sum = VecR32Sum(vec);
+    R32 sum = VecR32Sum(vec);
     return sum/vec->n;
 }
 
-r32
+R32
 VecR32Variance(VecR32 *vec)
 {
-    r32 avg = VecR32Average(vec);
-    r32 sum = 0;
+    R32 avg = VecR32Average(vec);
+    R32 sum = 0;
     for(int i = 0; i < vec->n; i++)
     {
-        r32 diff = vec->v[i]-avg;
+        R32 diff = vec->v[i]-avg;
         sum+=(diff*diff);
     }
     sum/=vec->n;
     return sum;
 }
 
-r32
+R32
 VecR32Length2(VecR32 *vec)
 {
-    r32 sum = 0;
-    for(ui32 idx = 0;
+    R32 sum = 0;
+    for(U32 idx = 0;
             idx < vec->n;
             idx++)
     {
@@ -222,22 +222,22 @@ VecR32Length2(VecR32 *vec)
     return sum;
 }
 
-r32
+R32
 VecR32Distance2(VecR32 *a, VecR32 *b)
 {
     Assert(a->n == b->n);
-    r32 sum = 0;
-    for(ui32 idx = 0;
+    R32 sum = 0;
+    for(U32 idx = 0;
             idx < a->n;
             idx++)
     {
-        r32 diff = b->v[idx] - a->v[idx];
+        R32 diff = b->v[idx] - a->v[idx];
         sum+=(diff*diff);
     }
     return sum;
 }
 
-#define VEC_TRANSFORM_FUNCTION(name) r32 name(r32 x)
+#define VEC_TRANSFORM_FUNCTION(name) R32 name(R32 x)
 typedef VEC_TRANSFORM_FUNCTION(vec_transform_function);
 
 VEC_TRANSFORM_FUNCTION(Sigmoid)
@@ -260,23 +260,23 @@ VecR32Apply(VecR32 *result, VecR32 *vec, vec_transform_function *f)
 }
 
 void
-RandomVecR32(VecR32 *vec, r32 min, r32 max)
+RandomVecR32(VecR32 *vec, R32 min, R32 max)
 {
     for(int i = 0; i < vec->n; i++)
     {
-        r32 r = ((rand() % 10000) / 10000.0)*(max-min)+min;
+        R32 r = ((rand() % 10000) / 10000.0)*(max-min)+min;
         vec->v[i] = r;
     }
 }
 
 void
-RandomMatR32(MatR32 *mat, r32 min, r32 max)
+RandomMatR32(MatR32 *mat, R32 min, R32 max)
 {
     for(int y = 0; y < mat->h; y++)
     for(int x = 0; x < mat->w; x++)
     {
         // TODO: Better rand
-        r32 r = ((rand() % 10000) / 10000.0)*(max-min)+min;
+        R32 r = ((rand() % 10000) / 10000.0)*(max-min)+min;
         MAT_VAL(mat, x, y) = r;
     }
 }
@@ -288,7 +288,7 @@ RandomIntMatR32(MatR32 *mat, int min, int max)
     for(int x = 0; x < mat->w; x++)
     {
         // TODO: Better rand
-        r32 r = rand()%(max-min)+min;
+        R32 r = rand()%(max-min)+min;
         MAT_VAL(mat, x, y) = r;
     }
 }

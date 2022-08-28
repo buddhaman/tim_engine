@@ -5,7 +5,7 @@ enum {
 };
 
 RigidBody *
-AddDynamicRectangle(FakeWorld *world, Vec2 pos, r32 width, r32 height, r32 angle, ui32 group)
+AddDynamicRectangle(FakeWorld *world, Vec2 pos, R32 width, R32 height, R32 angle, U32 group)
 {
     RigidBody *body = world->rigidBodies+world->nRigidBodies++;
     cpSpace *space = world->space;
@@ -32,7 +32,7 @@ AddDynamicRectangle(FakeWorld *world, Vec2 pos, r32 width, r32 height, r32 angle
 }
 
 internal inline RigidBody *
-AddStaticRectangle(FakeWorld *world, Vec2 pos, r32 width, r32 height, r32 angle)
+AddStaticRectangle(FakeWorld *world, Vec2 pos, R32 width, R32 height, R32 angle)
 {
     RigidBody *body = world->rigidBodies+world->nRigidBodies++;
     cpSpace *space = world->space;
@@ -70,26 +70,26 @@ GetBodyPos(RigidBody *body)
     return V2(pos.x, pos.y);
 }
 
-internal inline r32
+internal inline R32
 GetBodyAngle(RigidBody *body)
 {
-    return (r32)cpBodyGetAngle(body->body);
+    return (R32)cpBodyGetAngle(body->body);
 }
 
 internal inline OrientedBox
 GetRigidBodyBox(RigidBody *body)
 {
     cpVect pos = cpBodyGetPosition(body->body);
-    r32 angle = GetBodyAngle(body);
+    R32 angle = GetBodyAngle(body);
     return (OrientedBox){V2(pos.x, pos.y), V2(body->width, body->height), angle};
 }
 
-internal r32
+internal R32
 FitnessStrictlyMoveRight(FakeWorld *world, Creature *creature)
 {
-    r32 minX = 10000.0;
-    r32 maxY = -10000.0;
-    for(ui32 bodyPartIdx = 0;
+    R32 minX = 10000.0;
+    R32 maxY = -10000.0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
     {
@@ -101,16 +101,16 @@ FitnessStrictlyMoveRight(FakeWorld *world, Creature *creature)
     return minX - maxY;
 }
 
-internal r32
+internal R32
 FitnessDistanceTarget(FakeWorld *world, Creature *creature)
 {
     // Position of main bodypart
     Vec2 creaturePos = GetBodyPos(creature->bodyParts->body);
-    r32 dist = V2Dist(creaturePos, world->target);
+    R32 dist = V2Dist(creaturePos, world->target);
     return -dist;
 }
 
-internal r32
+internal R32
 FitnessWalkRight(FakeWorld *world, Creature *creature)
 {
     BodyPart *part = creature->bodyParts;
@@ -118,7 +118,7 @@ FitnessWalkRight(FakeWorld *world, Creature *creature)
     return pos.x;
 }
 
-internal r32
+internal R32
 CreatureGetFitness(FakeWorld *world, Creature *creature)
 {
     switch(world->trainingType)
@@ -151,7 +151,7 @@ CreatureGetFitness(FakeWorld *world, Creature *creature)
 internal inline void
 UpdateFakeWorld(FakeWorld *world)
 {
-    for(ui32 creatureIdx = 0;
+    for(U32 creatureIdx = 0;
             creatureIdx < world->nCreatures;
             creatureIdx++)
     {
@@ -159,7 +159,7 @@ UpdateFakeWorld(FakeWorld *world)
         UpdateCreature(world, creature);
     }
     cpSpaceStep(world->space, 1.0/60.0);
-    for(ui32 rigidBodyIdx = 0;
+    for(U32 rigidBodyIdx = 0;
             rigidBodyIdx < world->nRigidBodies;
             rigidBodyIdx++)
     {
@@ -198,14 +198,14 @@ RestartFakeWorld(FakeWorld *world)
     DefineFixedWorldArray(RotaryMuscle, nRotaryMuscles, maxRotaryMuscles, 512, rotaryMuscles);
 #undef DefineFixedWorldArray
 
-    ui32 transientStateSize = GetMinimalGatedUnitStateSize(def->nInputs, 
+    U32 transientStateSize = GetMinimalGatedUnitStateSize(def->nInputs, 
             def->nOutputs,
             def->nHidden);
 
     // Set new target
     if(world->trainingType==TRAIN_DISTANCE_TARGET)
     {
-        r32 randomAngle = RandomR32(-M_PI, M_PI);
+        R32 randomAngle = RandomR32(-M_PI, M_PI);
         world->target = V2Polar(randomAngle, 500.0);
     }
     else if(world->trainingType==TRAIN_WALK_RIGHT)
@@ -214,14 +214,14 @@ RestartFakeWorld(FakeWorld *world)
         cpSpaceSetGravity(world->space, cpv(0, -1200.0));
     }
 
-    r32 startXDev = 0.0;
+    R32 startXDev = 0.0;
     for(int creatureIdx = 0; 
             creatureIdx < world->nGenes;
             creatureIdx++)
     {
         MinimalGatedUnit *brain = PushStruct(world->transientMemory, MinimalGatedUnit);
         VecR32 *gene = world->strategies->genes+creatureIdx;
-        r32 *state = PushAndZeroArray(world->transientMemory, r32, transientStateSize);
+        R32 *state = PushAndZeroArray(world->transientMemory, R32, transientStateSize);
         InitMinimalGatedUnit(brain, def->nInputs, def->nOutputs, def->nHidden, gene, state);
         AddCreature(world, V2(RandomR32(-startXDev, startXDev), 0), &world->def, brain);
     }
@@ -233,9 +233,9 @@ InitFakeWorld(FakeWorld *world,
         MemoryArena *persistentMemory, 
         MemoryArena *transientMemory, 
         CreatureDefinition *creatureDefinition, 
-        ui32 nGenes,
-        r32 learningRate,
-        r32 dev)
+        U32 nGenes,
+        R32 learningRate,
+        R32 dev)
 {
     world->persistentMemory = persistentMemory;
     world->transientMemory = transientMemory;
@@ -257,7 +257,7 @@ void
 DestroyFakeWorld(FakeWorld *world)
 {
     cpSpaceFree(world->space);
-    for(ui32 creatureIdx = 0;
+    for(U32 creatureIdx = 0;
             creatureIdx < world->nCreatures;
             creatureIdx++)
     {

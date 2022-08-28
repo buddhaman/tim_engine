@@ -1,14 +1,14 @@
 
-b32
+B32
 NKEditFloatProperty(struct nk_context *ctx, 
         char *label, 
-        r32 min, 
-        r32 *value, 
-        r32 max, 
-        r32 stepSize, 
-        r32 incPerPixel)
+        R32 min, 
+        R32 *value, 
+        R32 max, 
+        R32 stepSize, 
+        R32 incPerPixel)
 {
-    r32 v = *value;
+    R32 v = *value;
     nk_property_float(ctx, label, min, &v, max, stepSize, incPerPixel);
     if(v!=*value)
     {
@@ -18,15 +18,15 @@ NKEditFloatProperty(struct nk_context *ctx,
     return 0;
 }
 
-b32
+B32
 NKEditFloatPropertyWithTooltip(struct nk_context *ctx, 
         char *label, 
         char *tooltip,
-        r32 min, 
-        r32 *value, 
-        r32 max, 
-        r32 stepSize, 
-        r32 incPerPixel)
+        R32 min, 
+        R32 *value, 
+        R32 max, 
+        R32 stepSize, 
+        R32 incPerPixel)
 {
     if(nk_widget_is_hovered(ctx))
     {
@@ -35,17 +35,17 @@ NKEditFloatPropertyWithTooltip(struct nk_context *ctx,
     return NKEditFloatProperty(ctx, label, min, value, max, stepSize, incPerPixel);
 }
 
-b32
+B32
 NKEditRadInDegProperty(struct nk_context *ctx, 
         char *label, 
-        r32 minRad, 
-        r32 *rad, 
-        r32 maxRad, 
-        r32 stepSize, 
-        r32 incPerPixel)
+        R32 minRad, 
+        R32 *rad, 
+        R32 maxRad, 
+        R32 stepSize, 
+        R32 incPerPixel)
 {
-    r32 valInDeg = RadToDeg(*rad);
-    r32 v = valInDeg;
+    R32 valInDeg = RadToDeg(*rad);
+    R32 v = valInDeg;
     nk_property_float(ctx, label, RadToDeg(minRad), &v, RadToDeg(maxRad), stepSize, incPerPixel);
     if(v!=valInDeg)
     {

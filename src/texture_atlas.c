@@ -1,6 +1,6 @@
 
 void
-InitAtlas(MemoryArena *arena, TextureAtlas *atlas, ui32 maxRegions, ui32 width, ui32 height)
+InitAtlas(MemoryArena *arena, TextureAtlas *atlas, U32 maxRegions, U32 width, U32 height)
 {
     *atlas = (TextureAtlas){};
     atlas->maxRegions = maxRegions;
@@ -32,8 +32,8 @@ NormalizePositions(TextureAtlas *atlas, int totalWidth, int totalHeight)
             atlasIdx++)
     {
         AtlasRegion *region = atlas->regions+atlasIdx;
-        region->pos = V2(region->x/((r32)totalWidth), region->y/((r32)totalHeight));
-        region->size = V2(region->width/((r32)totalWidth), region->height/((r32)totalHeight));
+        region->pos = V2(region->x/((R32)totalWidth), region->y/((R32)totalHeight));
+        region->size = V2(region->width/((R32)totalWidth), region->height/((R32)totalHeight));
     }
 }
 
@@ -47,14 +47,14 @@ SetTextureAtlasImageData(TextureAtlas *atlas, unsigned char *data)
 }
 
 void
-DrawCircleOnTexture(TextureAtlas *atlas, Vec2 rangePos, Vec2 rangeSize, Vec2 uvCenter, r32 radius, ui32 color)
+DrawCircleOnTexture(TextureAtlas *atlas, Vec2 rangePos, Vec2 rangeSize, Vec2 uvCenter, R32 radius, U32 color)
 {
-    r32 pxWidth = 1.0/atlas->width;
-    r32 pxHeight = 1.0/atlas->height;
-    r32 minTexX = Max(rangePos.x-pxWidth, uvCenter.x-radius);
-    r32 minTexY = Max(rangePos.y-pxHeight, uvCenter.y-radius);
-    r32 maxTexX = Min(rangePos.x+rangeSize.x+pxWidth, uvCenter.x+radius);
-    r32 maxTexY = Min(rangePos.y+rangeSize.y+pxHeight, uvCenter.y+radius);
+    R32 pxWidth = 1.0/atlas->width;
+    R32 pxHeight = 1.0/atlas->height;
+    R32 minTexX = Max(rangePos.x-pxWidth, uvCenter.x-radius);
+    R32 minTexY = Max(rangePos.y-pxHeight, uvCenter.y-radius);
+    R32 maxTexX = Min(rangePos.x+rangeSize.x+pxWidth, uvCenter.x+radius);
+    R32 maxTexY = Min(rangePos.y+rangeSize.y+pxHeight, uvCenter.y+radius);
     int startX = round(minTexX*atlas->width);
     int startY = round(minTexY*atlas->height);
     startX = Clamp(0, startX, atlas->width);
@@ -68,15 +68,15 @@ DrawCircleOnTexture(TextureAtlas *atlas, Vec2 rangePos, Vec2 rangeSize, Vec2 uvC
 
     if(w<=0 || h<=0) return;    // STOP EARLY
 
-    ui32 subImage[w*h];
+    U32 subImage[w*h];
     memset(subImage, 0, sizeof(subImage));
 
-    for(ui32 y = startY; y < endY; y++)
-    for(ui32 x = startX; x < endX; x++)
+    for(U32 y = startY; y < endY; y++)
+    for(U32 x = startX; x < endX; x++)
     {
-        r32 pxXDiff = pxWidth*(x+0.5) - uvCenter.x;
-        r32 pxYDiff = pxHeight*(y+0.5) - uvCenter.y;
-        r32 l2 = pxXDiff*pxXDiff + pxYDiff*pxYDiff;
+        R32 pxXDiff = pxWidth*(x+0.5) - uvCenter.x;
+        R32 pxYDiff = pxHeight*(y+0.5) - uvCenter.y;
+        R32 l2 = pxXDiff*pxXDiff + pxYDiff*pxYDiff;
         if(l2 <= radius*radius)
         {
             subImage[x-startX + (y-startY)*w] = atlas->image[x+atlas->width*y] = color;
@@ -93,8 +93,8 @@ DrawCircleOnTexture(TextureAtlas *atlas, Vec2 rangePos, Vec2 rangeSize, Vec2 uvC
 TextureAtlas *
 MakeRandomTextureAtlas(MemoryArena *arena)
 {
-    ui32 width = 2048;
-    ui32 height = 2048;
+    U32 width = 2048;
+    U32 height = 2048;
     TextureAtlas *atlas = PushStruct(arena, TextureAtlas);
     InitAtlas(arena, atlas, 16, width, height);    // Grid of 4x4. 
 
@@ -103,7 +103,7 @@ MakeRandomTextureAtlas(MemoryArena *arena)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    ui32 *image = PushAndZeroArray(arena, ui32, width*height);
+    U32 *image = PushAndZeroArray(arena, U32, width*height);
     atlas->image = image;
     atlas->width = width;
     atlas->height = height;
@@ -113,9 +113,9 @@ MakeRandomTextureAtlas(MemoryArena *arena)
 #if 1
         image[x+y*width] = 0;
 #else
-        ui8 r = RandomUI32(128, 255);
-        ui8 g = RandomUI32(128, 255);
-        ui8 b = RandomUI32(128, 255);
+        U8 r = RandomUI32(128, 255);
+        U8 g = RandomUI32(128, 255);
+        U8 b = RandomUI32(128, 255);
 
         image[x+y*width] = r + (g << 8) + (b << 16) +(255U << 24);
 #endif
@@ -142,18 +142,18 @@ MakeDefaultTexture(MemoryArena *arena, int circleRadius)
 
 
     // Not stored. Doesnt matter
-    ui32 *image = malloc(sizeof(ui32)*width*height);
-    r32 circleX = circleRadius;
-    r32 circleY = circleRadius;
-    r32 R2 = circleRadius*circleRadius;
+    U32 *image = malloc(sizeof(U32)*width*height);
+    R32 circleX = circleRadius;
+    R32 circleY = circleRadius;
+    R32 R2 = circleRadius*circleRadius;
     for(int y = 0; y < width; y++)
     for(int x = 0; x < height; x++)
     {
-        r32 cx = x+0.5;
-        r32 cy = y+0.5;
-        r32 dx = cx-circleX;
-        r32 dy = cy-circleY;
-        r32 d2 = dx*dx + dy*dy;
+        R32 cx = x+0.5;
+        R32 cy = y+0.5;
+        R32 dx = cx-circleX;
+        R32 dy = cy-circleY;
+        R32 d2 = dx*dx + dy*dy;
         image[x+y*width] = d2 < R2 ? 0xFFFFFFFF : 0x0;
     }
 

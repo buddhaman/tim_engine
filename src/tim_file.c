@@ -1,13 +1,13 @@
 
 
-b32
+B32
 StringStartsWith(char *string, char *prefix)
 {
     size_t prefixLength = strlen(prefix);
     return strncmp(string, prefix, prefixLength)==0;
 }
 
-b32
+B32
 StringEndsWith(char *string, char *suffix)
 {
     size_t suffixLength = strlen(suffix);
@@ -25,7 +25,7 @@ StringEndsWith(char *string, char *suffix)
 char *
 FindWithPrefix(int nStrings, char *strings[nStrings], char *prefix)
 {
-    for(ui32 stringIdx = 0;
+    for(U32 stringIdx = 0;
             stringIdx < nStrings;
             stringIdx++)
     {
@@ -47,8 +47,8 @@ PairCreatureFiles(int maxCreatures,
         int nCreatureTextureFiles,
         char *creatureTextureFiles[nCreatureTextureFiles])
 {
-    ui32 matchCounter = 0;
-    for(ui32 creatureIdx = 0;
+    U32 matchCounter = 0;
+    for(U32 creatureIdx = 0;
             creatureIdx < nCreatureDataFiles;
             creatureIdx++)
     {

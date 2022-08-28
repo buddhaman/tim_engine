@@ -2,7 +2,7 @@
 MemoryArena *
 CreateMemoryArena(size_t sizeInBytes)
 {
-    ui8 *totalMemory = malloc(sizeof(MemoryArena)+sizeInBytes);
+    U8 *totalMemory = malloc(sizeof(MemoryArena)+sizeInBytes);
     MemoryArena *arena = (MemoryArena *)totalMemory;
     Assert(totalMemory);
     arena->base = totalMemory + sizeof(MemoryArena);
@@ -74,21 +74,21 @@ CreateMemoryPool(MemoryArena *arena, size_t elementSize, size_t maxBlocks)
     pool->sizeInBytes = elementSize*maxBlocks*32;
 
     // 32 is hardcoded for now
-    pool->base = PushArray(arena, ui8, pool->sizeInBytes);
-    pool->blocks = PushArray(arena, ui32, maxBlocks);
+    pool->base = PushArray(arena, U8, pool->sizeInBytes);
+    pool->blocks = PushArray(arena, U32, maxBlocks);
     memset(pool->base, 0, pool->sizeInBytes);
-    memset(pool->blocks, 0, maxBlocks*sizeof(ui32));
+    memset(pool->blocks, 0, maxBlocks*sizeof(U32));
 
     return pool;
 }
 
-void PrintMemoryBlock(ui32 block)
+void PrintMemoryBlock(U32 block)
 {
     for(int bit = 0;
             bit < 32;
             bit++)
     {
-        b32 bit = block & (1<<31);
+        B32 bit = block & (1<<31);
         putc(bit ? '1' : '0', stdout);
         block <<= 1;
     }
@@ -97,13 +97,13 @@ void PrintMemoryBlock(ui32 block)
 void *
 AllocateElement(MemoryPool *pool)
 {
-    ui32 blockIdx = 0;
-    ui32 bitIdx = 0;
+    U32 blockIdx = 0;
+    U32 bitIdx = 0;
     for(blockIdx = 0;
             blockIdx < pool->maxBlocks;
             blockIdx++)
     {
-        ui32 block = pool->blocks[blockIdx];
+        U32 block = pool->blocks[blockIdx];
         if((~(block))!=0U)
         {
             bitIdx = 0;
@@ -139,7 +139,7 @@ PrintMemoryPool(MemoryPool *pool)
             blockIdx < pool->maxBlocks;
             blockIdx++)
     {
-        ui32 block = pool->blocks[blockIdx];
+        U32 block = pool->blocks[blockIdx];
         printf("block %5d : ", blockIdx);
         PrintMemoryBlock(block);
         putc('\n', stdout);

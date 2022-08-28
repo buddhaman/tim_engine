@@ -20,18 +20,19 @@
 #define Max(a, b) (a) < (b) ? (b) : (a)
 #define Clamp(min, value, max) (value) < (min) ? (min) : ((value) > (max) ? (max) : (value))
 
-typedef unsigned char ui8;
-typedef unsigned short ui16;
-typedef unsigned int ui32;
-typedef unsigned long ui64;
-typedef char i8;
-typedef short i16;
-typedef int i32;
-typedef long i64;
+typedef uint8_t U8;
+typedef uint16_t U16;
+typedef uint32_t U32;
+typedef uint64_t U64;
 
-typedef float r32;
-typedef double r64;
+typedef int8_t I8;
+typedef int16_t I16;
+typedef int32_t I32;
+typedef int64_t I64;
 
-typedef i32 b32;
+typedef float R32;
+typedef double R64;
+
+typedef I32 B32;
 
 #endif

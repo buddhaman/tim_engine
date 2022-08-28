@@ -2,12 +2,12 @@ typedef struct
 {
     int w;
     int h;
-    r32 *m;
+    R32 *m;
 } MatR32;
 
 typedef struct
 {
     int n;
-    r32 *v;
+    R32 *v;
 } VecR32;
 

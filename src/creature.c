@@ -4,7 +4,7 @@ CreatureAddBodyPart(FakeWorld *world,
         Creature *creature, 
         Vec2 pos, 
         Vec2 size,
-        r32 angle)
+        R32 angle)
 {
     BodyPart *part = world->bodyParts + world->nBodyParts++;
     creature->nBodyParts++;
@@ -16,7 +16,7 @@ CreatureAddBodyPart(FakeWorld *world,
     return part;
 }
 
-internal inline b32
+internal inline B32
 BodyPartPoint2Intersect(BodyPart *part, Vec2 point)
 {
     OrientedBox bodyBox = GetRigidBodyBox(part->body);
@@ -27,7 +27,7 @@ BodyPart *
 GetCreatureBodyPartAt(Creature *creature, Vec2 point)
 {
     BodyPart *intersect = NULL;
-    for(ui32 bodyPartIdx = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
     {
@@ -52,8 +52,8 @@ CreatureAddRotaryMuscle(FakeWorld *world,
         BodyPart *bodyA, 
         BodyPart *bodyB, 
         Vec2 pivotPoint,
-        r32 minAngle, 
-        r32 maxAngle)
+        R32 minAngle, 
+        R32 maxAngle)
 {
     RotaryMuscle *muscle = world->rotaryMuscles+world->nRotaryMuscles++;
     creature->nRotaryMuscles++;
@@ -104,9 +104,9 @@ BuildCreature(FakeWorld *world,
             V2(partDef->width, partDef->height),
             partDef->angle);
     part->def = partDef;
-    ui32 subDefs[def->nBodyParts];
-    ui32 nConnections = GetSubNodeBodyPartsById(def, partDef, subDefs);
-    for(ui32 connectionIdx = 0;
+    U32 subDefs[def->nBodyParts];
+    U32 nConnections = GetSubNodeBodyPartsById(def, partDef, subDefs);
+    for(U32 connectionIdx = 0;
             connectionIdx < nConnections;
             connectionIdx++)
     {
@@ -118,10 +118,10 @@ BuildCreature(FakeWorld *world,
     {
         BodyPart *a = parentPart;
         BodyPart *b = part;
-        r32 angleA = parentPartDef->angle;
-        //r32 angleB = partDef->angle;
-        r32 angleOffset = -angleA;
-        r32 edgeAngle = GetAbsoluteEdgeAngle(parentPartDef, partDef->xEdge, partDef->yEdge);
+        R32 angleA = parentPartDef->angle;
+        //R32 angleB = partDef->angle;
+        R32 angleOffset = -angleA;
+        R32 edgeAngle = GetAbsoluteEdgeAngle(parentPartDef, partDef->xEdge, partDef->yEdge);
         RotaryMuscle *muscle = CreatureAddRotaryMuscle(world, creature, a, b, 
                 V2Add(pos, partDef->pivotPoint), 
                 edgeAngle+partDef->minAngle+angleOffset,
@@ -131,8 +131,8 @@ BuildCreature(FakeWorld *world,
 }
 
 // No sine
-r32
-GetInternalClockValue(Creature *creature, ui32 clockIdx)
+R32
+GetInternalClockValue(Creature *creature, U32 clockIdx)
 {
     return creature->phases[clockIdx] + 
         creature->frequencies[clockIdx]*creature->internalClock*M_PI*2;
@@ -157,7 +157,7 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
 
     creature->nInternalClocks = def->nInternalClocks;
     creature->internalClock = 0;
-    for(ui32 clockIdx = 0;
+    for(U32 clockIdx = 0;
             clockIdx < creature->nInternalClocks;
             clockIdx++)
     {
@@ -187,8 +187,8 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
         RotaryMuscleDefinition *muscleDef = def->rotaryMuscles+muscleIdx;
         BodyPart *a = creature->bodyParts+muscleDef->bodyPartIdx0;
         BodyPart *b = creature->bodyParts+muscleDef->bodyPartIdx1;
-        r32 angleA = cpBodyGetAngle(a->body->body);
-        r32 angleB = cpBodyGetAngle(b->body->body);
+        R32 angleA = cpBodyGetAngle(a->body->body);
+        R32 angleB = cpBodyGetAngle(b->body->body);
         CreatureAddRotaryMuscle(world, creature, a, b, 
                 V2Add(pos, muscleDef->pivotPoint), 
                 muscleDef->minAngle+angleB-angleA, 
@@ -202,13 +202,13 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
 void
 DestroyCreature(Creature *creature)
 {
-    for(ui32 bodyPartIdx = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
     {
         DestroyRigidBody(creature->bodyParts[bodyPartIdx].body);
     }
-    for(ui32 rotaryMuscleIdx = 0;
+    for(U32 rotaryMuscleIdx = 0;
             rotaryMuscleIdx < creature->nRotaryMuscles;
             rotaryMuscleIdx++)
     {
@@ -224,20 +224,20 @@ GetBodyPartCenter(BodyPart *part)
 }
 
 void
-SetMuscleActivation(RotaryMuscle *muscle, r32 activation)
+SetMuscleActivation(RotaryMuscle *muscle, R32 activation)
 {
-    r32 absActivation = fabsf(activation);
+    R32 absActivation = fabsf(activation);
     cpSimpleMotorSetRate(muscle->motor, activation < 0.0 ? -5 : 5);
-    r32 maxActivation = 1200000.0;
+    R32 maxActivation = 1200000.0;
     cpConstraintSetMaxForce(muscle->motor, absActivation*maxActivation);
 }
 
-r32
+R32
 FitnessStrictlyMoveForward(Creature *creature)
 {
-    r32 maxX = -10000.0;
-    r32 minY = 10000.0;
-    for(ui32 bodyPartIdx = 0;
+    R32 maxX = -10000.0;
+    R32 minY = 10000.0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
     {
@@ -253,64 +253,63 @@ void
 UpdateCreature(FakeWorld *world, Creature *creature)
 {
     MinimalGatedUnit *brain = creature->brain;
-    r32 drag = 0.2;
+    R32 drag = 0.2;
 
-    creature->internalClock+=1.0/60.0;
 
-    for(ui32 internalClockIdx = 0;
+    for(U32 internalClockIdx = 0;
             internalClockIdx < creature->nInternalClocks;
             internalClockIdx++)
     {
         brain->x.v[internalClockIdx] = sinf(GetInternalClockValue(creature, internalClockIdx));
     }
 
-    for(ui32 bodyPartIdx = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         Vec2 pos = GetBodyPartCenter(part);
-        r32 angle = GetBodyAngle(part->body);
+        R32 angle = GetBodyAngle(part->body);
         if(part->def->hasAbsoluteXPositionInput)
         {
-            r32 activation = pos.x/100;
+            R32 activation = pos.x/100;
             brain->x.v[part->def->absoluteXPositionInputIdx] = activation;
         }
         if(part->def->hasAbsoluteYPositionInput)
         {
-            r32 activation = pos.y/100;
+            R32 activation = pos.y/100;
             brain->x.v[part->def->absoluteYPositionInputIdx] = activation;
         }
         if(part->def->hasAngleTowardsTargetInput)
         {
             Vec2 diff = V2Sub(world->target, pos);
-            r32 tAngle = atan2f(diff.y, diff.x);
-            r32 activation = GetNormalizedAngDiff(angle, tAngle);
+            R32 tAngle = atan2f(diff.y, diff.x);
+            R32 activation = GetNormalizedAngDiff(angle, tAngle);
             brain->x.v[part->def->angleTowardsTargetInputIdx] = activation;
         }
         if(part->def->hasAbsoluteAngleInput)
         {
-            r32 activation = angle;
+            R32 activation = angle;
             brain->x.v[part->def->absoluteAngleInputIdx] = activation;
         }
     }
 
     UpdateMinimalGatedUnit(brain);
 
-    for(ui32 bodyPartIdx = 0;
+    for(U32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         if(part->def->hasDragOutput)
         {
-            r32 activation = brain->h.v[brain->stateSize-brain->outputSize+part->def->dragOutputIdx];
+            R32 activation = brain->h.v[brain->stateSize-brain->outputSize+part->def->dragOutputIdx];
 
             part->body->drag = 0.03+activation*drag + drag;
         }
         if(part->def->hasRotaryMuscleOutput)
         {
-            r32 activation = brain->h.v[brain->stateSize-brain->outputSize+part->def->rotaryMuscleOutputIdx];
+            R32 activation = brain->h.v[brain->stateSize-brain->outputSize+part->def->rotaryMuscleOutputIdx];
 
             RotaryMuscle *muscle = part->rotaryMuscle;
             Assert(muscle);

@@ -32,15 +32,15 @@ struct RenderCommand
 
     union
     {
-        r32 angle;
-        r32 radius; 
+        R32 angle;
+        R32 radius; 
     };
 
-    ui32 nPoints;
-    r32 lineWidth;
+    U32 nPoints;
+    R32 lineWidth;
     Vec4 color;
 
-    ui32 textureHandle;
+    U32 textureHandle;
     Vec2 uvPos;
     Vec2 uvDims;
 };
@@ -48,7 +48,7 @@ struct RenderCommand
 struct RenderGroup 
 {
     RenderCommand *commands;
-    ui32 nCommands;
-    ui32 maxCommands;
+    U32 nCommands;
+    U32 maxCommands;
 };
 

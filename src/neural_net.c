@@ -69,24 +69,24 @@ UpdateFFNN(FFNN *brain)
 }
 
 // In floats. Not in bytes.
-ui32
+U32
 GetMinimalGatedUnitGeneSize(int inputLayerSize,
         int outputLayerSize,
         int hiddenLayerSize)
 {
-    ui32 stateSize = outputLayerSize+hiddenLayerSize;
-    ui32 inputMatrixSize = inputLayerSize*stateSize;
-    ui32 stateMatrixSize = stateSize*stateSize;
-    ui32 biasSize = stateSize;
+    U32 stateSize = outputLayerSize+hiddenLayerSize;
+    U32 inputMatrixSize = inputLayerSize*stateSize;
+    U32 stateMatrixSize = stateSize*stateSize;
+    U32 biasSize = stateSize;
     return inputMatrixSize*2 + stateMatrixSize*2 + biasSize*2;
 }
 
-ui32
+U32
 GetMinimalGatedUnitStateSize(int inputLayerSize,
         int outputLayerSize,
         int hiddenLayerSize)
 {
-    ui32 stateSize = outputLayerSize+hiddenLayerSize;
+    U32 stateSize = outputLayerSize+hiddenLayerSize;
     return stateSize *3 + inputLayerSize;
 }
 
@@ -96,7 +96,7 @@ SizeOfMinimalGatedUnit(int inputLayerSize,
         int hiddenLayerSize)
 {
     return sizeof(MinimalGatedUnit) + 
-        GetMinimalGatedUnitStateSize(inputLayerSize, outputLayerSize, hiddenLayerSize)*sizeof(r32);
+        GetMinimalGatedUnitStateSize(inputLayerSize, outputLayerSize, hiddenLayerSize)*sizeof(R32);
 }
 
 MinimalGatedUnit*
@@ -105,7 +105,7 @@ InitMinimalGatedUnit(MinimalGatedUnit *brain,
         int outputLayerSize,
         int hiddenLayerSize,
         VecR32 *gene,
-        r32 *stateStorage)
+        R32 *stateStorage)
 {
     brain->inputSize = inputLayerSize;
     brain->outputSize = outputLayerSize;
@@ -114,7 +114,7 @@ InitMinimalGatedUnit(MinimalGatedUnit *brain,
     brain->gene = gene;
 
     // Parameters from gene.
-    r32 *atMemory = gene->v;
+    R32 *atMemory = gene->v;
     InitVecR32FromGene(&brain->bf, brain->stateSize, gene, &atMemory);
     InitVecR32FromGene(&brain->bh, brain->stateSize, gene, &atMemory);
     InitMatR32FromGene(&brain->Wf, brain->inputSize, brain->stateSize, gene, &atMemory);
@@ -122,7 +122,7 @@ InitMinimalGatedUnit(MinimalGatedUnit *brain,
     InitMatR32FromGene(&brain->Uf, brain->stateSize, brain->stateSize, gene, &atMemory);
     InitMatR32FromGene(&brain->Uh, brain->stateSize, brain->stateSize, gene, &atMemory);
 
-    r32 *atTransientMemory = stateStorage;
+    R32 *atTransientMemory = stateStorage;
 
     InitVecR32(&brain->x, brain->inputSize, atTransientMemory);
     atTransientMemory+=brain->inputSize;
@@ -140,11 +140,11 @@ void
 UpdateMinimalGatedUnit(MinimalGatedUnit *brain)
 {
     // Allocate temporary vectors on the stack.
-    ui8 tempMem0[SizeOfVecR32(brain->stateSize)];
+    U8 tempMem0[SizeOfVecR32(brain->stateSize)];
     VecR32 *tempv0 = CreateVecR32(brain->stateSize, (void*)tempMem0);
-    ui8 tempMem1[SizeOfVecR32(brain->stateSize)];
+    U8 tempMem1[SizeOfVecR32(brain->stateSize)];
     VecR32 *tempv1 = CreateVecR32(brain->stateSize, (void*)tempMem1);
-    ui8 tempMem2[SizeOfVecR32(brain->stateSize)];
+    U8 tempMem2[SizeOfVecR32(brain->stateSize)];
     VecR32 *tempv2 = CreateVecR32(brain->stateSize, (void*)tempMem2);
 
     VecR32 *x  = &brain->x; 

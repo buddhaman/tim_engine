@@ -19,6 +19,7 @@ typedef enum
     CREATURE_TOOL_BRUSH,
 } EditCreatureTool;
 
+#define MAX_EDITOR_PARTICLES 256
 typedef struct
 {
     CreatureDefinition *creatureDefinition;
@@ -27,23 +28,23 @@ typedef struct
     EditPhase editPhase;
 
     Gui *gui;
-    b32 isInputCaptured;
+    B32 isInputCaptured;
     
-    ui32 idCounter;
-    ui32 selectedId;
-    ui32 rightSelectedId;
+    U32 idCounter;
+    U32 selectedId;
+    U32 rightSelectedId;
 
-    b32 isDimSnapEnabled;
-    r32 dimSnapResolution;
-    b32 isAngleSnapEnabled;
-    r32 angleSnapResolution;
-    b32 isEdgeSnapEnabled;
-    ui32 edgeSnapDivisions;
+    B32 isDimSnapEnabled;
+    R32 dimSnapResolution;
+    B32 isAngleSnapEnabled;
+    R32 angleSnapResolution;
+    B32 isEdgeSnapEnabled;
+    U32 edgeSnapDivisions;
 
     // Simulation settings
-    ui32 nGenes;
-    r32 learningRate;
-    r32 deviation;
+    U32 nGenes;
+    R32 learningRate;
+    R32 deviation;
 
     // Bodypart editing info
     EditCreatureState editState;
@@ -51,29 +52,36 @@ typedef struct
     BoxEdgeLocation bodyPartLocation;
     BodyPartDefinition *attachTo;
 
-    b32 isCreatureColorPickerVisible;
+    B32 isCreatureColorPickerVisible;
 
     struct nk_colorf creatureSolidColor;
-    b32 isSolidColorPickerVisible;
+    B32 isSolidColorPickerVisible;
 
     struct nk_colorf brushColor;
-    b32 isBrushColorPickerVisible;
+    B32 isBrushColorPickerVisible;
 
-    b32 canMoveCameraWithMouse;
-    b32 canScrollCameraWithMouse;
+    B32 canMoveCameraWithMouse;
+    B32 canScrollCameraWithMouse;
 
-    b32 isErasing;
-    r32 brushSize;
-    b32 drawBrushInScreenCenter;
-    b32 hasLastBrushStroke;
+    B32 isErasing;
+    R32 brushSize;
+    B32 drawBrushInScreenCenter;
+    B32 hasLastBrushStroke;
     Vec2 lastBrushStroke;
-    b32 isMouseInDrawArea;
+    B32 isMouseInDrawArea;
 
-    b32 showSaveScreen;
+    B32 showSaveScreen;
 
-    b32 showLoadScreen;
-    ui32 nCreatureFiles;
+    B32 showLoadScreen;
+    U32 nCreatureFiles;
     CreatureDefinitionFile creatureFiles[MAX_CREATURE_FILES];
+
+    Vec2 gravity;
+    int nParticles;
+    Particle particles[MAX_EDITOR_PARTICLES];
+
+    BodyPartDefinition *animateBodyPart;
+    R32 animationTime;
 
 } CreatureEditorScreen;
 

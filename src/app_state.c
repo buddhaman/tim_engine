@@ -31,7 +31,7 @@ RegisterTextInput(AppState *appState, char *text)
 }
 
 void
-RegisterKeyAction(AppState *appState, KeyAction action, b32 down)
+RegisterKeyAction(AppState *appState, KeyAction action, B32 down)
 {
     appState->isActionDown[action] = down;
 }
@@ -67,7 +67,7 @@ HandleSDLEvent(AppState *appState, SDL_Event *event)
         }
         if(mouseButton)
         {
-            b32 down = event->type==SDL_MOUSEBUTTONDOWN;
+            B32 down = event->type==SDL_MOUSEBUTTONDOWN;
             appState->isActionDown[mouseButton] = down;
         }
     } break;
@@ -75,26 +75,26 @@ HandleSDLEvent(AppState *appState, SDL_Event *event)
     }
 }
 
-b32
+B32
 IsKeyActionDown(AppState *appState, KeyAction action)
 {
     return appState->isActionDown[action];
 }
 
-b32
+B32
 IsKeyActionJustDown(AppState *appState, KeyAction action)
 {
     return appState->isActionDown[action] && !appState->wasActionDown[action];
 }
 
-b32
+B32
 IsKeyActionJustReleased(AppState *appState, KeyAction action)
 {
     return !appState->isActionDown[action] && appState->wasActionDown[action];
 }
 
 void
-StartFakeWorld(AppState *appState, CreatureDefinition *definition, Assets *assets, ui32 nGenes, r32 dev, r32 learningRate)
+StartFakeWorld(AppState *appState, CreatureDefinition *definition, Assets *assets, U32 nGenes, R32 dev, R32 learningRate)
 {
     MemoryArena *arena = appState->fakeWorldArena;
     ClearArena(arena);

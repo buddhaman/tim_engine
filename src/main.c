@@ -56,12 +56,12 @@ typedef struct {
 } NuklearMedia;
 global_variable NuklearMedia nuklearMedia;
 
-ui32
+U32
 TimLoadImage(char *path)
 {
     int x, y, n;
-    ui32 tex;
-    ui8 *data = stbi_load(path, &x, &y, &n, 4);
+    U32 tex;
+    U8 *data = stbi_load(path, &x, &y, &n, 4);
     if(!data)
     {
         DebugOut("Cannot load image at %s.", path);
@@ -90,6 +90,7 @@ TimLoadImage(char *path)
 #include "render2d.h"
 #include "render_group.h"
 #include "assets.h"
+#include "particles.h"
 #include "world_renderer.h"
 #include "creature_definition.h"
 #include "evolution_strategies.h"
@@ -113,6 +114,7 @@ TimLoadImage(char *path)
 #include "render2d.c"
 #include "render_group.c"
 #include "assets.c"
+#include "particles.c"
 #include "world_renderer.c"
 #include "creature_definition.c"
 #include "evolution_strategies.c"
@@ -185,7 +187,7 @@ main(int argc, char**argv)
 
     SDL_GL_SetSwapInterval(1);
     
-    b32 err = gl3wInit() != 0;
+    B32 err = gl3wInit() != 0;
     if(err)
     {
         DebugOut("Failed to initialize OpenGl Loader!\n");
@@ -209,7 +211,7 @@ main(int argc, char**argv)
     nk_style_set_font(ctx, &font->handle);
 
     // Load nuklear images and set style.
-    ui32 textureSize = 512;
+    U32 textureSize = 512;
     nuklearMedia.textureHandle = TimLoadImage("assets/creature_ui.png");
 
     nuklearMedia.select = nk_subimage_id(nuklearMedia.textureHandle, 
@@ -248,14 +250,14 @@ main(int argc, char**argv)
     InitCamera2D(appState->screenCamera);
     appState->screenCamera->isYUp = 0;
 
-    r32 time = 0.0;
-    r32 deltaTime = 0.0;
-    r32 timeSinceLastFrame = 0.0;
-    r32 updateTime = 1.0/FRAMES_PER_SECOND;
-    ui32 frameStart = SDL_GetTicks(); 
+    R32 time = 0.0;
+    R32 deltaTime = 0.0;
+    R32 timeSinceLastFrame = 0.0;
+    R32 updateTime = 1.0/FRAMES_PER_SECOND;
+    U32 frameStart = SDL_GetTicks(); 
     // Timing
-    b32 done = 0;
-    ui32 frameCounter = 0;
+    B32 done = 0;
+    U32 frameCounter = 0;
 
     Assets *assets = PushStruct(gameArena, Assets);
     InitAssets(assets, gameArena);
@@ -263,7 +265,6 @@ main(int argc, char**argv)
     CreatureEditorScreen *creatureEditorScreen = PushStruct(gameArena, CreatureEditorScreen);
     InitCreatureEditorScreen(appState, creatureEditorScreen, assets, gameArena);
 
-    // Handle evolution
     while(!done)
     {
         SDL_Event event;
@@ -342,15 +343,15 @@ main(int argc, char**argv)
         // Set Appstate
 
         SDL_GetWindowSize(window, &appState->screenWidth, &appState->screenHeight);
-        appState->ratio = (r32)appState->screenHeight / ((r32)appState->screenWidth);
-        i32 mx, my;
+        appState->ratio = (R32)appState->screenHeight / ((R32)appState->screenWidth);
+        I32 mx, my;
         SDL_GetMouseState(&mx, &my);
         appState->dx = mx-appState->mx;
         appState->dy = my-appState->my;
         appState->mx = mx;
         appState->my = my;
-        appState->normalizedMX = 2*((r32)mx)/appState->screenWidth - 1.0;
-        appState->normalizedMY = -2*((r32)my)/appState->screenHeight + 1.0;
+        appState->normalizedMX = 2*((R32)mx)/appState->screenWidth - 1.0;
+        appState->normalizedMY = -2*((R32)my)/appState->screenHeight + 1.0;
 
         FitCamera2DToScreen(appState->screenCamera, appState);
         UpdateCamera2D(appState->screenCamera, appState);
@@ -383,7 +384,7 @@ main(int argc, char**argv)
         nk_sdl_render(NK_ANTI_ALIASING_ON, MAX_VERTEX_MEMORY, MAX_ELEMENT_MEMORY);
 
         // frame timing
-        ui32 frameEnd = SDL_GetTicks();
+        U32 frameEnd = SDL_GetTicks();
 #if 0
         if(frameEnd > (lastSecond+1)*1000)
         {
@@ -393,14 +394,14 @@ main(int argc, char**argv)
             frameCounter = 0;
         }
 #endif
-        ui32 frameTicks = frameEnd-frameStart;
+        U32 frameTicks = frameEnd-frameStart;
         frameStart=frameEnd;
-        deltaTime=((r32)frameTicks)/1000.0;
+        deltaTime=((R32)frameTicks)/1000.0;
         time+=deltaTime;
         timeSinceLastFrame+=deltaTime;
         if(timeSinceLastFrame < updateTime)
         {
-            i32 waitForTicks = (i32)((updateTime-timeSinceLastFrame)*1000);
+            I32 waitForTicks = (I32)((updateTime-timeSinceLastFrame)*1000);
             if(waitForTicks > 0)
             {
                 //DebugOut("this happened, waitForTicks = %d\n", waitForTicks);

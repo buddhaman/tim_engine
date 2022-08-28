@@ -2,11 +2,11 @@
 typedef struct 
 {
     // Hyperparameters
-    r32 dev;
-    r32 learningRate;
+    R32 dev;
+    R32 learningRate;
     
-    ui32 geneSize;
-    ui32 nGenes;
+    U32 geneSize;
+    U32 nGenes;
 
     VecR32 *genes;
     VecR32 *epsilons;

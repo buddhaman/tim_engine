@@ -17,16 +17,16 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
 
     SpriteBatch *batch = assets->batch;
     BeginSpritebatch(batch);
-    ui32 currentTextureHandle = 0;
+    U32 currentTextureHandle = 0;
 
-    for(ui32 commandIdx = 0;
+    for(U32 commandIdx = 0;
             commandIdx < renderGroup->nCommands;
             commandIdx++)
     {
         RenderCommand *command = renderGroup->commands+commandIdx;
 
         // TODO: Remove this code by sorting and inserting state changes.
-        ui32 handle = command->textureHandle;
+        U32 handle = command->textureHandle;
         if(currentTextureHandle!=handle)
         {
             EndSpritebatch(batch);
@@ -132,7 +132,7 @@ internal inline void
 Push2DTexRectColored(RenderGroup* renderGroup,
         Vec2 pos,
         Vec2 dims,
-        ui32 textureHandle,
+        U32 textureHandle,
         Vec2 uvPos,
         Vec2 uvDims,
         Vec4 color)
@@ -165,7 +165,7 @@ Push2DRectColored(RenderGroup* renderGroup,
 internal inline void
 Push2DCircleColored(RenderGroup* renderGroup,
         Vec2 center,
-        r32 radius,
+        R32 radius,
         AtlasRegion *texture,
         Vec4 color)
 {
@@ -182,8 +182,8 @@ internal inline void
 Push2DTexLineColored(RenderGroup *renderGroup,
         Vec2 from,
         Vec2 to,
-        r32 lineWidth,
-        ui32 textureHandle,
+        R32 lineWidth,
+        U32 textureHandle,
         Vec2 uvPos,
         Vec2 uvDims, 
         Vec4 color)
@@ -202,7 +202,7 @@ internal inline void
 Push2DLineColored(RenderGroup *renderGroup,
         Vec2 from,
         Vec2 to,
-        r32 lineWidth,
+        R32 lineWidth,
         AtlasRegion *texture,
         Vec4 color)
 {
@@ -220,8 +220,8 @@ internal inline void
 Push2DTexOrientedRectangleColored(RenderGroup *renderGroup,
         Vec2 pos,
         Vec2 dims,
-        r32 angle,
-        ui32 textureHandle,
+        R32 angle,
+        U32 textureHandle,
         Vec2 uvPos,
         Vec2 uvDims,
         Vec4 color)
@@ -240,7 +240,7 @@ internal inline void
 Push2DOrientedRectangleColored(RenderGroup *renderGroup,
         Vec2 pos,
         Vec2 dims,
-        r32 angle,
+        R32 angle,
         AtlasRegion *texture,
         Vec4 color)
 {
@@ -258,13 +258,13 @@ internal inline void
 Push2DOrientedLineRectangleColored(RenderGroup *renderGroup,
         Vec2 pos, 
         Vec2 dims, 
-        r32 angle, 
-        r32 lineWidth,
+        R32 angle, 
+        R32 lineWidth,
         AtlasRegion *texture,
         Vec4 color)
 {
-    r32 c = cosf(angle);
-    r32 s = sinf(angle);
+    R32 c = cosf(angle);
+    R32 s = sinf(angle);
     Vec2 axis0 = V2(c*dims.x/2.0, s*dims.x/2.0);
     Vec2 axis1 = V2(s*dims.y/2.0, -c*dims.y/2.0);
     Vec2 p00 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, -1)));
@@ -286,11 +286,11 @@ Push2DTextColored(RenderGroup *renderGroup,
         Vec4 color)
 {
     stbtt_aligned_quad q;
-    r32 x = pos.x;
-    r32 y = pos.y;
-    ui32 w = fontRenderer->atlas->width;
-    ui32 h = fontRenderer->atlas->height;
-    ui32 textureHandle = fontRenderer->atlas->textureHandle;
+    R32 x = pos.x;
+    R32 y = pos.y;
+    U32 w = fontRenderer->atlas->width;
+    U32 h = fontRenderer->atlas->height;
+    U32 textureHandle = fontRenderer->atlas->textureHandle;
 
     while(*sequence)
     {
@@ -322,10 +322,10 @@ Push2DText(RenderGroup *renderGroup,
 internal inline void
 Push2DSemiCircleColored(RenderGroup *renderGroup, 
         Vec2 pos,
-        r32 radius,
-        r32 fromAngle,
-        r32 toAngle, 
-        ui32 nPoints,
+        R32 radius,
+        R32 fromAngle,
+        R32 toAngle, 
+        U32 nPoints,
         AtlasRegion *texture,
         Vec4 color)
 {
@@ -343,9 +343,9 @@ Push2DSemiCircleColored(RenderGroup *renderGroup,
 internal inline void
 Push2DLineCircleColored(RenderGroup *renderGroup, 
         Vec2 pos,
-        r32 radius,
-        ui32 nPoints,
-        r32 lineWidth,
+        R32 radius,
+        U32 nPoints,
+        R32 lineWidth,
         AtlasRegion *texture,
         Vec4 color)
 {
@@ -361,7 +361,7 @@ Push2DLineCircleColored(RenderGroup *renderGroup,
 }
 
 void
-InitRenderGroup(MemoryArena *arena, RenderGroup *renderGroup, ui32 maxCommands)
+InitRenderGroup(MemoryArena *arena, RenderGroup *renderGroup, U32 maxCommands)
 {
     renderGroup->nCommands = 0;
     renderGroup->maxCommands = maxCommands;

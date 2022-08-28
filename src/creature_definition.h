@@ -10,64 +10,64 @@
 
 typedef struct
 {
-    ui32 id;
-    ui16 degree;
+    U32 id;
+    U16 degree;
     Vec2 pos;
-    r32 width;
-    r32 height;
-    r32 angle;
-    r32 localAngle;
+    R32 width;
+    R32 height;
+    R32 angle;
+    R32 localAngle;
 
     // Connection to other bodypart
-    ui32 connectionId;
+    U32 connectionId;
     int xEdge;
     int yEdge;
-    r32 offset;
+    R32 offset;
     Vec2 pivotPoint;    // Calculated from above variables.
-    r32 minAngle;
-    r32 maxAngle;
+    R32 minAngle;
+    R32 maxAngle;
 
-    b32 hasDragOutput;
-    b32 hasRotaryMuscleOutput;
-    b32 hasAbsoluteXPositionInput;      
-    b32 hasAbsoluteYPositionInput;       
-    b32 hasAngleTowardsTargetInput;
-    b32 hasAbsoluteAngleInput;
+    B32 hasDragOutput;
+    B32 hasRotaryMuscleOutput;
+    B32 hasAbsoluteXPositionInput;      
+    B32 hasAbsoluteYPositionInput;       
+    B32 hasAngleTowardsTargetInput;
+    B32 hasAbsoluteAngleInput;
 
-    ui32 absoluteXPositionInputIdx;
-    ui32 absoluteYPositionInputIdx;
-    ui32 angleTowardsTargetInputIdx;
-    ui32 absoluteAngleInputIdx;
+    U32 absoluteXPositionInputIdx;
+    U32 absoluteYPositionInputIdx;
+    U32 angleTowardsTargetInputIdx;
+    U32 absoluteAngleInputIdx;
 
-    ui32 dragOutputIdx;
-    ui32 rotaryMuscleOutputIdx;
-    //b32 hasTargetOrientationInput;
+    U32 dragOutputIdx;
+    U32 rotaryMuscleOutputIdx;
+    //B32 hasTargetOrientationInput;
 
-    r32 rotaryMuscleStrength;   //TODO: implement. Not used yet.
+    R32 rotaryMuscleStrength;   //TODO: implement. Not used yet.
 
     // Cosmetic
     Vec2 uvPos;
     Vec2 uvDims;
     int texGridX;
     int texGridY;
-    r32 texScale;
+    R32 texScale;
 } BodyPartDefinition;
 
 typedef struct
 {
-    ui32 nBodyParts;
-    ui32 nInputs;
-    ui32 nOutputs;
-    ui32 nHidden;
-    ui32 geneSize;
-    ui32 nInternalClocks;
-    r32 textureOverhang;
-    b32 drawSolidColor;
+    U32 nBodyParts;
+    U32 nInputs;
+    U32 nOutputs;
+    U32 nHidden;
+    U32 geneSize;
+    U32 nInternalClocks;
+    R32 textureOverhang;
+    B32 drawSolidColor;
     Vec3 solidColor;
 
     // Texture atlas
-    ui32 creatureTextureGridDivs;
-    b32 isTextureSquareOccupied[16];
+    U32 creatureTextureGridDivs;
+    B32 isTextureSquareOccupied[16];
 
     BodyPartDefinition bodyParts[MAX_BODYPARTS];
     BodyPartDefinition *drawOrder[MAX_BODYPARTS];

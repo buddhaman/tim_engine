@@ -1,19 +1,19 @@
 
 // TODO: Better rand.
-r32
-RandomR32(r32 min, r32 max)
+R32
+RandomR32(R32 min, R32 max)
 {
     return min + (max - min)*(rand()%RAND_MAX)/RAND_MAX;
 }
 
 int
-RandomUI32(ui32 min, ui32 max)
+RandomUI32(U32 min, U32 max)
 {
     return min + (rand()%(max-min));
 }
 
-r32
-Sign(r32 x)
+R32
+Sign(R32 x)
 {
     return x < 0 ? -1.0 : 1.0;
 }
@@ -21,98 +21,98 @@ Sign(r32 x)
 Vec2
 RandomNormalPair()
 {
-    r32 x, y, s;
+    R32 x, y, s;
     do
     {
         x = RandomR32(-1, 1);
         y = RandomR32(-1, 1);
         s = x*x + y*y;
     } while(s > 1.0);
-    r32 factor = sqrtf(-2*logf(s)/s);
+    R32 factor = sqrtf(-2*logf(s)/s);
     return V2(factor*x, factor*y);
 }
 
 internal inline Vec2
-V2Polar(r32 angle, r32 length)
+V2Polar(R32 angle, R32 length)
 {
     return V2(cosf(angle)*length, sinf(angle)*length);
 }
 
-internal inline r32 
-Lerp(r32 a, r32 b, r32 factor)
+internal inline R32 
+Lerp(R32 a, R32 b, R32 factor)
 {
     return (1.0-factor)*a+factor*b;
 }
 
 Vec3 
-GetZIntersection(Vec3 rayPos, Vec3 rayDir, r32 z)
+GetZIntersection(Vec3 rayPos, Vec3 rayDir, R32 z)
 {
-    r32 zDiff = z-rayPos.z;
-    r32 s = zDiff/rayDir.z;
+    R32 zDiff = z-rayPos.z;
+    R32 s = zDiff/rayDir.z;
     return V3Add(rayPos, V3MulS(rayDir, s));
 }
 
-internal inline b32
+internal inline B32
 BoxPoint2Intersect(Vec2 pos, Vec2 dims, Vec2 point)
 {
-    r32 xDiff = point.x-pos.x-dims.x/2;
-    r32 yDiff = point.y-pos.y-dims.y/2;
+    R32 xDiff = point.x-pos.x-dims.x/2;
+    R32 yDiff = point.y-pos.y-dims.y/2;
     return (fabsf(xDiff) < dims.x/2 && fabsf(yDiff) < dims.y/2);
 }
 
-internal inline b32
-OrientedBoxPoint2Intersect(Vec2 pos, Vec2 dims, r32 angle, Vec2 point)
+internal inline B32
+OrientedBoxPoint2Intersect(Vec2 pos, Vec2 dims, R32 angle, Vec2 point)
 {
     // Project onto axes see if dot < dims
-    r32 c = cosf(angle);
-    r32 s = sinf(angle);
-    r32 xDiff = point.x-pos.x;
-    r32 yDiff = point.y-pos.y;
-    r32 xProj = c*xDiff + s*yDiff;
-    r32 yProj = -s*xDiff + c*yDiff;
+    R32 c = cosf(angle);
+    R32 s = sinf(angle);
+    R32 xDiff = point.x-pos.x;
+    R32 yDiff = point.y-pos.y;
+    R32 xProj = c*xDiff + s*yDiff;
+    R32 yProj = -s*xDiff + c*yDiff;
     return (fabsf(xProj) < dims.x/2 && fabsf(yProj) < dims.y/2);
 }
 
 internal inline Vec2
-GetCoordinateInBox(Vec2 pos, Vec2 dims, r32 angle, Vec2 point)
+GetCoordinateInBox(Vec2 pos, Vec2 dims, R32 angle, Vec2 point)
 {
-    r32 c = cosf(angle);
-    r32 s = sinf(angle);
-    r32 xDiff = point.x-pos.x;
-    r32 yDiff = point.y-pos.y;
-    r32 xProj = c*xDiff + s*yDiff;
-    r32 yProj = -s*xDiff + c*yDiff;
+    R32 c = cosf(angle);
+    R32 s = sinf(angle);
+    R32 xDiff = point.x-pos.x;
+    R32 yDiff = point.y-pos.y;
+    R32 xProj = c*xDiff + s*yDiff;
+    R32 yProj = -s*xDiff + c*yDiff;
     return V2(xProj/dims.x+0.5, yProj/dims.y+0.5);
 }
 
-internal inline b32
-CirclePointIntersect(Vec2 pos, r32 radius, Vec2 point)
+internal inline B32
+CirclePointIntersect(Vec2 pos, R32 radius, Vec2 point)
 {
     Vec2 diff = V2Sub(point, pos);
     return V2Len2(diff) <= radius*radius;
 }
 
 // Ignores points inside the rectangle.
-internal inline r32 
-GetNearestBoxEdgeLocation(Vec2 pos, Vec2 dims, r32 angle, Vec2 point, BoxEdgeLocation *location)
+internal inline R32 
+GetNearestBoxEdgeLocation(Vec2 pos, Vec2 dims, R32 angle, Vec2 point, BoxEdgeLocation *location)
 {
-    r32 c = cosf(angle);
-    r32 s = sinf(angle);
-    r32 xDiff = point.x-pos.x;
-    r32 yDiff = point.y-pos.y;
+    R32 c = cosf(angle);
+    R32 s = sinf(angle);
+    R32 xDiff = point.x-pos.x;
+    R32 yDiff = point.y-pos.y;
     Vec2 p = V2(c*xDiff + s*yDiff, -s*xDiff + c*yDiff);   // point coordinates seen from box transform.
 
-    r32 result = -1.0;
+    R32 result = -1.0;
     *location = (BoxEdgeLocation){};
 
-    b32 inYRange = fabsf(p.x) < dims.x/2.0;
-    b32 inXRange = fabsf(p.y) < dims.y/2.0;
+    B32 inYRange = fabsf(p.x) < dims.x/2.0;
+    B32 inXRange = fabsf(p.y) < dims.y/2.0;
     if(inYRange)
     {
         if(!inXRange)
         {
             int sign = Sign(p.y);
-            r32 yPos = sign*dims.y/2.0;
+            R32 yPos = sign*dims.y/2.0;
             location->pos = V2(p.x, yPos);
             location->yEdge = sign;
             location->offset = 1.0-sign*(p.x+sign*dims.x/2)/dims.x;
@@ -126,7 +126,7 @@ GetNearestBoxEdgeLocation(Vec2 pos, Vec2 dims, r32 angle, Vec2 point, BoxEdgeLoc
     else if(inXRange)
     {
         int sign = Sign(p.x);
-        r32 xPos = sign*dims.x/2.0;
+        R32 xPos = sign*dims.x/2.0;
         location->pos = V2(xPos, p.y);
         location->xEdge = sign;
         location->offset = sign*(p.y+sign*dims.y/2)/dims.y;
@@ -154,7 +154,7 @@ GetNearestBoxEdgeLocation(Vec2 pos, Vec2 dims, r32 angle, Vec2 point, BoxEdgeLoc
 }
 
 internal inline Vec2
-GetBoxEdgePosition(Vec2 pos, Vec2 dims, r32 angle, int xEdge, int yEdge, r32 offset)
+GetBoxEdgePosition(Vec2 pos, Vec2 dims, R32 angle, int xEdge, int yEdge, R32 offset)
 {
     Vec2 result;
     if(xEdge!=0)
@@ -175,7 +175,7 @@ GetBoxEdgePosition(Vec2 pos, Vec2 dims, r32 angle, int xEdge, int yEdge, r32 off
 }
 
 internal inline Vec4
-RGBAToVec4(ui32 hex)
+RGBAToVec4(U32 hex)
 {
     return V4( (hex >> 24 & 255)/255.0f,
             (hex >> 16 & 255)/255.0f,
@@ -183,7 +183,7 @@ RGBAToVec4(ui32 hex)
             (hex & 255)/255.0f);
 }
 
-internal inline ui32
+internal inline U32
 Vec4ToRGBA(Vec4 color)
 {
     int r = (color.x*255);
@@ -193,20 +193,20 @@ Vec4ToRGBA(Vec4 color)
     return (a << 24) + (b << 16) + (g << 8) + r;
 }
 
-internal inline r32
-RadToDeg(r32 rad)
+internal inline R32
+RadToDeg(R32 rad)
 {
     return (180 * rad / M_PI);
 }
 
-internal inline r32
-DegToRad(r32 rad)
+internal inline R32
+DegToRad(R32 rad)
 {
     return rad*(M_PI/180.0);
 }
 
-internal inline r32
-NormalizeAngle(r32 rad)
+internal inline R32
+NormalizeAngle(R32 rad)
 {
     rad = fmodf(rad, M_PI*2);
     rad = fmodf(rad+M_PI*2, M_PI*2);
@@ -217,15 +217,15 @@ NormalizeAngle(r32 rad)
     return rad;
 }
 
-internal inline r32
-GetNormalizedAngDiff(r32 a, r32 b)
+internal inline R32
+GetNormalizedAngDiff(R32 a, R32 b)
 {
-    r32 diff = a-b;
+    R32 diff = a-b;
     return NormalizeAngle(diff);
 }
 
-internal inline r32
-ClampF(r32 min, r32 max, r32 x)
+internal inline R32
+ClampF(R32 min, R32 max, R32 x)
 {
     return x < min ? min : (x > max ? max : x);
 }
@@ -247,7 +247,7 @@ ArrayRemoveElement(void *array, size_t elementSize, size_t nElements, void *elem
     size_t nMoveElements = nElements-index;
     if(nMoveElements > 0)
     {
-        memmove(element, (ui8*)element+elementSize, nMoveElements*elementSize);
+        memmove(element, (U8*)element+elementSize, nMoveElements*elementSize);
     }
 }
 

@@ -4,15 +4,15 @@
 // Must be power of two
 #define MAX_GUI_ANIMATIONS 256 
 
-typedef ui32 GuiId;
+typedef U32 GuiId;
 
 typedef struct
 {
-    b32 isActive;
+    B32 isActive;
     GuiId widgetId;
 
-    r32 timeFactor;
-    r32 timeStep;
+    R32 timeFactor;
+    R32 timeStep;
 } GuiAnimation;
 
 typedef struct
@@ -20,8 +20,8 @@ typedef struct
     AppState *appState;
     BasicRenderTools *renderTools;
 
-    b32 isMouseDown;
-    b32 isMouseJustReleased;
+    B32 isMouseDown;
+    B32 isMouseJustReleased;
 
     GuiId active;
     GuiId prevActive;
@@ -29,17 +29,17 @@ typedef struct
     GuiId prevHot;
     GuiId mouseEnteredWidgetId;
 
-    ui32 contextStackDepth;
+    U32 contextStackDepth;
     GuiId contextStack[MAX_CONTEXT_STACK_SIZE];
-    ui32 nWidgetsInCurrentContext;
+    U32 nWidgetsInCurrentContext;
 
     Vec4 defaultColor;
     Vec4 hitColor;
     Vec4 pressedColor;
 
-    b32 isRadialMenuActive;
+    B32 isRadialMenuActive;
     Vec2 radialMenuPos;
-    r32 radialTimer;
+    R32 radialTimer;
 
     char textInput[128];
     GuiAnimation animations[MAX_GUI_ANIMATIONS];

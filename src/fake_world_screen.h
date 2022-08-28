@@ -11,25 +11,25 @@ typedef struct
     FrameBuffer *frameBuffer0;
     FrameBuffer *frameBuffer1;
 
-    b32 isPaused;
-    ui32 stepsPerFrame;
-    b32 isInputCaptured;
+    B32 isPaused;
+    U32 stepsPerFrame;
+    B32 isInputCaptured;
 
-    ui32 generation;
-    ui32 tick;
-    ui32 ticksPerGeneration;
+    U32 generation;
+    U32 tick;
+    U32 ticksPerGeneration;
     
-    r32 avgFitness;
+    R32 avgFitness;
     Vec2 target;
 
     BodyPart *hitBodyPart;
     Creature *selectedCreature;
     BodyPart *selectedBodyPart;
 
-    b32 isGuiInputCaptured;
+    B32 isGuiInputCaptured;
 
-    b32 isPopulationVisible;
-    b32 isDragVisible;
+    B32 isPopulationVisible;
+    B32 isDragVisible;
 
 } FakeWorldScreen;
 
@@ -39,9 +39,9 @@ InitFakeWorldScreen(AppState *appState,
         MemoryArena *arena, 
         Assets *assets,
         CreatureDefinition *def,
-        ui32 nGenes,
-        r32 dev,
-        r32 learningRate);
+        U32 nGenes,
+        R32 dev,
+        R32 learningRate);
 
 #endif
 

@@ -1,12 +1,12 @@
 
-ui32
+U32
 CreateAndCompileShaderSource(char *source, GLenum shaderType)
 {
     const char *const* src = (const char *const *)&source;
-    ui32 shader = glCreateShader(shaderType);
+    U32 shader = glCreateShader(shaderType);
     glShaderSource(shader, 1, src, NULL);
     glCompileShader(shader);
-    i32 succes;
+    I32 succes;
     char infolog[512];
     glGetShaderiv(shader, GL_COMPILE_STATUS, &succes);
     if(!succes)
@@ -22,14 +22,14 @@ CreateAndCompileShaderSource(char *source, GLenum shaderType)
     return shader;
 }
 
-ui32 
-CreateAndLinkShaderProgram(ui32 vertexShader, ui32 fragmentShader)
+U32 
+CreateAndLinkShaderProgram(U32 vertexShader, U32 fragmentShader)
 {
-    ui32 shaderProgram = glCreateProgram();
+    U32 shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
-    i32 succes;
+    I32 succes;
     char infolog[512];
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &succes);
     if(!succes)
@@ -66,8 +66,8 @@ LoadShader(Shader *shader)
 
     //printf("Shader source for %s:\n %s\n", shader->fragmentSourcePath, shader->fragmentSource);
 
-    ui32 fragmentShader = CreateAndCompileShaderSource(shader->fragmentSource, GL_FRAGMENT_SHADER);
-    ui32 vertexShader = CreateAndCompileShaderSource(shader->vertexSource, GL_VERTEX_SHADER);
+    U32 fragmentShader = CreateAndCompileShaderSource(shader->fragmentSource, GL_FRAGMENT_SHADER);
+    U32 vertexShader = CreateAndCompileShaderSource(shader->vertexSource, GL_VERTEX_SHADER);
     shader->program = CreateAndLinkShaderProgram(fragmentShader, vertexShader);
 }
 

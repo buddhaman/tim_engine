@@ -4,7 +4,7 @@ typedef struct
     Vec2 pos;
     int xEdge;
     int yEdge;
-    r32 offset;     // Counterclockwise direction on edge.
+    R32 offset;     // Counterclockwise direction on edge.
 } BoxEdgeLocation;
 
 typedef struct
@@ -13,10 +13,10 @@ typedef struct
     {
         struct
         {
-            r32 x;
-            r32 y;
-            r32 width;
-            r32 height;
+            R32 x;
+            R32 y;
+            R32 width;
+            R32 height;
         };
         struct
         {
@@ -30,7 +30,7 @@ typedef struct
 {
     Vec2 pos;
     Vec2 dims;
-    r32 angle;
+    R32 angle;
 } OrientedBox;
 
 
