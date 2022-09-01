@@ -126,7 +126,7 @@ EditorRemoveBodyPart(CreatureEditorScreen *editor, U32 id)
     }
     ArrayRemoveElement(def->bodyParts, sizeof(BodyPartDefinition), def->nBodyParts--, parent);
 
-    // TODO: Called wayyy too often now bc of recursion. Instead flag as removed and remove in one batch.
+    // TODO: Called wayyy too often now bc of recursion. Instead flag as removed and remove in one mesh.
     RecalculateSubNodeBodyParts(def, def->bodyParts);
     RecalculateBodyPartDrawOrder(def);
     AssignBrainIO(def);
@@ -747,12 +747,12 @@ DoToolWindow(AppState *appState, CreatureEditorScreen *editor, struct nk_context
 }
 
 internal inline void 
-DrawBodyPartWithOverhang(Mesh2D *batch, 
+DrawBodyPartWithOverhang(Mesh2D *mesh, 
         BodyPartDefinition *def, 
         R32 overhang,
         AtlasRegion *tex)
 {
-    PushOrientedRectangle2(batch, 
+    PushOrientedRectangle2(mesh, 
             def->pos,
             def->width+overhang*2,
             def->height+overhang*2,
@@ -921,7 +921,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                 color);
     }
 
-    // TODO: collect in editor and display at the same time. Just like spritebatch.
+    // TODO: collect in editor and display at the same time. Just like spritemesh.
     char info[256];
     memset(info, 0, 256);
 
@@ -1098,18 +1098,18 @@ UpdateCreatureEditorScreen(AppState *appState,
 #if 1
             // Render drawable surface
             glEnable(GL_STENCIL_TEST);
-            Mesh2D *batch = assets->batch;
+            Mesh2D *mesh = assets->mesh;
             
             glBindTexture(GL_TEXTURE_2D, assets->defaultAtlas->textureHandle);
             BeginShaderInstance(worldShader);
 
             BeginStencilShape();
 
-            BeginMesh2D(batch);
+            BeginMesh2D(mesh);
             if(editor->selectedId)
             {
                 BodyPartDefinition *part = def->bodyParts+GetIndexOfBodyPart(def, editor->selectedId);
-                DrawBodyPartWithOverhang(batch, part, def->textureOverhang, squareRegion);
+                DrawBodyPartWithOverhang(mesh, part, def->textureOverhang, squareRegion);
             }
             else
             {
@@ -1118,15 +1118,15 @@ UpdateCreatureEditorScreen(AppState *appState,
                         bodyPartIdx++)
                 {
                     BodyPartDefinition *part = def->bodyParts+bodyPartIdx;
-                    DrawBodyPartWithOverhang(batch, part, def->textureOverhang, squareRegion);
+                    DrawBodyPartWithOverhang(mesh, part, def->textureOverhang, squareRegion);
                 }
             }
-            EndMesh2D(batch);
+            EndMesh2D(mesh);
             EndStencilShape();
 
             glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 
-            DrawDirectRect(batch, 
+            DrawDirectRect(mesh, 
                     worldShader,
                     V2(camera->pos.x-camera->size.x/2.0, camera->pos.y-camera->size.y/2.0),
                     camera->size,

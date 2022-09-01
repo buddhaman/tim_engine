@@ -107,109 +107,108 @@ CreateFrameBuffer(MemoryArena *arena, U32 width, U32 height)
 }
 
 void
-InitMesh2D(Mesh2D *batch, U32 maxVertices, MemoryArena *arena)
+InitMesh2D(Mesh2D *mesh, U32 maxVertices, MemoryArena *arena)
 {
-    batch->nVertices = 0;
-    batch->maxVertices = maxVertices;
-    batch->stride = 8;  //pos(2), tex(2), col(4)
-    batch->vertexBuffer = PushArray(arena, R32, batch->maxVertices*batch->stride);
-    batch->indexBuffer = PushArray(arena, U16, batch->maxVertices);
+    mesh->nVertices = 0;
+    mesh->maxVertices = maxVertices;
+    mesh->stride = 5;  //pos(2), tex(2), col(1)
+    mesh->vertexBuffer = PushArray(arena, R32, mesh->maxVertices*mesh->stride);
+    mesh->indexBuffer = PushArray(arena, U16, mesh->maxVertices);
 
-    glGenVertexArrays(1, &batch->vao);
-    glGenBuffers(1, &batch->vbo);
-    glGenBuffers(1, &batch->ebo);
+    glGenVertexArrays(1, &mesh->vao);
+    glGenBuffers(1, &mesh->vbo);
+    glGenBuffers(1, &mesh->ebo);
 
-    glBindVertexArray(batch->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, batch->vbo);
+    glBindVertexArray(mesh->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
 
     size_t memOffset = 0;
 
     // Position
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, batch->stride*sizeof(R32), (void *)(memOffset));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, mesh->stride*sizeof(R32), (void *)(memOffset));
     memOffset+=2*sizeof(R32);
 
-    // Texture coords
+    // Color
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, batch->stride*sizeof(R32), (void *)(memOffset));
-    memOffset+=4*sizeof(R32);
+    glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, mesh->stride*sizeof(R32), (void *)(memOffset));
+    memOffset+=1*sizeof(R32);
 
     // Texture coords
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, batch->stride*sizeof(R32), (void *)(memOffset));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, mesh->stride*sizeof(R32), (void *)(memOffset));
     memOffset+=2*sizeof(R32);
     //CheckOpenglError();
 }
 
 internal inline void
-BeginMesh2D(Mesh2D *batch)
+BeginMesh2D(Mesh2D *mesh)
 {
-    Assert(!batch->isDrawing);
-    batch->isDrawing = 1;
-    batch->nVertices = 0;
-    batch->nIndices = 0;
+    Assert(!mesh->isDrawing);
+    mesh->isDrawing = 1;
+    mesh->nVertices = 0;
+    mesh->nIndices = 0;
 }
 
 internal inline void
-EndMesh2D(Mesh2D *batch)
+EndMesh2D(Mesh2D *mesh)
 {
-    Assert(batch->isDrawing);
-    batch->isDrawing = 0;
-    glBindVertexArray(batch->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, batch->vbo);
-    glBufferData(GL_ARRAY_BUFFER, batch->nVertices*batch->stride*sizeof(R32), 
-            batch->vertexBuffer, GL_DYNAMIC_DRAW);
+    Assert(mesh->isDrawing);
+    mesh->isDrawing = 0;
+    glBindVertexArray(mesh->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+    glBufferData(GL_ARRAY_BUFFER, mesh->nVertices*mesh->stride*sizeof(R32), 
+            mesh->vertexBuffer, GL_DYNAMIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, batch->nIndices*sizeof(U16), 
-            batch->indexBuffer, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->nIndices*sizeof(U16), 
+            mesh->indexBuffer, GL_DYNAMIC_DRAW);
 
-    glDrawElements(GL_TRIANGLES, batch->nIndices, GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, mesh->nIndices, GL_UNSIGNED_SHORT, 0);
 }
 
 internal inline void
-PushVertex2(Mesh2D *batch, Vec2 pos, Vec2 texCoord, Vec4 color)
+PushVertex2(Mesh2D *mesh, Vec2 pos, Vec2 texCoord, Vec4 color)
 {
-    U32 bufferIdx = batch->nVertices*batch->stride;
+    U32 bufferIdx = mesh->nVertices*mesh->stride;
 
-    batch->vertexBuffer[bufferIdx] = pos.x;
-    batch->vertexBuffer[bufferIdx+1] = pos.y;
-    batch->vertexBuffer[bufferIdx+2] = color.x;
-    batch->vertexBuffer[bufferIdx+3] = color.y;
-    batch->vertexBuffer[bufferIdx+4] = color.z;
-    batch->vertexBuffer[bufferIdx+5] = color.w;
-    batch->vertexBuffer[bufferIdx+6] = texCoord.x;
-    batch->vertexBuffer[bufferIdx+7] = texCoord.y;
+    mesh->vertexBuffer[bufferIdx] = pos.x;
+    mesh->vertexBuffer[bufferIdx+1] = pos.y;
+    U32 colorBits = Vec4ToRGBA(color);
+    R32 colorBitsFloat = *((R32 *)(&colorBits));
+    mesh->vertexBuffer[bufferIdx+2] = colorBitsFloat;
+    mesh->vertexBuffer[bufferIdx+3] = texCoord.x;
+    mesh->vertexBuffer[bufferIdx+4] = texCoord.y;
 
-    batch->nVertices++;
-    Assert(batch->nIndices < batch->maxVertices);
+    mesh->nVertices++;
+    Assert(mesh->nIndices < mesh->maxVertices);
 }
 
 internal inline void
-PushIndex(Mesh2D *batch, U16 index)
+PushIndex(Mesh2D *mesh, U16 index)
 {
-    batch->indexBuffer[batch->nIndices++] = index;
+    mesh->indexBuffer[mesh->nIndices++] = index;
 }
 
 void
-PushQuad2(Mesh2D *batch, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, Vec2 texSize)
+PushQuad2(Mesh2D *mesh, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, Vec2 texSize)
 {
-    U16 lastIdx = batch->nVertices;
-    PushVertex2(batch, p0, V2(texOrig.x, texOrig.y+texSize.y), batch->colorState);
-    PushVertex2(batch, p1, V2(texOrig.x+texSize.x, texOrig.y+texSize.y), batch->colorState);
-    PushVertex2(batch, p2, V2(texOrig.x+texSize.x, texOrig.y), batch->colorState);
-    PushVertex2(batch, p3, texOrig, batch->colorState);
-    PushIndex(batch, lastIdx);
-    PushIndex(batch, lastIdx+1);
-    PushIndex(batch, lastIdx+2);
-    PushIndex(batch, lastIdx+2);
-    PushIndex(batch, lastIdx+3);
-    PushIndex(batch, lastIdx);
-    Assert(batch->nIndices < batch->maxVertices);
+    U16 lastIdx = mesh->nVertices;
+    PushVertex2(mesh, p0, V2(texOrig.x, texOrig.y+texSize.y), mesh->colorState);
+    PushVertex2(mesh, p1, V2(texOrig.x+texSize.x, texOrig.y+texSize.y), mesh->colorState);
+    PushVertex2(mesh, p2, V2(texOrig.x+texSize.x, texOrig.y), mesh->colorState);
+    PushVertex2(mesh, p3, texOrig, mesh->colorState);
+    PushIndex(mesh, lastIdx);
+    PushIndex(mesh, lastIdx+1);
+    PushIndex(mesh, lastIdx+2);
+    PushIndex(mesh, lastIdx+2);
+    PushIndex(mesh, lastIdx+3);
+    PushIndex(mesh, lastIdx);
+    Assert(mesh->nIndices < mesh->maxVertices);
 }
 
 void
-PushSemiCircle2(Mesh2D *batch, 
+PushSemiCircle2(Mesh2D *mesh, 
         Vec2 pos, 
         R32 radius, 
         R32 minAngle, 
@@ -217,8 +216,8 @@ PushSemiCircle2(Mesh2D *batch,
         U32 nPoints, 
         AtlasRegion *tex)
 {
-    U16 lastIdx = batch->nVertices;
-    PushVertex2(batch, pos, tex->pos, batch->colorState);
+    U16 lastIdx = mesh->nVertices;
+    PushVertex2(mesh, pos, tex->pos, mesh->colorState);
     R32 angDiff = (maxAngle-minAngle)/(nPoints-1);
     for(U32 atPoint = 0;
             atPoint < nPoints;
@@ -226,27 +225,27 @@ PushSemiCircle2(Mesh2D *batch,
     {
         R32 angle = minAngle+angDiff*atPoint;
         Vec2 point = V2Add(pos, V2Polar(angle, radius));
-        PushVertex2(batch, point, tex->pos, batch->colorState); 
+        PushVertex2(mesh, point, tex->pos, mesh->colorState); 
     }
     for(U32 atPoint = 0;
             atPoint < nPoints-1;
             atPoint++)
     {
-        PushIndex(batch, lastIdx);
-        PushIndex(batch, lastIdx+atPoint+1);
-        PushIndex(batch, lastIdx+atPoint+2);
+        PushIndex(mesh, lastIdx);
+        PushIndex(mesh, lastIdx+atPoint+1);
+        PushIndex(mesh, lastIdx+atPoint+2);
     }
 }
 
 void
-PushLineCircle2(Mesh2D *batch,
+PushLineCircle2(Mesh2D *mesh,
         Vec2 center,
         R32 radius,
         R32 lineWidth,
         int nPoints,
         AtlasRegion *tex)
 {
-    U16 lastIdx = batch->nVertices;
+    U16 lastIdx = mesh->nVertices;
     R32 innerRadius = radius-lineWidth/2.0;
     R32 outerRadius = radius+lineWidth/2.0;
     R32 dAngle = 2*M_PI/nPoints;
@@ -258,38 +257,38 @@ PushLineCircle2(Mesh2D *batch,
         R32 angle = atPoint * dAngle;
         R32 c = cosf(angle);
         R32 s = sinf(angle);
-        PushVertex2(batch, 
+        PushVertex2(mesh, 
                 V2(center.x+c*innerRadius, center.y+s*innerRadius),
                 tex->pos, 
-                batch->colorState);
-        PushVertex2(batch, 
+                mesh->colorState);
+        PushVertex2(mesh, 
                 V2(center.x+c*outerRadius, center.y+s*outerRadius),
                 tex->pos, 
-                batch->colorState);
+                mesh->colorState);
     }
     for(int atPoint = 0;
             atPoint < nPoints-1;
             atPoint++)
     {
-        PushIndex(batch, lastIdx+atPoint*2);
-        PushIndex(batch, lastIdx+atPoint*2+1);
-        PushIndex(batch, lastIdx+atPoint*2+3);
-        PushIndex(batch, lastIdx+atPoint*2+3);
-        PushIndex(batch, lastIdx+atPoint*2+2);
-        PushIndex(batch, lastIdx+atPoint*2);
+        PushIndex(mesh, lastIdx+atPoint*2);
+        PushIndex(mesh, lastIdx+atPoint*2+1);
+        PushIndex(mesh, lastIdx+atPoint*2+3);
+        PushIndex(mesh, lastIdx+atPoint*2+3);
+        PushIndex(mesh, lastIdx+atPoint*2+2);
+        PushIndex(mesh, lastIdx+atPoint*2);
     }
-    PushIndex(batch, lastIdx+nPoints*2-2);
-    PushIndex(batch, lastIdx+nPoints*2-1);
-    PushIndex(batch, lastIdx+1);
-    PushIndex(batch, lastIdx+1);
-    PushIndex(batch, lastIdx);
-    PushIndex(batch, lastIdx+nPoints*2-2);
+    PushIndex(mesh, lastIdx+nPoints*2-2);
+    PushIndex(mesh, lastIdx+nPoints*2-1);
+    PushIndex(mesh, lastIdx+1);
+    PushIndex(mesh, lastIdx+1);
+    PushIndex(mesh, lastIdx);
+    PushIndex(mesh, lastIdx+nPoints*2-2);
 }
 
 void
-PushRect2(Mesh2D *batch, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
+PushRect2(Mesh2D *mesh, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
 {
-    PushQuad2(batch, 
+    PushQuad2(mesh, 
             orig, 
             V2(orig.x+size.x, orig.y), 
             V2(orig.x+size.x, orig.y+size.y),
@@ -299,21 +298,21 @@ PushRect2(Mesh2D *batch, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
 }
 
 void
-PushLineRect2(Mesh2D *batch, Vec2 origin, Vec2 size, Vec2 texOrig, Vec2 texSize, R32 lineWidth)
+PushLineRect2(Mesh2D *mesh, Vec2 origin, Vec2 size, Vec2 texOrig, Vec2 texSize, R32 lineWidth)
 {
-    PushRect2(batch, origin, V2(size.x, lineWidth), texOrig, texSize);
-    PushRect2(batch, origin, V2(lineWidth, size.y), texOrig, texSize);
-    PushRect2(batch, V2(origin.x+size.x-lineWidth, origin.y), V2(lineWidth, size.y), texOrig, texSize);
-    PushRect2(batch, V2(origin.x, origin.y+size.y-lineWidth), V2(size.x, lineWidth), texOrig, texSize);
+    PushRect2(mesh, origin, V2(size.x, lineWidth), texOrig, texSize);
+    PushRect2(mesh, origin, V2(lineWidth, size.y), texOrig, texSize);
+    PushRect2(mesh, V2(origin.x+size.x-lineWidth, origin.y), V2(lineWidth, size.y), texOrig, texSize);
+    PushRect2(mesh, V2(origin.x, origin.y+size.y-lineWidth), V2(size.x, lineWidth), texOrig, texSize);
 }
 
 void
-PushLine2(Mesh2D *batch, Vec2 from, Vec2 to, R32 lineWidth, Vec2 texOrig, Vec2 texSize)
+PushLine2(Mesh2D *mesh, Vec2 from, Vec2 to, R32 lineWidth, Vec2 texOrig, Vec2 texSize)
 {
     Vec2 diff = V2Sub(to, from);
     R32 invl = 1.0/V2Len(diff);
     Vec2 perp = V2(diff.y*invl*lineWidth/2.0, -diff.x*invl*lineWidth/2.0);
-    PushQuad2(batch,
+    PushQuad2(mesh,
             V2Add(from, perp), V2Add(to, perp),
             V2Sub(to, perp), V2Sub(from, perp),
             texOrig,
@@ -321,7 +320,7 @@ PushLine2(Mesh2D *batch, Vec2 from, Vec2 to, R32 lineWidth, Vec2 texOrig, Vec2 t
 }
 
 void
-PushOrientedRectangle2(Mesh2D *batch, 
+PushOrientedRectangle2(Mesh2D *mesh, 
         Vec2 pos, 
         R32 width, 
         R32 height, 
@@ -337,11 +336,11 @@ PushOrientedRectangle2(Mesh2D *batch,
     Vec2 p11 = V2Add(pos, V2Add(V2MulS(axis0, 1), V2MulS(axis1, 1)));
     Vec2 p01 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, 1)));
 
-    PushQuad2(batch, p00, p10, p11, p01, texture->pos, texture->size);
+    PushQuad2(mesh, p00, p10, p11, p01, texture->pos, texture->size);
 }
 
 void
-PushOrientedLineRectangle2(Mesh2D *batch, 
+PushOrientedLineRectangle2(Mesh2D *mesh, 
         Vec2 pos, 
         R32 width, 
         R32 height, 
@@ -358,16 +357,16 @@ PushOrientedLineRectangle2(Mesh2D *batch,
     Vec2 p11 = V2Add(pos, V2Add(V2MulS(axis0, 1), V2MulS(axis1, 1)));
     Vec2 p01 = V2Add(pos, V2Add(V2MulS(axis0, -1), V2MulS(axis1, 1)));
 
-    PushLine2(batch, p00, p10, lineWidth, texture->pos, texture->size);
-    PushLine2(batch, p10, p11, lineWidth, texture->pos, texture->size);
-    PushLine2(batch, p11, p01, lineWidth, texture->pos, texture->size);
-    PushLine2(batch, p01, p00, lineWidth, texture->pos, texture->size);
+    PushLine2(mesh, p00, p10, lineWidth, texture->pos, texture->size);
+    PushLine2(mesh, p10, p11, lineWidth, texture->pos, texture->size);
+    PushLine2(mesh, p11, p01, lineWidth, texture->pos, texture->size);
+    PushLine2(mesh, p01, p00, lineWidth, texture->pos, texture->size);
 }
 
 void
-PushCircle2(Mesh2D *batch, Vec2 center, R32 size, AtlasRegion *tex)
+PushCircle2(Mesh2D *mesh, Vec2 center, R32 size, AtlasRegion *tex)
 {
-    PushRect2(batch, V2(center.x-size, center.y-size), V2(size*2, size*2), tex->pos, tex->size);
+    PushRect2(mesh, V2(center.x-size, center.y-size), V2(size*2, size*2), tex->pos, tex->size);
 }
 
 internal inline Vec2
@@ -420,7 +419,7 @@ GetStringSize(FontRenderer *fontRenderer, char *sequence, Vec2 pos)
 }
 
 void
-DrawString2D(Mesh2D *batch, FontRenderer *fontRenderer, Vec2 pos, char *sequence)
+DrawString2D(Mesh2D *mesh, FontRenderer *fontRenderer, Vec2 pos, char *sequence)
 {
     stbtt_aligned_quad q;
     R32 x = pos.x;
@@ -431,14 +430,14 @@ DrawString2D(Mesh2D *batch, FontRenderer *fontRenderer, Vec2 pos, char *sequence
     while(*sequence)
     {
         stbtt_GetPackedQuad(fontRenderer->charData, w, h, *sequence-32, &x, &y, &q, 0);
-        PushRect2(batch, V2(q.x0, q.y0), V2(q.x1-q.x0, q.y1-q.y0), 
+        PushRect2(mesh, V2(q.x0, q.y0), V2(q.x1-q.x0, q.y1-q.y0), 
                 V2(q.s0, q.t1), V2(q.s1-q.s0, q.t0-q.t1));
         sequence++;
     }
 }
 
 internal inline void
-DrawDirectRect(Mesh2D *batch, 
+DrawDirectRect(Mesh2D *mesh, 
         ShaderInstance *shaderInstance,
         Vec2 pos, 
         Vec2 dims, 
@@ -451,19 +450,19 @@ DrawDirectRect(Mesh2D *batch,
     glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    BeginMesh2D(batch);
+    BeginMesh2D(mesh);
     BeginShaderInstance(shaderInstance);
 
-    batch->colorState = color;
+    mesh->colorState = color;
     glBindTexture(GL_TEXTURE_2D, textureHandle);
 
-    PushRect2(batch,
+    PushRect2(mesh,
             pos,
             dims,
             uvPos,
             uvDims);
 
-    EndMesh2D(batch);
+    EndMesh2D(mesh);
 
 }
 

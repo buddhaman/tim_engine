@@ -1,7 +1,7 @@
 
 typedef struct 
 {
-    Mesh2D *batch;
+    Mesh2D *mesh;
     TextureAtlas *defaultAtlas;
     TextureAtlas *creatureTextureAtlas;
     FontRenderer *fontRenderer;

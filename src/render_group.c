@@ -15,8 +15,8 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
 
     BeginShaderInstance(shaderInstance);
 
-    Mesh2D *batch = assets->batch;
-    BeginMesh2D(batch);
+    Mesh2D *mesh = assets->mesh;
+    BeginMesh2D(mesh);
     U32 currentTextureHandle = 0;
 
     for(U32 commandIdx = 0;
@@ -29,8 +29,8 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
         U32 handle = command->textureHandle;
         if(currentTextureHandle!=handle)
         {
-            EndMesh2D(batch);
-            BeginMesh2D(batch);
+            EndMesh2D(mesh);
+            BeginMesh2D(mesh);
             glBindTexture(GL_TEXTURE_2D, handle);
             currentTextureHandle = handle;
         }
@@ -40,8 +40,8 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
 
         case RENDER_2D_RECT:
         {
-            batch->colorState = command->color;
-            PushRect2(batch,
+            mesh->colorState = command->color;
+            PushRect2(mesh,
                     command->pos,
                     command->dims,
                     command->uvPos,
@@ -50,11 +50,11 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
 
         case RENDER_2D_ORIENTED_RECT:
         {
-            batch->colorState = command->color;
+            mesh->colorState = command->color;
             AtlasRegion region;
             region.pos = command->uvPos;
             region.size = command->uvDims;
-            PushOrientedRectangle2(batch,
+            PushOrientedRectangle2(mesh,
                     command->pos,
                     command->dims.x,
                     command->dims.y,
@@ -64,8 +64,8 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
 
         case RENDER_2D_LINE:
         {
-            batch->colorState = command->color;
-            PushLine2(batch,
+            mesh->colorState = command->color;
+            PushLine2(mesh,
                     command->from,
                     command->to,
                     command->lineWidth,
@@ -75,11 +75,11 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
 
         case RENDER_2D_SEMICIRCLE:
         {
-            batch->colorState = command->color;
+            mesh->colorState = command->color;
             AtlasRegion region;
             region.pos = command->uvPos;
             region.size = command->uvDims;
-            PushSemiCircle2(batch,
+            PushSemiCircle2(mesh,
                     command->pos,
                     command->radius,
                     command->range.x,
@@ -90,11 +90,11 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
 
         case RENDER_2D_LINE_CIRCLE:
         {
-            batch->colorState = command->color;
+            mesh->colorState = command->color;
             AtlasRegion region;
             region.pos = command->uvPos;
             region.size = command->uvDims;
-            PushLineCircle2(batch,
+            PushLineCircle2(mesh,
                     command->pos,
                     command->radius,
                     command->lineWidth,
@@ -109,7 +109,7 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
 
         }
     }
-    EndMesh2D(batch);
+    EndMesh2D(mesh);
 }
 
 void 

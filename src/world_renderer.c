@@ -19,7 +19,7 @@ DrawBodyPartWithTexture(RenderGroup *renderGroup,
 }
 
 void
-DrawGrid(Mesh2D *batch, 
+DrawGrid(Mesh2D *mesh, 
         Camera2D *camera, 
         R32 gridResolution, 
         R32 gridLineWidth,
@@ -45,11 +45,11 @@ DrawGrid(Mesh2D *batch,
     {
         R32 fade = (maxLines-mostLines)/((R32)(maxLines-fadeAfter));
         if(fade > 1.0) fade = 1.0;
-        batch->colorState = V4(1.0, 1.0, 1.0, fade*alpha);
+        mesh->colorState = V4(1.0, 1.0, 1.0, fade*alpha);
         for(U32 xIdx = 0; xIdx < nXLines; xIdx++)
         {
             R32 x = xStart+xIdx*gridResolution;
-            PushRect2(batch, 
+            PushRect2(mesh, 
                     V2(x-gridLineWidth/2.0, minY), 
                     V2(gridLineWidth, maxY-minY), 
                     texture->pos, 
@@ -58,7 +58,7 @@ DrawGrid(Mesh2D *batch,
         for(U32 yIdx = 0; yIdx < nYLines; yIdx++)
         {
             R32 y = yStart+yIdx*gridResolution;
-            PushRect2(batch, 
+            PushRect2(mesh, 
                     V2(minX, y-gridLineWidth/2.0),
                     V2(maxX-minX, gridLineWidth), 
                     texture->pos, 

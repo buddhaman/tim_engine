@@ -99,10 +99,9 @@ TODO:
 - Measure relative angle and express as ratio of joint limits. Use this as sensor.
 - Use target relative angle as actuator.
 
-- Mesh2D with color in 4 bytes.
 
 DONE:
-
+- Mesh2D with color in 4 bytes.
 - Add grass on top of ground.
 - New color scheme.
 - Gradient background.
