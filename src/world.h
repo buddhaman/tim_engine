@@ -28,12 +28,47 @@ enum TrainingScenario
     TRAIN_WALK_RIGHT
 };
 
+typedef struct StaticPlatform StaticPlatform;
+struct StaticPlatform
+{
+    RigidBody *body;
+    Rect2 bounds;
+};
+
+typedef struct Grass Grass;
+struct Grass
+{
+    Vec2 pos;
+    R32 width;
+    R32 topHeight;
+    R32 ovalHeight;
+};
+
+typedef struct TallGrass TallGrass;
+struct TallGrass
+{
+    Vec2 from;
+    int nBlades;
+    Vec2 to[6];
+};
+
+typedef struct Bush Bush;
+struct Bush
+{
+    int nLeafs;
+    Vec2 leafs[16];
+    R32 r[16];
+};
+
 // For now most of the arrays are fixed size. World is destroyed after each generation.
 struct FakeWorld
 {
     MemoryArena *persistentMemory;
     MemoryArena *transientMemory;
     cpSpace *space;
+
+    Vec2 origin;
+    Vec2 size;
 
     U32 nGenes;
     CreatureDefinition def;
@@ -49,7 +84,24 @@ struct FakeWorld
     RigidBody *rigidBodies;
 
     int nStaticBodies;
-    RigidBody *staticBodies[16];
+    int maxStaticBodies;
+    RigidBody *staticBodies;
+
+    int nStaticPlatforms;
+    int maxStaticPlatforms;
+    StaticPlatform *staticPlatforms;
+
+    int nGrass;
+    int maxGrass;
+    Grass *grass;
+
+    int nTallGrass;
+    int maxTallGrass;
+    TallGrass *tallGrass;
+
+    int nBushes;
+    int maxBushes;
+    Bush *bushes;
 
     int nCreatures;
     int maxCreatures;

@@ -147,6 +147,7 @@ AssignBrainIO(CreatureDefinition *def)
             bodyPartIdx++)
     {
         BodyPartDefinition *bodyPartDef = def->bodyParts+bodyPartIdx;
+
         //Inputs
         if(bodyPartDef->hasAbsoluteXPositionInput) bodyPartDef->absoluteXPositionInputIdx = atInputIdx++;
         if(bodyPartDef->hasAbsoluteYPositionInput) bodyPartDef->absoluteYPositionInputIdx = atInputIdx++;

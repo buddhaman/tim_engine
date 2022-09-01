@@ -17,6 +17,7 @@ struct RotaryMuscle
 struct BodyPart
 {
     RigidBody *body;
+    RigidBody *parent;
     Vec4 color;
     BodyPartDefinition *def;
     RotaryMuscle *rotaryMuscle; // New bodyparts always have this muscle but cannot always control it.
@@ -47,7 +48,7 @@ Creature *
 AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUnit *brain);
 
 void
-DestroyCreature(Creature *creature);
+DestroyCreature(FakeWorld *world, Creature *creature);
 
 void
 UpdateCreature(FakeWorld *world, Creature *creature);

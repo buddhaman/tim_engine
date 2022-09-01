@@ -15,8 +15,8 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
 
     BeginShaderInstance(shaderInstance);
 
-    SpriteBatch *batch = assets->batch;
-    BeginSpritebatch(batch);
+    Mesh2D *batch = assets->batch;
+    BeginMesh2D(batch);
     U32 currentTextureHandle = 0;
 
     for(U32 commandIdx = 0;
@@ -29,8 +29,8 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
         U32 handle = command->textureHandle;
         if(currentTextureHandle!=handle)
         {
-            EndSpritebatch(batch);
-            BeginSpritebatch(batch);
+            EndMesh2D(batch);
+            BeginMesh2D(batch);
             glBindTexture(GL_TEXTURE_2D, handle);
             currentTextureHandle = handle;
         }
@@ -109,7 +109,7 @@ ExecuteRenderGroup(RenderGroup *renderGroup, Assets *assets, ShaderInstance *sha
 
         }
     }
-    EndSpritebatch(batch);
+    EndMesh2D(batch);
 }
 
 void 

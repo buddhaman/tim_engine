@@ -172,7 +172,7 @@ main(int argc, char**argv)
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
 
     SDL_WindowFlags window_flags = 
         (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
@@ -242,7 +242,9 @@ main(int argc, char**argv)
     *appState = (AppState){};
 
     appState->fakeWorldArena = CreateMemoryArena(128L*1000L*1000L);
-    appState->clearColor = RGBAToVec4(0x35637cff);
+
+    appState->clearColor = RGBAToVec4(0x87CEEBFF);
+
     appState->currentScreen = SCREEN_CREATURE_EDITOR;
 
     // Font/Gui Camera

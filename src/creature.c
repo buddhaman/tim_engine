@@ -82,11 +82,20 @@ CreatureAddRotaryMuscle(FakeWorld *world,
 }
 
 void
-DestroyRotaryMuscle(RotaryMuscle *muscle)
+DestroyRotaryMuscle(FakeWorld *world, RotaryMuscle *muscle)
 {
+    cpSpaceRemoveConstraint(world->space, muscle->motor);
+    cpConstraintDestroy(muscle->motor);
     cpConstraintFree(muscle->motor);
+
+    cpSpaceRemoveConstraint(world->space, muscle->rotaryLimitConstraint);
+    cpConstraintDestroy(muscle->rotaryLimitConstraint);
     cpConstraintFree(muscle->rotaryLimitConstraint);
+
+    cpSpaceRemoveConstraint(world->space, muscle->pivotConstraint);
+    cpConstraintDestroy(muscle->pivotConstraint);
     cpConstraintFree(muscle->pivotConstraint);
+
 }
 
 void
@@ -162,7 +171,7 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
             clockIdx++)
     {
         creature->phases[clockIdx] = 0;
-        creature->frequencies[clockIdx] = 1.0/(clockIdx+1);
+        creature->frequencies[clockIdx] = 0.5f/(clockIdx+1);
     }
 
     //creature->physicsGroup = world->physicsGroupCounter++;
@@ -200,19 +209,19 @@ AddCreature(FakeWorld *world, Vec2 pos, CreatureDefinition *def, MinimalGatedUni
 }
 
 void
-DestroyCreature(Creature *creature)
+DestroyCreature(FakeWorld *world, Creature *creature)
 {
     for(U32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
     {
-        DestroyRigidBody(creature->bodyParts[bodyPartIdx].body);
+        DestroyRigidBody(world, creature->bodyParts[bodyPartIdx].body);
     }
     for(U32 rotaryMuscleIdx = 0;
             rotaryMuscleIdx < creature->nRotaryMuscles;
             rotaryMuscleIdx++)
     {
-        DestroyRotaryMuscle(creature->rotaryMuscles + rotaryMuscleIdx);
+        DestroyRotaryMuscle(world, creature->rotaryMuscles + rotaryMuscleIdx);
     }
 }
 
@@ -226,10 +235,16 @@ GetBodyPartCenter(BodyPart *part)
 void
 SetMuscleActivation(RotaryMuscle *muscle, R32 activation)
 {
+#if 1
+    // Muscle as force
     R32 absActivation = fabsf(activation);
     cpSimpleMotorSetRate(muscle->motor, activation < 0.0 ? -5 : 5);
     R32 maxActivation = 1200000.0;
     cpConstraintSetMaxForce(muscle->motor, absActivation*maxActivation);
+#else
+    // Muscle as target (relative) orientation to the joint limits
+
+#endif
 }
 
 R32
@@ -237,7 +252,7 @@ FitnessStrictlyMoveForward(Creature *creature)
 {
     R32 maxX = -10000.0;
     R32 minY = 10000.0;
-    for(U32 bodyPartIdx = 0;
+    for(I32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
     {
@@ -255,6 +270,7 @@ UpdateCreature(FakeWorld *world, Creature *creature)
     MinimalGatedUnit *brain = creature->brain;
     R32 drag = 0.2;
 
+    creature->internalClock += (1.0f/60.0f);
 
     for(U32 internalClockIdx = 0;
             internalClockIdx < creature->nInternalClocks;
@@ -270,6 +286,7 @@ UpdateCreature(FakeWorld *world, Creature *creature)
         BodyPart *part = creature->bodyParts+bodyPartIdx;
         Vec2 pos = GetBodyPartCenter(part);
         R32 angle = GetBodyAngle(part->body);
+
         if(part->def->hasAbsoluteXPositionInput)
         {
             R32 activation = pos.x/100;
@@ -296,7 +313,7 @@ UpdateCreature(FakeWorld *world, Creature *creature)
 
     UpdateMinimalGatedUnit(brain);
 
-    for(U32 bodyPartIdx = 0;
+    for(I32 bodyPartIdx = 0;
             bodyPartIdx < creature->nBodyParts;
             bodyPartIdx++)
     {

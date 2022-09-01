@@ -107,7 +107,7 @@ CreateFrameBuffer(MemoryArena *arena, U32 width, U32 height)
 }
 
 void
-InitSpriteBatch(SpriteBatch *batch, U32 maxVertices, MemoryArena *arena)
+InitMesh2D(Mesh2D *batch, U32 maxVertices, MemoryArena *arena)
 {
     batch->nVertices = 0;
     batch->maxVertices = maxVertices;
@@ -142,7 +142,7 @@ InitSpriteBatch(SpriteBatch *batch, U32 maxVertices, MemoryArena *arena)
 }
 
 internal inline void
-BeginSpritebatch(SpriteBatch *batch)
+BeginMesh2D(Mesh2D *batch)
 {
     Assert(!batch->isDrawing);
     batch->isDrawing = 1;
@@ -151,7 +151,7 @@ BeginSpritebatch(SpriteBatch *batch)
 }
 
 internal inline void
-EndSpritebatch(SpriteBatch *batch)
+EndMesh2D(Mesh2D *batch)
 {
     Assert(batch->isDrawing);
     batch->isDrawing = 0;
@@ -168,7 +168,7 @@ EndSpritebatch(SpriteBatch *batch)
 }
 
 internal inline void
-PushVertex2(SpriteBatch *batch, Vec2 pos, Vec2 texCoord, Vec4 color)
+PushVertex2(Mesh2D *batch, Vec2 pos, Vec2 texCoord, Vec4 color)
 {
     U32 bufferIdx = batch->nVertices*batch->stride;
 
@@ -186,13 +186,13 @@ PushVertex2(SpriteBatch *batch, Vec2 pos, Vec2 texCoord, Vec4 color)
 }
 
 internal inline void
-PushIndex(SpriteBatch *batch, U16 index)
+PushIndex(Mesh2D *batch, U16 index)
 {
     batch->indexBuffer[batch->nIndices++] = index;
 }
 
 void
-PushQuad2(SpriteBatch *batch, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, Vec2 texSize)
+PushQuad2(Mesh2D *batch, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, Vec2 texSize)
 {
     U16 lastIdx = batch->nVertices;
     PushVertex2(batch, p0, V2(texOrig.x, texOrig.y+texSize.y), batch->colorState);
@@ -209,7 +209,7 @@ PushQuad2(SpriteBatch *batch, Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3, Vec2 texOrig, 
 }
 
 void
-PushSemiCircle2(SpriteBatch *batch, 
+PushSemiCircle2(Mesh2D *batch, 
         Vec2 pos, 
         R32 radius, 
         R32 minAngle, 
@@ -239,7 +239,7 @@ PushSemiCircle2(SpriteBatch *batch,
 }
 
 void
-PushLineCircle2(SpriteBatch *batch,
+PushLineCircle2(Mesh2D *batch,
         Vec2 center,
         R32 radius,
         R32 lineWidth,
@@ -287,7 +287,7 @@ PushLineCircle2(SpriteBatch *batch,
 }
 
 void
-PushRect2(SpriteBatch *batch, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
+PushRect2(Mesh2D *batch, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
 {
     PushQuad2(batch, 
             orig, 
@@ -299,7 +299,7 @@ PushRect2(SpriteBatch *batch, Vec2 orig, Vec2 size, Vec2 texOrig, Vec2 texSize)
 }
 
 void
-PushLineRect2(SpriteBatch *batch, Vec2 origin, Vec2 size, Vec2 texOrig, Vec2 texSize, R32 lineWidth)
+PushLineRect2(Mesh2D *batch, Vec2 origin, Vec2 size, Vec2 texOrig, Vec2 texSize, R32 lineWidth)
 {
     PushRect2(batch, origin, V2(size.x, lineWidth), texOrig, texSize);
     PushRect2(batch, origin, V2(lineWidth, size.y), texOrig, texSize);
@@ -308,7 +308,7 @@ PushLineRect2(SpriteBatch *batch, Vec2 origin, Vec2 size, Vec2 texOrig, Vec2 tex
 }
 
 void
-PushLine2(SpriteBatch *batch, Vec2 from, Vec2 to, R32 lineWidth, Vec2 texOrig, Vec2 texSize)
+PushLine2(Mesh2D *batch, Vec2 from, Vec2 to, R32 lineWidth, Vec2 texOrig, Vec2 texSize)
 {
     Vec2 diff = V2Sub(to, from);
     R32 invl = 1.0/V2Len(diff);
@@ -321,7 +321,7 @@ PushLine2(SpriteBatch *batch, Vec2 from, Vec2 to, R32 lineWidth, Vec2 texOrig, V
 }
 
 void
-PushOrientedRectangle2(SpriteBatch *batch, 
+PushOrientedRectangle2(Mesh2D *batch, 
         Vec2 pos, 
         R32 width, 
         R32 height, 
@@ -341,7 +341,7 @@ PushOrientedRectangle2(SpriteBatch *batch,
 }
 
 void
-PushOrientedLineRectangle2(SpriteBatch *batch, 
+PushOrientedLineRectangle2(Mesh2D *batch, 
         Vec2 pos, 
         R32 width, 
         R32 height, 
@@ -365,7 +365,7 @@ PushOrientedLineRectangle2(SpriteBatch *batch,
 }
 
 void
-PushCircle2(SpriteBatch *batch, Vec2 center, R32 size, AtlasRegion *tex)
+PushCircle2(Mesh2D *batch, Vec2 center, R32 size, AtlasRegion *tex)
 {
     PushRect2(batch, V2(center.x-size, center.y-size), V2(size*2, size*2), tex->pos, tex->size);
 }
@@ -420,7 +420,7 @@ GetStringSize(FontRenderer *fontRenderer, char *sequence, Vec2 pos)
 }
 
 void
-DrawString2D(SpriteBatch *batch, FontRenderer *fontRenderer, Vec2 pos, char *sequence)
+DrawString2D(Mesh2D *batch, FontRenderer *fontRenderer, Vec2 pos, char *sequence)
 {
     stbtt_aligned_quad q;
     R32 x = pos.x;
@@ -438,7 +438,7 @@ DrawString2D(SpriteBatch *batch, FontRenderer *fontRenderer, Vec2 pos, char *seq
 }
 
 internal inline void
-DrawDirectRect(SpriteBatch *batch, 
+DrawDirectRect(Mesh2D *batch, 
         ShaderInstance *shaderInstance,
         Vec2 pos, 
         Vec2 dims, 
@@ -451,7 +451,7 @@ DrawDirectRect(SpriteBatch *batch,
     glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    BeginSpritebatch(batch);
+    BeginMesh2D(batch);
     BeginShaderInstance(shaderInstance);
 
     batch->colorState = color;
@@ -463,7 +463,7 @@ DrawDirectRect(SpriteBatch *batch,
             uvPos,
             uvDims);
 
-    EndSpritebatch(batch);
+    EndMesh2D(batch);
 
 }
 

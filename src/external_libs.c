@@ -16,9 +16,6 @@
 #define NK_SDL_GL3_IMPLEMENTATION
 #include "nuklear_sdl_gl3.h"
 
-#define MATH_3D_IMPLEMENTATION
-#include "math_3d.h"
-
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
 #define STB_IMAGE_IMPLEMENTATION

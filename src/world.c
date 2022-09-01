@@ -34,7 +34,7 @@ AddDynamicRectangle(FakeWorld *world, Vec2 pos, R32 width, R32 height, R32 angle
 internal inline RigidBody *
 AddStaticRectangle(FakeWorld *world, Vec2 pos, R32 width, R32 height, R32 angle)
 {
-    RigidBody *body = world->rigidBodies+world->nRigidBodies++;
+    RigidBody *body = world->staticBodies+world->nStaticBodies++;
     cpSpace *space = world->space;
     body->pos = pos;
     body->width = width;
@@ -51,16 +51,140 @@ AddStaticRectangle(FakeWorld *world, Vec2 pos, R32 width, R32 height, R32 angle)
     cpBodySetAngle(body->body, angle);
     cpSpaceReindexShapesForBody(space, body->body);
 
-    world->staticBodies[world->nStaticBodies++] = body;
-
     return body;
 }
 
-void
-DestroyRigidBody(RigidBody *body)
+Grass *
+AddGrass(FakeWorld *world, 
+        Vec2 pos, 
+        R32 width, 
+        R32 topHeight, 
+        R32 ovalHeight)
 {
-    cpBodyFree(body->body);
+    Assert(world->nGrass < world->maxGrass);
+    Grass *grass = world->grass+world->nGrass++;
+    *grass = (Grass){};
+    grass->pos = pos;
+    grass->width = width;
+    grass->topHeight = topHeight;
+    grass->ovalHeight = ovalHeight;
+    return grass;
+}
+
+StaticPlatform *
+AddStaticPlatform(FakeWorld *world, Vec2 pos, Vec2 dims)
+{
+    StaticPlatform *platform = world->staticPlatforms+world->nStaticPlatforms++;
+    *platform = (StaticPlatform){};
+
+    platform->bounds.pos  = pos;
+    platform->bounds.dims = dims;
+    
+    platform->body = AddStaticRectangle(world, pos, dims.x, dims.y, 0.0f);
+
+    R32 avgWidth     = 60.0f;
+    R32 widthSpread  = 5.0f;
+    R32 avgHeight    = 20.0f;
+    R32 heightSpread = 3.0f;
+    R32 overhang     = 3.0f;
+
+    int nGrass = (int)(dims.x/avgWidth)+1;
+    R32 atX = pos.x-dims.x/2.0f;
+    R32 toX = pos.x+dims.x/2.0f;
+    for(int grassIdx = 0;
+            grassIdx < nGrass*2; // Just a random limit to prevent infinite loop.
+            grassIdx++)
+    {
+        B32 last = 0;
+        R32 width;
+        if(toX-atX < avgWidth*2)
+        {
+            last = 1;
+            width = toX-atX;
+        }
+        else
+        { 
+            width = RandomR32(avgWidth-widthSpread, avgWidth+widthSpread);
+        }
+        R32 topHeight = RandomR32(avgHeight-heightSpread, avgHeight+heightSpread);
+        R32 ovalHeight = Min(width, topHeight*1.8f);
+        AddGrass(world, V2(atX-overhang, pos.y+dims.y/2.0f-topHeight), 
+                width + overhang*2.0f,
+                topHeight+overhang, 
+                ovalHeight);
+
+        atX+=width;
+        if(last) break;
+    }
+
+    atX = pos.x-dims.x/2.0f;
+    R32 atY = pos.y+dims.y/2.0f;
+    R32 r = 30.0f;
+    R32 spread = 10.0f;
+    R32 angleSpread = M_PI/3.0f;
+    while(atX < toX)
+    {
+        atX+=RandomR32(100, 200);
+        if(atX > toX) break;
+        Assert(world->nTallGrass < world->maxTallGrass);
+        TallGrass *grass = world->tallGrass+world->nTallGrass++;
+        grass->from = V2(atX, atY);
+        
+        int N = RandomUI32(4, 6);
+        for(int i = 0; i < N; i++)
+        {
+            R32 theta = M_PI/2.0-angleSpread+angleSpread*2*i/((R32)(N-1));
+            grass->to[grass->nBlades++] = 
+                V2Add(grass->from, V2Polar(theta, RandomR32(r-spread, r+spread)));
+        }
+    }
+
+    atX = pos.x-dims.x/2.0f;
+    r = 200.0f;
+    while(atX < toX)
+    {
+        atX+=RandomR32(200, 300);
+        if(atX > toX) break;
+        Assert(world->nBushes < world->maxBushes);
+        Bush *bush = world->bushes+world->nBushes++;
+
+        Vec2 pos = V2(atX, atY);
+        bush->leafs[bush->nLeafs] = pos;
+        bush->r[bush->nLeafs] = 50.0f;
+        bush->nLeafs++;
+        r = 60.0f;
+        int N = 6;
+        for(int i = 0; i < N; i++)
+        {
+            R32 theta = M_PI/2.0-angleSpread+angleSpread*2*i/((R32)(N-1));
+            bush->leafs[bush->nLeafs] = V2Add(pos, V2Polar(theta, RandomR32(r-spread, r+spread)));
+            bush->r[bush->nLeafs] = 40.0f;
+            bush->nLeafs++;
+        }
+        r = 90.0f;
+        N = 10;
+        for(int i = 0; i < 8; i++)
+        {
+            R32 theta = M_PI/2.0-angleSpread+angleSpread*2*i/((R32)(N-1));
+            bush->leafs[bush->nLeafs] = V2Add(pos, V2Polar(theta, RandomR32(r-spread, r+spread)));
+            bush->r[bush->nLeafs] = 25.0f;
+            bush->nLeafs++;
+        }
+    }
+
+    return platform;
+}
+
+void
+DestroyRigidBody(FakeWorld *world, RigidBody *body)
+{
+    cpSpaceRemoveShape(world->space, body->shape);
+    cpShapeDestroy(body->shape);
     cpShapeFree(body->shape);
+
+    cpSpaceRemoveBody(world->space, body->body);
+    cpBodyDestroy(body->body);
+    cpBodyFree(body->body);
 }
 
 internal inline Vec2
@@ -182,10 +306,8 @@ void
 RestartFakeWorld(FakeWorld *world)
 {
     CreatureDefinition *def = &world->def;
-    world->space = cpSpaceNew();
 
     world->physicsGroupCounter = 1U;
-    world->nStaticBodies = 0;
 
 #define DefineFixedWorldArray(type, counterName, maxName, maxValue, arrayName) \
     world->counterName = 0;\
@@ -196,6 +318,7 @@ RestartFakeWorld(FakeWorld *world)
     DefineFixedWorldArray(Creature, nCreatures, maxCreatures, 128, creatures);
     DefineFixedWorldArray(BodyPart, nBodyParts, maxBodyParts, 512, bodyParts);
     DefineFixedWorldArray(RotaryMuscle, nRotaryMuscles, maxRotaryMuscles, 512, rotaryMuscles);
+
 #undef DefineFixedWorldArray
 
     U32 transientStateSize = GetMinimalGatedUnitStateSize(def->nInputs, 
@@ -207,11 +330,6 @@ RestartFakeWorld(FakeWorld *world)
     {
         R32 randomAngle = RandomR32(-M_PI, M_PI);
         world->target = V2Polar(randomAngle, 500.0);
-    }
-    else if(world->trainingType==TRAIN_WALK_RIGHT)
-    {
-        AddStaticRectangle(world, V2(0,-150.0), 3200.0, 40.0, 0.0);
-        cpSpaceSetGravity(world->space, cpv(0, -1200.0));
     }
 
     R32 startXDev = 0.0;
@@ -244,8 +362,38 @@ InitFakeWorld(FakeWorld *world,
 
     // Set trainging scenario.
     world->trainingType = TRAIN_WALK_RIGHT;
+    world->size = V2(16000.0f, 3000.0f);
+    world->origin = V2MulS(world->size, -0.5f);
+
+    world->maxGrass = 2048;
+    world->nGrass = 0;
+    world->grass = PushAndZeroArray(persistentMemory, Grass, world->maxGrass);
+
+    world->maxTallGrass = 256;
+    world->nTallGrass = 0;
+    world->tallGrass = PushAndZeroArray(persistentMemory, TallGrass, world->maxTallGrass);
+
+    world->maxBushes = 128;
+    world->nBushes = 0;
+    world->bushes = PushAndZeroArray(persistentMemory, Bush, world->maxBushes);
+
+    world->maxStaticPlatforms = 64;
+    world->nStaticPlatforms = 0;
+    world->staticPlatforms = PushAndZeroArray(persistentMemory, StaticPlatform, world->maxStaticPlatforms);
+
+    world->maxStaticBodies = 64;
+    world->nStaticBodies = 0;
+    world->staticBodies = PushAndZeroArray(persistentMemory, RigidBody, world->maxStaticBodies);
 
     DebugOut("Gene size = %u" ,world->def.geneSize);
+
+    world->space = cpSpaceNew();
+
+    if(world->trainingType==TRAIN_WALK_RIGHT)
+    {
+        AddStaticPlatform(world, V2(800.0f,-500.0), V2(3600.0, 800.0));
+        cpSpaceSetGravity(world->space, cpv(0, -1200.0));
+    }
 
     // Create es from definition
     world->strategies = ESCreate(persistentMemory, world->def.geneSize, world->nGenes, dev, learningRate);
@@ -256,12 +404,13 @@ InitFakeWorld(FakeWorld *world,
 void
 DestroyFakeWorld(FakeWorld *world)
 {
-    cpSpaceFree(world->space);
+    //cpSpaceFree(world->space);
+    //cpSpaceDestroy(world->space);
     for(U32 creatureIdx = 0;
             creatureIdx < world->nCreatures;
             creatureIdx++)
     {
-        DestroyCreature(world->creatures+creatureIdx);
+        DestroyCreature(world, world->creatures+creatureIdx);
     }
     ClearArena(world->transientMemory);
 }

@@ -644,9 +644,11 @@ InitGui(Gui *gui,
     gui->renderTools = PushStruct(arena, BasicRenderTools);
     InitRenderTools(arena, gui->renderTools, assets, camera, appState->screenCamera);
 
-    gui->defaultColor = V4(0.6, 0.3, 0.3, 1.0);
-    gui->hitColor = V4(0.8, 0.5, 0.5, 1.0);
-    gui->pressedColor = V4(0.4, 0.2, 0.2, 1.0);
+    Vec4 col = RGBAToVec4(0xEBA487FF);
+    R32 s = 1.0f;
+    s = 1.0f; gui->defaultColor = V4(s*col.r, s*col.g, s*col.b, 1.0f);
+    s = 1.0f/0.9f;; gui->hitColor = V4(s*col.r, s*col.g, s*col.b, 1.0f);
+    s = 0.6f; gui->pressedColor = V4(s*col.r, s*col.g, s*col.b, 1.0f);
 }
 
 #undef GuiDefaultParameters

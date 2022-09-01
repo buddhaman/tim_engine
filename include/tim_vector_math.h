@@ -55,6 +55,11 @@ typedef union
 
     struct
     {
+        float r, g, b;
+    };
+
+    struct
+    {
         Vec2 xy;
         float _ignored0;
     };

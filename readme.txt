@@ -13,6 +13,7 @@ Collect info about ecosystem, try to create balance. Sandbox ecosystem game.
 Nice: Do competition. 150 dollars for best creature. 
 
 Next landmark:
+ - Make editing creature more juicy.
  - Multiple training scenarios. Walking & swimming towards target.
  - Pretty rendering with directional shadows.
  - Own juicy interface.
@@ -61,11 +62,7 @@ Make both juicy:
 - Start adding sound!. Growing sound after attaching limbs. Sound when hitting the floor. Pop sound when attaching or removing limbs.
 - Particle system. Add particles when attaching/removing limbs.
 
-TODO:
- - Make devlog of progress so far and short roadmap.
-
 LATER: 
-
 - Texture editor! Create normal maps. Specular maps etc inside editor. And generate this for the terrain.
 - Contact saplings developer. Wessel.
 - Make googly eyes, or other decorations.
@@ -91,8 +88,25 @@ BRAIN EDIT SCREEN:
 - Save brain results.
 - Show brain constantly. In juicy way. Springs.
 
+TODO:
+- Bushes
+- Draw ground with rounded corners.
+- Parallax layers.
+- Mountains in background.
+- Clouds in parallax layers.
+
+- Store parent bodypart in fake world screen.
+- Measure relative angle and express as ratio of joint limits. Use this as sensor.
+- Use target relative angle as actuator.
+
+- Mesh2D with color in 4 bytes.
+
 DONE:
 
+- Add grass on top of ground.
+- New color scheme.
+- Gradient background.
+- Make devlog of progress so far and short roadmap. 
 - Write juicy button.   
 - Use rendergroups in personal ui library.
 - Write basic button.
@@ -354,4 +368,14 @@ FUN:
           put your own body on it in gimp. (Done)
     IDEA: @ Lex Fridman in mijn volgende tweets. En @openai over hun ES paper. Denk groots
     IDEA: Schrijf website waar gedeeltes van ecosystemen gedownload kunnen worden. Animeer creatures in javascript.
+
+Experiment with actuators and sensors.
+
+Sensors:
+    - Current joint activation (from min to max)
+    - Current absolute angle as normalized vectors.
+
+Actuators:
+    - Joint activation as target, instead of simple impulse.
+
  

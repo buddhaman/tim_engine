@@ -137,6 +137,22 @@ DrawClock(RenderGroup *renderGroup,
             squareTexture, V4(0, 0, 0, 1));
 }
 
+global_variable R32 gWindScale     = 0.1f;
+global_variable R32 gWindAmplitude = 4.0f;
+global_variable R32 gWindPeriod    = (2.0f*M_PI)/5.0f;
+
+R32 
+WindX(R32 x, R32 y, R32 time)
+{
+    return x+gWindAmplitude*cosf(gWindPeriod*time+(x+y)*gWindScale);
+}
+
+R32 
+WindY(R32 x, R32 y, R32 time)
+{
+    return y+gWindAmplitude*sinf(gWindPeriod*time+(x+y)*gWindScale);
+}
+
 void
 DrawFakeWorld(FakeWorldScreen *screen, 
         RenderGroup *renderGroup,
@@ -147,6 +163,8 @@ DrawFakeWorld(FakeWorldScreen *screen,
     FakeWorld *world = screen->world;
     AtlasRegion *circleRegion = defaultAtlas->regions;
     AtlasRegion *squareRegion = defaultAtlas->regions+1;
+
+    Vec4 groundColor = RGBAToVec4(0x996437FF);
 
     Push2DCircleColored(renderGroup, V2(0, 0), 3, circleRegion, V4(1,1,1,0.5));
 
@@ -169,13 +187,100 @@ DrawFakeWorld(FakeWorldScreen *screen,
         }
     }
 
-    for(U32 floorIdx = 0;
-            floorIdx < world->nStaticBodies;
-            floorIdx++)
+
+    local_persist R32 time = 0.0f;
+    time+=(1.0f/60.0f);
+    Vec4 grassColor = V4(0.0f, 1.0f, 0.0f, 1.0f);
+    R32 r = 7.0f;
+    Vec4 tallGrassColor = ShadeRGB(grassColor, 0.8f);
+    Vec4 bushColor = ShadeRGB(tallGrassColor, 0.8f);
+
+    for(I32 bushIdx = 0;
+            bushIdx < world->nBushes;
+            bushIdx++)
     {
-        RigidBody *floor = world->staticBodies[floorIdx];
-        DrawSolidRigidBody(renderGroup, floor, squareRegion, V4(0.5, 0.5, 0.5, 1.0));
+        Bush *bush = &world->bushes[bushIdx];
+        for(int i = 0; i < bush->nLeafs; i++)
+        {
+            Vec2 pos = V2(
+                    WindX(bush->leafs[i].x, bush->leafs[i].y, time),
+                    WindY(bush->leafs[i].x, bush->leafs[i].y, time)
+                    );
+            Push2DCircleColored(renderGroup,
+                    pos,
+                    bush->r[i],
+                    circleRegion,
+                    bushColor);
+        }
     }
+
+    for(I32 grassIdx = 0;
+            grassIdx < world->nTallGrass;
+            grassIdx++)
+    {
+        TallGrass *grass = &world->tallGrass[grassIdx];
+        Vec2 from = grass->from;
+
+        for(int i = 0; i < grass->nBlades; i++)
+        {
+            Vec2 to = V2(
+                    WindX(grass->to[i].x, grass->to[i].y, time),
+                    WindY(grass->to[i].x, grass->to[i].y, time)
+                    );
+            Push2DLineColored(renderGroup,
+                    from,
+                    to,
+                    r*2,
+                    squareRegion,
+                    tallGrassColor);
+            Push2DCircleColored(renderGroup,
+                    to,
+                    r,
+                    circleRegion,
+                    tallGrassColor);
+        }
+    }
+
+    for(I32 platformIdx = 0;
+            platformIdx < world->nStaticPlatforms;
+            platformIdx++)
+    {
+        StaticPlatform *platform = &world->staticPlatforms[platformIdx];
+
+        Push2DOrientedRectangleColored(renderGroup, 
+                platform->bounds.pos, 
+                platform->bounds.dims,
+                0.0f, 
+                squareRegion,
+                groundColor);
+    }
+
+    for(I32 grassIdx = 0;
+            grassIdx < world->nGrass;
+            grassIdx++)
+    {
+        Grass *grass = &world->grass[grassIdx];
+
+        Push2DRectColored(renderGroup, 
+                grass->pos, 
+                V2(grass->width, grass->topHeight),
+                squareRegion, 
+                grassColor);
+
+        R32 x0 = WindX(grass->pos.x, grass->pos.y, time);
+        R32 y0 = WindY(grass->pos.x, grass->pos.y, time);
+
+        R32 x1 = WindX(grass->pos.x+grass->width, grass->pos.y, time);
+
+        Push2DRectColored(renderGroup, 
+                V2(x0, y0-grass->ovalHeight/2.0f),
+                V2(x1-x0, grass->ovalHeight),
+                circleRegion, 
+                grassColor);
+    }
+#if 1
+
+#endif
 
     // Draw first creature
     Creature *creature = world->creatures+0;
@@ -292,6 +397,34 @@ UpdateFakeWorldScreen(AppState *appState,
 
     // Calculate bodypart intersection of first creature
     screen->hitBodyPart = GetCreatureBodyPartAt(world->creatures, mousePos);
+
+    // Draw background TODO: Turn into function.
+    Vec4 topColor    = appState->clearColor;
+    Vec4 bottomColor = V4(1.0, 1.0, 1.0, 1.0);
+    Mesh2D *batch = assets->batch;
+    BeginMesh2D(batch);
+    BeginShaderInstance(renderTools->worldShader);
+    U16 lastIdx = batch->nVertices;
+    Vec2 size = world->size;
+    Vec2 origin = world->origin;
+    Vec2 p0 = V2(origin.x, origin.y);
+    Vec2 p1 = V2(origin.x+size.x, origin.y);
+    Vec2 p2 = V2(origin.x+size.x, origin.y+size.y);
+    Vec2 p3 = V2(origin.x, origin.y+size.y);
+    Vec2 texOrig = squareRegion->pos;
+    Vec2 texSize = squareRegion->size;
+    PushVertex2(batch, p0, V2(texOrig.x, texOrig.y+texSize.y), bottomColor);
+    PushVertex2(batch, p1, V2(texOrig.x+texSize.x, texOrig.y+texSize.y), bottomColor);
+    PushVertex2(batch, p2, V2(texOrig.x+texSize.x, texOrig.y), topColor);
+    PushVertex2(batch, p3, texOrig, topColor);
+    PushIndex(batch, lastIdx);
+    PushIndex(batch, lastIdx+1);
+    PushIndex(batch, lastIdx+2);
+    PushIndex(batch, lastIdx+2);
+    PushIndex(batch, lastIdx+3);
+    PushIndex(batch, lastIdx);
+    Assert(batch->nIndices < batch->maxVertices);
+    EndMesh2D(batch);
 
     DrawFakeWorld(screen, worldRenderGroup, camera, defaultAtlas, assets->creatureTextureAtlas);
 

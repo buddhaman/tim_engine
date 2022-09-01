@@ -193,6 +193,12 @@ Vec4ToRGBA(Vec4 color)
     return (a << 24) + (b << 16) + (g << 8) + r;
 }
 
+internal inline Vec4
+ShadeRGB(Vec4 color, R32 shade)
+{
+    return V4(shade*color.r, shade*color.g, shade*color.b, 1.0f);
+}
+
 internal inline R32
 RadToDeg(R32 rad)
 {

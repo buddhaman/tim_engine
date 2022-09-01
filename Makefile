@@ -20,7 +20,7 @@ evodraw_win: $(OBJ_WIN)
 		-static -lmingw32 -lSDL2main -lSDL2 -mwindows -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lsetupapi -lhid -lwinmm -limm32 -lole32 -loleaut32 -lshell32 -lversion -luuid -static-libgcc -lopengl32 $^
 
 external:
-	$(CC) src/external_libs.c -c -o external.o -O3 -Iinclude \
+	$(CC) src/external_libs.c -c -g -o external.o -O3 -Iinclude \
     -Iinclude_chipmunk -I/usr/local/include/SDL2 -lSDL2 -Wall 
 
 external_win: 
@@ -32,7 +32,7 @@ chipmunk: $(OBJ)
 
 $(ODIR)/%.o : src_chipmunk/%.c 
 	@mkdir -p $(ODIR)
-	$(CC) $(CFLAGS) -o $@ -c -O3 $< -Iinclude_chipmunk
+	$(CC) $(CFLAGS) -g -o $@ -c -O3 $< -Iinclude_chipmunk
 
 $(ODIR_WIN)/%.o : src_chipmunk/%.c 
 	@mkdir -p $(ODIR_WIN)

@@ -137,9 +137,8 @@ MakeDefaultTexture(MemoryArena *arena, int circleRadius)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Not stored. Doesnt matter
     U32 *image = malloc(sizeof(U32)*width*height);
@@ -154,18 +153,23 @@ MakeDefaultTexture(MemoryArena *arena, int circleRadius)
         R32 dx = cx-circleX;
         R32 dy = cy-circleY;
         R32 d2 = dx*dx + dy*dy;
-        image[x+y*width] = d2 < R2 ? 0xFFFFFFFF : 0x0;
+        image[x+y*width] = d2 < R2 ? 0xFFFFFFFF : 0x00FFFFFF;
     }
 
-    // Add white region
     image[width-1+(height-1)*width] = 0xFFFFFFFF;
 
     glBindTexture(GL_TEXTURE_2D, atlas->textureHandle);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
     AddAtlasRegion(atlas, 0, 0, circleRadius*2, circleRadius*2);
-    AddAtlasRegion(atlas, width-1, height-1, 1, 1);
+    AddAtlasRegion(atlas, width-1, height-1, 0, 0);
     NormalizePositions(atlas, width, height);
+
+    // Total hack, adding half a pixel to the coordinate so white region is accurate.
+    R32 xx = 1.0/width;
+    R32 yy = 1.0/height;
+    atlas->regions[1].pos.x+=xx*0.5f;
+    atlas->regions[1].pos.y+=yy*0.5f;
 
     free(image);
     return atlas;

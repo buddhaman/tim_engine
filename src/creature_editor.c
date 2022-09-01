@@ -483,7 +483,7 @@ EditBodypartDefinition(CreatureEditorScreen *editor,
     Gui *gui = editor->gui;
     CreatureDefinition *def = editor->creatureDefinition;
     RenderGroup *renderGroup = renderTools->worldRenderGroup;
-    R32 lineWidth = 2.0*renderTools->camera->scale;
+    R32 lineWidth = 1.0*renderTools->camera->scale;
     R32 buttonRadius = 10;
 
     R32 halfWidth = part->width/2;
@@ -747,7 +747,7 @@ DoToolWindow(AppState *appState, CreatureEditorScreen *editor, struct nk_context
 }
 
 internal inline void 
-DrawBodyPartWithOverhang(SpriteBatch *batch, 
+DrawBodyPartWithOverhang(Mesh2D *batch, 
         BodyPartDefinition *def, 
         R32 overhang,
         AtlasRegion *tex)
@@ -900,7 +900,7 @@ UpdateCreatureEditorScreen(AppState *appState,
         }
     }
 
-    R32 outlineSize = 2.0 * camera->scale;
+    R32 outlineSize = 1.0 * camera->scale;
 
     // Draw creature outline
     for(U32 bodyPartIdx = 0; 
@@ -1098,14 +1098,14 @@ UpdateCreatureEditorScreen(AppState *appState,
 #if 1
             // Render drawable surface
             glEnable(GL_STENCIL_TEST);
-            SpriteBatch *batch = assets->batch;
+            Mesh2D *batch = assets->batch;
             
             glBindTexture(GL_TEXTURE_2D, assets->defaultAtlas->textureHandle);
             BeginShaderInstance(worldShader);
 
             BeginStencilShape();
 
-            BeginSpritebatch(batch);
+            BeginMesh2D(batch);
             if(editor->selectedId)
             {
                 BodyPartDefinition *part = def->bodyParts+GetIndexOfBodyPart(def, editor->selectedId);
@@ -1121,7 +1121,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                     DrawBodyPartWithOverhang(batch, part, def->textureOverhang, squareRegion);
                 }
             }
-            EndSpritebatch(batch);
+            EndMesh2D(batch);
             EndStencilShape();
 
             glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -1591,7 +1591,7 @@ InitCreatureEditorScreen(AppState *appState,
             sizeof(editor->creatureDefinition->isTextureSquareOccupied));
     editor->brushSize = 3.0;
     editor->brushColor = (struct nk_colorf){1.0, 0.0, 0.0, 1.0};
-    editor->creatureSolidColor = (struct nk_colorf){0.8, 0.8, 0.8, 1.0};
+    editor->creatureSolidColor = (struct nk_colorf){0.6, 0.6, 0.6, 1.0};
 
     editor->editPhase = EDIT_PHASE_BODY;
 

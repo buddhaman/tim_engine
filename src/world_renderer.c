@@ -19,7 +19,7 @@ DrawBodyPartWithTexture(RenderGroup *renderGroup,
 }
 
 void
-DrawGrid(SpriteBatch *batch, 
+DrawGrid(Mesh2D *batch, 
         Camera2D *camera, 
         R32 gridResolution, 
         R32 gridLineWidth,

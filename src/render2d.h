@@ -22,7 +22,7 @@ typedef struct
 
     Vec4 colorState;
     B32 isDrawing;
-} SpriteBatch;
+} Mesh2D;
 
 typedef struct
 {
