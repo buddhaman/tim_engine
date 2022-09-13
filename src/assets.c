@@ -2,8 +2,8 @@
 void
 InitAssets(Assets *assets, MemoryArena *arena)
 {
-    assets->batch = PushStruct(arena, Mesh2D);
-    InitMesh2D(assets->batch, 100000, arena);
+    assets->mesh = PushStruct(arena, Mesh2D);
+    InitMesh2D(assets->mesh, 100000, arena);
     
     assets->defaultAtlas = MakeDefaultTexture(arena, 256);
     assets->creatureTextureAtlas = MakeRandomTextureAtlas(arena);

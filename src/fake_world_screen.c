@@ -425,10 +425,10 @@ UpdateFakeWorldScreen(AppState *appState,
     // Draw background TODO: Turn into function.
     Vec4 topColor    = appState->clearColor;
     Vec4 bottomColor = V4(1.0, 1.0, 1.0, 1.0);
-    Mesh2D *batch = assets->batch;
-    BeginMesh2D(batch);
+    Mesh2D *mesh = assets->mesh;
+    BeginMesh2D(mesh);
     BeginShaderInstance(renderTools->worldShader);
-    U16 lastIdx = batch->nVertices;
+    U16 lastIdx = mesh->nVertices;
     Vec2 size = world->size;
     Vec2 origin = world->origin;
     Vec2 p0 = V2(origin.x, origin.y);
@@ -437,18 +437,18 @@ UpdateFakeWorldScreen(AppState *appState,
     Vec2 p3 = V2(origin.x, origin.y+size.y);
     Vec2 texOrig = squareRegion->pos;
     Vec2 texSize = squareRegion->size;
-    PushVertex2(batch, p0, V2(texOrig.x, texOrig.y+texSize.y), bottomColor);
-    PushVertex2(batch, p1, V2(texOrig.x+texSize.x, texOrig.y+texSize.y), bottomColor);
-    PushVertex2(batch, p2, V2(texOrig.x+texSize.x, texOrig.y), topColor);
-    PushVertex2(batch, p3, texOrig, topColor);
-    PushIndex(batch, lastIdx);
-    PushIndex(batch, lastIdx+1);
-    PushIndex(batch, lastIdx+2);
-    PushIndex(batch, lastIdx+2);
-    PushIndex(batch, lastIdx+3);
-    PushIndex(batch, lastIdx);
-    Assert(batch->nIndices < batch->maxVertices);
-    EndMesh2D(batch);
+    PushVertex2(mesh, p0, V2(texOrig.x, texOrig.y+texSize.y), bottomColor);
+    PushVertex2(mesh, p1, V2(texOrig.x+texSize.x, texOrig.y+texSize.y), bottomColor);
+    PushVertex2(mesh, p2, V2(texOrig.x+texSize.x, texOrig.y), topColor);
+    PushVertex2(mesh, p3, texOrig, topColor);
+    PushIndex(mesh, lastIdx);
+    PushIndex(mesh, lastIdx+1);
+    PushIndex(mesh, lastIdx+2);
+    PushIndex(mesh, lastIdx+2);
+    PushIndex(mesh, lastIdx+3);
+    PushIndex(mesh, lastIdx);
+    Assert(mesh->nIndices < mesh->maxVertices);
+    EndMesh2D(mesh);
 
     DrawFakeWorld(screen, worldRenderGroup, camera, defaultAtlas, assets->creatureTextureAtlas);
 
@@ -647,7 +647,7 @@ UpdateFakeWorldScreen(AppState *appState,
     blurShaderInstance->mat3Transform = &camera->transform;
     blurShaderInstance->dir2 = V2(invScreenX, invScreenY);
     blurShaderInstance->radius = 1800;
-    DrawDirectRect(assets->batch,
+    DrawDirectRect(assets->mesh,
             blurShaderInstance,
             V2(camera->pos.x-camera->size.x/2, camera->pos.y-camera->size.y/2),
             camera->size,
@@ -660,7 +660,7 @@ UpdateFakeWorldScreen(AppState *appState,
     glViewport(0, 0, appState->screenWidth, appState->screenHeight);
 
     blurShaderInstance->dir2 = V2(-invScreenY, invScreenX);
-    DrawDirectRect(assets->batch,
+    DrawDirectRect(assets->mesh,
             blurShaderInstance,
             V2(camera->pos.x-camera->size.x/2, camera->pos.y-camera->size.y/2),
             camera->size,

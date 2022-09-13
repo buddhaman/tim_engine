@@ -90,6 +90,7 @@ BRAIN EDIT SCREEN:
 
 TODO:
 
+<<<<<<< HEAD
 - Make some standard creatures.
 - Collect footage for devlog.
 - Publish new version.
@@ -111,6 +112,15 @@ DONE:
 - Use target relative angle as actuator.
 - Draw ground with rounded corners.
 - Bushes
+=======
+- Store parent bodypart in fake world screen.
+- Measure relative angle and express as ratio of joint limits. Use this as sensor.
+- Use target relative angle as actuator.
+
+
+DONE:
+- Mesh2D with color in 4 bytes.
+>>>>>>> 17f04dec841aabb4e2afb03183d161f6490d2eec
 - Add grass on top of ground.
 - New color scheme.
 - Gradient background.
