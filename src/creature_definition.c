@@ -137,30 +137,38 @@ RecalculateBodyPartDrawOrder(CreatureDefinition *def)
     qsort(def->drawOrder, def->nBodyParts, sizeof(BodyPartDefinition*), DegreeCompareFunction);
 }
 
+int
+AssignBodyPartIO(int atIndex, int maxIOIndex, CreatureIO *ioArray)
+{
+    for(int idx = 0;
+            idx < maxIOIndex;
+            idx++)
+    {
+        CreatureIO *io = &ioArray[idx];
+        if(io->activated)
+        {
+            io->index = atIndex++;
+        }
+    }
+    return atIndex;
+}
+
 void
 AssignBrainIO(CreatureDefinition *def)
 {
-    U32 atInputIdx = def->nInternalClocks;
-    U32 atOutputIdx = 0;
+    U32 atSensorIdx = def->nInternalClocks;
+    U32 atActuatorIdx = 0;
     for(U32 bodyPartIdx = 0;
             bodyPartIdx < def->nBodyParts;
             bodyPartIdx++)
     {
         BodyPartDefinition *bodyPartDef = def->bodyParts+bodyPartIdx;
-
-        //Inputs
-        if(bodyPartDef->hasAbsoluteXPositionInput) bodyPartDef->absoluteXPositionInputIdx = atInputIdx++;
-        if(bodyPartDef->hasAbsoluteYPositionInput) bodyPartDef->absoluteYPositionInputIdx = atInputIdx++;
-        if(bodyPartDef->hasAngleTowardsTargetInput) bodyPartDef->angleTowardsTargetInputIdx = atInputIdx++;
-        if(bodyPartDef->hasAbsoluteAngleInput) bodyPartDef->absoluteAngleInputIdx = atInputIdx++;
-
-        // Outputs
-        if(bodyPartDef->hasDragOutput) bodyPartDef->dragOutputIdx = atOutputIdx++;
-        if(bodyPartDef->hasRotaryMuscleOutput) bodyPartDef->rotaryMuscleOutputIdx = atOutputIdx++;
+        atSensorIdx = AssignBodyPartIO(atSensorIdx, N_BODYPART_SENSORS, bodyPartDef->sensors);
+        atActuatorIdx = AssignBodyPartIO(atActuatorIdx, N_BODYPART_ACTUATORS, bodyPartDef->actuators);
     }
     
-    def->nInputs = atInputIdx;
-    def->nOutputs = atOutputIdx;
+    def->nInputs = atSensorIdx;
+    def->nOutputs = atActuatorIdx;
     def->geneSize = GetMinimalGatedUnitGeneSize(def->nInputs, def->nOutputs, def->nHidden);
 }
 

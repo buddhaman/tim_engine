@@ -89,20 +89,28 @@ BRAIN EDIT SCREEN:
 - Show brain constantly. In juicy way. Springs.
 
 TODO:
-- Bushes
-- Draw ground with rounded corners.
-- Parallax layers.
-- Mountains in background.
-- Clouds in parallax layers.
 
-- Store parent bodypart in fake world screen.
-- Measure relative angle and express as ratio of joint limits. Use this as sensor.
-- Use target relative angle as actuator.
-
-- Mesh2D with color in 4 bytes.
+- Make some standard creatures.
+- Collect footage for devlog.
+- Publish new version.
+- Publish youtube video.
+- Design logo for game.
+- New images for itch io page
+- Update logo and itch io page.
 
 DONE:
 
+- Remove drag.
+- Set automatic sensors and actuators.
+- Relative position sensor by normalized vectors.
+- Make bounds for camera.
+- Set automatic brain properties (more intuitive interface).
+- Mesh2D with color in 4 bytes.
+- Store parent bodypart in fake world screen.
+- Measure relative angle and express as ratio of joint limits. Use this as sensor.
+- Use target relative angle as actuator.
+- Draw ground with rounded corners.
+- Bushes
 - Add grass on top of ground.
 - New color scheme.
 - Gradient background.

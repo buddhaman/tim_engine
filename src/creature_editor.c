@@ -1042,9 +1042,9 @@ UpdateCreatureEditorScreen(AppState *appState,
                     newPart->minAngle = -1;
                     newPart->maxAngle = 1;
                     
-                    newPart->hasDragOutput = 0;
-                    newPart->hasRotaryMuscleOutput = 1;
-                    newPart->hasAbsoluteAngleInput = 1;
+                    newPart->rotaryMuscleActuator.activated = 1;
+                    newPart->xOrientationSensor.activated = 1;
+                    newPart->yOrientationSensor.activated = 1;
 
                     AssignTextureToBodyPartDefinition(def, newPart);
 
@@ -1327,9 +1327,20 @@ UpdateCreatureEditorScreen(AppState *appState,
                     isEdited = 1;
 
                 nk_label(ctx, "Sensors", NK_TEXT_LEFT);
+                if(part->xOrientationSensor.activated)
+                    nk_labelf(ctx, NK_TEXT_LEFT, "X orientation (%d)", part->xOrientationSensor.index);
+                if(part->yOrientationSensor.activated)
+                    nk_labelf(ctx, NK_TEXT_LEFT, "Y orientation (%d)", part->yOrientationSensor.index);
+
+
+                nk_label(ctx, "Actuators", NK_TEXT_LEFT);
+                if(part->rotaryMuscleActuator.activated)
+                    nk_labelf(ctx, NK_TEXT_LEFT, "Muscle (%d)", part->rotaryMuscleActuator.index);
+#if 0
+                nk_label(ctx, "Sensors", NK_TEXT_LEFT);
                 if(NKEditCreatureIO(ctx, "Abs Y pos", 
-                            "This bodypart can sense how much it deviates from the x-axis",
-                            &part->hasAbsoluteYPositionInput, 
+                            "",
+                            &part->, 
                             part->absoluteYPositionInputIdx)) isBrainEdited = 1;
                 if(NKEditCreatureIO(ctx, "Angle", 
                             "This bodypart can sense how much it points towards the target",
@@ -1356,6 +1367,7 @@ UpdateCreatureEditorScreen(AppState *appState,
                                 &part->hasRotaryMuscleOutput, 
                                 part->rotaryMuscleOutputIdx)) isBrainEdited = 1;
                 }
+#endif
 
                 nk_layout_row_dynamic(ctx, 30, 1);
 
@@ -1375,7 +1387,7 @@ UpdateCreatureEditorScreen(AppState *appState,
             nk_layout_row_dynamic(ctx, 30, 1);
             nk_labelf(ctx, NK_TEXT_LEFT, "Inputs : %u", def->nInputs);
             nk_labelf(ctx, NK_TEXT_LEFT, "Outputs : %u", def->nOutputs);
-            int nHidden = nk_propertyi(ctx, "Hidden Neurons", 0, def->nHidden, 16, 1, 1);
+            int nHidden = nk_propertyi(ctx, "Hidden Neurons", 0, def->nHidden, 18, 1, 1);
             if(nHidden!=def->nHidden)
             {
                 def->nHidden = nHidden;
@@ -1595,7 +1607,7 @@ InitCreatureEditorScreen(AppState *appState,
 
     editor->editPhase = EDIT_PHASE_BODY;
 
-    editor->creatureDefinition->nHidden = 6;
+    editor->creatureDefinition->nHidden = 12;
     editor->creatureDefinition->textureOverhang = 5;
     editor->creatureDefinition->nInternalClocks = 2;
     editor->creatureDefinition->drawSolidColor = 1;
@@ -1607,9 +1619,8 @@ InitCreatureEditorScreen(AppState *appState,
     torso->pos = V2(0,0);
     torso->width = 50;
     torso->height = 50;
-    torso->hasAbsoluteAngleInput = 1;
-    torso->hasDragOutput = 0;
-    torso->hasRotaryMuscleOutput = 0;
+    torso->xOrientationSensor.activated = 1;
+    torso->yOrientationSensor.activated = 1;
     AssignTextureToBodyPartDefinition(editor->creatureDefinition, torso);
     AssignBrainIO(editor->creatureDefinition);
     RecalculateBodyPartDrawOrder(editor->creatureDefinition);

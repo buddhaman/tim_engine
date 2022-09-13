@@ -8,8 +8,38 @@
 #define MAX_CREATURE_FILES 64
 #define CREATURE_FOLDER_NAME "crdefs"
 
+typedef struct CreatureIO CreatureIO;
+struct CreatureIO 
+{
+    B32 activated;
+    I32 index;
+};
+
+#define N_BODYPART_SENSORS 2
+#define N_BODYPART_ACTUATORS 1
+
 typedef struct
 {
+    // Sensors
+    union 
+    {
+        CreatureIO sensors[N_BODYPART_SENSORS];
+        struct
+        {
+            CreatureIO xOrientationSensor;
+            CreatureIO yOrientationSensor;
+        };
+    };
+    // Actuators
+    union 
+    {
+        CreatureIO actuators[N_BODYPART_ACTUATORS];
+        struct 
+        {
+            CreatureIO rotaryMuscleActuator;
+        };
+    };
+
     U32 id;
     U16 degree;
     Vec2 pos;
@@ -26,24 +56,6 @@ typedef struct
     Vec2 pivotPoint;    // Calculated from above variables.
     R32 minAngle;
     R32 maxAngle;
-
-    B32 hasDragOutput;
-    B32 hasRotaryMuscleOutput;
-    B32 hasAbsoluteXPositionInput;      
-    B32 hasAbsoluteYPositionInput;       
-    B32 hasAngleTowardsTargetInput;
-    B32 hasAbsoluteAngleInput;
-
-    U32 absoluteXPositionInputIdx;
-    U32 absoluteYPositionInputIdx;
-    U32 angleTowardsTargetInputIdx;
-    U32 absoluteAngleInputIdx;
-
-    U32 dragOutputIdx;
-    U32 rotaryMuscleOutputIdx;
-    //B32 hasTargetOrientationInput;
-
-    R32 rotaryMuscleStrength;   //TODO: implement. Not used yet.
 
     // Cosmetic
     Vec2 uvPos;

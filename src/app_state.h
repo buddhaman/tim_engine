@@ -39,6 +39,8 @@ struct AppState
     I32 my;
     I32 dx;
     I32 dy;
+    I32 mousePressedAtX;
+    I32 mousePressedAtY;
     I32 mouseScrollY;
     R32 normalizedMX;
     R32 normalizedMY;

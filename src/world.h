@@ -60,7 +60,7 @@ struct Bush
     R32 r[16];
 };
 
-// For now most of the arrays are fixed size. World is destroyed after each generation.
+// For now most of the arrays are fixed size.
 struct FakeWorld
 {
     MemoryArena *persistentMemory;

@@ -7,14 +7,19 @@ InitCamera2D(Camera2D *camera)
 }
 
 void
-UpdateCamera2D(Camera2D *camera, AppState *appState)
+UpdateCameraSize(Camera2D *camera, AppState *appState)
 {
     Vec2 size = V2(camera->scale*appState->screenWidth, camera->scale*appState->screenHeight);
     camera->transform = M3TranslationAndScale(
             V2(-camera->pos.x, -camera->pos.y),
             2.0/size.x, (-1.0+2*camera->isYUp)*2.0/size.y);
     camera->size = size;
+}
 
+void
+UpdateCamera2D(Camera2D *camera, AppState *appState)
+{
+    UpdateCameraSize(camera, appState);
     R32 ny = ((R32)appState->my)/((R32)appState->screenHeight) - 0.5;// In [-0.5, 0.5]
     // Mouse location.
     camera->mousePos = V2(
@@ -27,6 +32,20 @@ FitCamera2DToScreen(Camera2D *camera, AppState *appState)
 {
     camera->scale = 1;
     camera->pos = V2(appState->screenWidth/2.0, appState->screenHeight/2.0);
+}
+
+void
+KeepCameraInBounds(Camera2D *camera, Rect2 bounds)
+{
+    R32 x0 = camera->pos.x-camera->size.x/2.0f;
+    R32 x1 = camera->pos.x+camera->size.x/2.0f;
+    R32 y0 = camera->pos.y-camera->size.y/2.0f;
+    R32 y1 = camera->pos.y+camera->size.y/2.0f;
+
+    if(x0 < bounds.x) { camera->pos.x += (bounds.x-x0); }
+    if(y0 < bounds.y) { camera->pos.y += (bounds.y-y0); }
+    if(x1 > bounds.x+bounds.width) { camera->pos.x -= (x1-bounds.x-bounds.width); }
+    if(y1 > bounds.y+bounds.height) { camera->pos.y -= (y1-bounds.y-bounds.height); }
 }
 
 internal inline Vec2

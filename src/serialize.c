@@ -73,6 +73,13 @@ SerializeString(Serializer *serializer, char *string, size_t len)
     }
 }
 
+void
+SerializeCreatureIO(Serializer *serialzer, CreatureIO *c)
+{
+    SerializeB32(serialzer, &c->activated);
+    SerializeI32(serialzer, &c->index);
+}
+
 void SerializeBodyPartDefinition(Serializer *serializer, BodyPartDefinition *partDef)
 {
     SerializeUI32(serializer, &partDef->id);
@@ -90,18 +97,18 @@ void SerializeBodyPartDefinition(Serializer *serializer, BodyPartDefinition *par
     SerializeR32(serializer, &partDef->minAngle);
     SerializeR32(serializer, &partDef->maxAngle);
 
-    SerializeB32(serializer, &partDef->hasDragOutput);
-    SerializeB32(serializer, &partDef->hasRotaryMuscleOutput);
-    SerializeB32(serializer, &partDef->hasAbsoluteXPositionInput);
-    SerializeB32(serializer, &partDef->hasAbsoluteYPositionInput);
-
-    SerializeUI32(serializer, &partDef->absoluteXPositionInputIdx);
-    SerializeUI32(serializer, &partDef->absoluteYPositionInputIdx);
-
-    SerializeUI32(serializer, &partDef->dragOutputIdx);
-    SerializeUI32(serializer, &partDef->rotaryMuscleOutputIdx);
-
-    SerializeR32(serializer, &partDef->rotaryMuscleStrength);
+    for(int sensorIdx = 0; 
+            sensorIdx < N_BODYPART_SENSORS;
+            sensorIdx++)
+    {
+        SerializeCreatureIO(serializer, &partDef->sensors[sensorIdx]);
+    }
+    for(int actuatorIdx = 0; 
+            actuatorIdx < N_BODYPART_ACTUATORS;
+            actuatorIdx++)
+    {
+        SerializeCreatureIO(serializer, &partDef->actuators[actuatorIdx]);
+    }
 
     SerializeVec2(serializer, &partDef->uvPos);
     SerializeVec2(serializer, &partDef->uvDims);

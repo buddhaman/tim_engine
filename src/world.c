@@ -1,6 +1,6 @@
 
 enum {
-    GROUND_MASK = 1<<0,
+    GROUND_MASK  = 1<<0,
     DYNAMIC_MASK = 1<<1
 };
 
@@ -82,7 +82,7 @@ AddStaticPlatform(FakeWorld *world, Vec2 pos, Vec2 dims)
     
     platform->body = AddStaticRectangle(world, pos, dims.x, dims.y, 0.0f);
 
-    R32 avgWidth     = 60.0f;
+    R32 avgWidth     = 70.0f;
     R32 widthSpread  = 5.0f;
     R32 avgHeight    = 20.0f;
     R32 heightSpread = 3.0f;
@@ -124,7 +124,7 @@ AddStaticPlatform(FakeWorld *world, Vec2 pos, Vec2 dims)
     R32 angleSpread = M_PI/3.0f;
     while(atX < toX)
     {
-        atX+=RandomR32(100, 200);
+        atX+=RandomR32(100, 350);
         if(atX > toX) break;
         Assert(world->nTallGrass < world->maxTallGrass);
         TallGrass *grass = world->tallGrass+world->nTallGrass++;
@@ -143,7 +143,7 @@ AddStaticPlatform(FakeWorld *world, Vec2 pos, Vec2 dims)
     r = 200.0f;
     while(atX < toX)
     {
-        atX+=RandomR32(200, 300);
+        atX+=RandomR32(200, 500);
         if(atX > toX) break;
         Assert(world->nBushes < world->maxBushes);
         Bush *bush = world->bushes+world->nBushes++;
@@ -362,8 +362,8 @@ InitFakeWorld(FakeWorld *world,
 
     // Set trainging scenario.
     world->trainingType = TRAIN_WALK_RIGHT;
-    world->size = V2(16000.0f, 3000.0f);
-    world->origin = V2MulS(world->size, -0.5f);
+    world->size = V2(6000.0f, 2500.0f);
+    world->origin = V2(-800.0f, -1000.0f);
 
     world->maxGrass = 2048;
     world->nGrass = 0;
@@ -391,7 +391,10 @@ InitFakeWorld(FakeWorld *world,
 
     if(world->trainingType==TRAIN_WALK_RIGHT)
     {
-        AddStaticPlatform(world, V2(800.0f,-500.0), V2(3600.0, 800.0));
+        R32 groundY = -120.0f;
+        Vec2 size   = V2(world->size.x, groundY-world->origin.y);
+        Vec2 center = V2(world->origin.x+world->size.x/2.0f, world->origin.y+size.y/2.0f);
+        AddStaticPlatform(world, center, size);
         cpSpaceSetGravity(world->space, cpv(0, -1200.0));
     }
 

@@ -17,7 +17,7 @@ struct RotaryMuscle
 struct BodyPart
 {
     RigidBody *body;
-    RigidBody *parent;
+    BodyPart *parent;
     Vec4 color;
     BodyPartDefinition *def;
     RotaryMuscle *rotaryMuscle; // New bodyparts always have this muscle but cannot always control it.

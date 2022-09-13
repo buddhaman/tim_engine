@@ -8,6 +8,8 @@
     AtlasRegion *squareRegion = assets->defaultAtlas->regions+1;(void)squareRegion;\
     FontRenderer *fontRenderer = assets->fontRenderer;(void)fontRenderer;
 
+// Utiltiy
+
 global_variable U32 default_hash_seed = 5381;
 
 internal inline GuiId

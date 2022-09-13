@@ -272,10 +272,15 @@ main(int argc, char**argv)
         SDL_Event event;
         nk_input_begin(ctx);
         AppStateInputBegin(appState);
+
+        I32 mx, my;
+        SDL_GetMouseState(&mx, &my);
+
         while(SDL_PollEvent(&event))
         {
             nk_sdl_handle_event(&event);
             HandleSDLEvent(appState, &event);
+
             switch(event.type)
             {
 
@@ -293,6 +298,8 @@ main(int argc, char**argv)
 
             case SDL_MOUSEBUTTONDOWN:
             {
+                appState->mousePressedAtX = mx;
+                appState->mousePressedAtY = my;
                 if(event.button.button==SDL_BUTTON_LEFT)
                 {
                     RegisterKeyAction(appState, ACTION_MOUSE_BUTTON_LEFT, 1);
@@ -346,8 +353,6 @@ main(int argc, char**argv)
 
         SDL_GetWindowSize(window, &appState->screenWidth, &appState->screenHeight);
         appState->ratio = (R32)appState->screenHeight / ((R32)appState->screenWidth);
-        I32 mx, my;
-        SDL_GetMouseState(&mx, &my);
         appState->dx = mx-appState->mx;
         appState->dy = my-appState->my;
         appState->mx = mx;

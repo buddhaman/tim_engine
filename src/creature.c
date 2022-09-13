@@ -2,12 +2,14 @@
 BodyPart *
 CreatureAddBodyPart(FakeWorld *world, 
         Creature *creature, 
+        BodyPart *parent,
         Vec2 pos, 
         Vec2 size,
         R32 angle)
 {
     BodyPart *part = world->bodyParts + world->nBodyParts++;
     creature->nBodyParts++;
+    part->parent = parent;
     RigidBody *body = AddDynamicRectangle(world, pos, size.x, size.y, angle, creature->physicsGroup);
 
     part->body = body;
@@ -109,6 +111,7 @@ BuildCreature(FakeWorld *world,
 {
     BodyPart *part = CreatureAddBodyPart(world, 
             creature, 
+            parentPart,
             V2Add(pos, partDef->pos),
             V2(partDef->width, partDef->height),
             partDef->angle);
@@ -144,7 +147,7 @@ R32
 GetInternalClockValue(Creature *creature, U32 clockIdx)
 {
     return creature->phases[clockIdx] + 
-        creature->frequencies[clockIdx]*creature->internalClock*M_PI*2;
+        creature->frequencies[clockIdx]*creature->internalClock*2*M_PI;
 }
 
 Creature *
@@ -235,7 +238,7 @@ GetBodyPartCenter(BodyPart *part)
 void
 SetMuscleActivation(RotaryMuscle *muscle, R32 activation)
 {
-#if 1
+#if 0
     // Muscle as force
     R32 absActivation = fabsf(activation);
     cpSimpleMotorSetRate(muscle->motor, activation < 0.0 ? -5 : 5);
@@ -243,7 +246,11 @@ SetMuscleActivation(RotaryMuscle *muscle, R32 activation)
     cpConstraintSetMaxForce(muscle->motor, absActivation*maxActivation);
 #else
     // Muscle as target (relative) orientation to the joint limits
-
+    activation = (activation+1.0f)/2.0f;
+    R32 target = (muscle->minAngle*(1.0f-activation)+muscle->maxAngle*(activation));
+    cpRotaryLimitJointSetMin(muscle->rotaryLimitConstraint, target);
+    cpRotaryLimitJointSetMax(muscle->rotaryLimitConstraint, target);
+// CP_EXPORT void cpRotaryLimitJointSetMin(cpConstraint *constraint, cpFloat min);
 #endif
 }
 
@@ -265,10 +272,15 @@ FitnessStrictlyMoveForward(Creature *creature)
 }
 
 void
+UpdateCreatureSensor(MinimalGatedUnit *brain, CreatureIO *io, R32 value)
+{
+    brain->x.v[io->index] = value;
+}
+
+void
 UpdateCreature(FakeWorld *world, Creature *creature)
 {
     MinimalGatedUnit *brain = creature->brain;
-    R32 drag = 0.2;
 
     creature->internalClock += (1.0f/60.0f);
 
@@ -284,30 +296,21 @@ UpdateCreature(FakeWorld *world, Creature *creature)
             bodyPartIdx++)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
-        Vec2 pos = GetBodyPartCenter(part);
+        Vec2 pos = GetBodyPartCenter(part); (void)pos;
         R32 angle = GetBodyAngle(part->body);
 
-        if(part->def->hasAbsoluteXPositionInput)
+        CreatureIO *io = &part->def->xOrientationSensor;
+        if(io->activated)
         {
-            R32 activation = pos.x/100;
-            brain->x.v[part->def->absoluteXPositionInputIdx] = activation;
+            R32 activation = cosf(angle);
+            UpdateCreatureSensor(brain, io, activation);
         }
-        if(part->def->hasAbsoluteYPositionInput)
+
+        io = &part->def->yOrientationSensor;
+        if(io->activated)
         {
-            R32 activation = pos.y/100;
-            brain->x.v[part->def->absoluteYPositionInputIdx] = activation;
-        }
-        if(part->def->hasAngleTowardsTargetInput)
-        {
-            Vec2 diff = V2Sub(world->target, pos);
-            R32 tAngle = atan2f(diff.y, diff.x);
-            R32 activation = GetNormalizedAngDiff(angle, tAngle);
-            brain->x.v[part->def->angleTowardsTargetInputIdx] = activation;
-        }
-        if(part->def->hasAbsoluteAngleInput)
-        {
-            R32 activation = angle;
-            brain->x.v[part->def->absoluteAngleInputIdx] = activation;
+            R32 activation = sinf(angle);
+            UpdateCreatureSensor(brain, io, activation);
         }
     }
 
@@ -318,16 +321,11 @@ UpdateCreature(FakeWorld *world, Creature *creature)
             bodyPartIdx++)
     {
         BodyPart *part = creature->bodyParts+bodyPartIdx;
-        if(part->def->hasDragOutput)
-        {
-            R32 activation = brain->h.v[brain->stateSize-brain->outputSize+part->def->dragOutputIdx];
 
-            part->body->drag = 0.03+activation*drag + drag;
-        }
-        if(part->def->hasRotaryMuscleOutput)
+        CreatureIO *io = &part->def->rotaryMuscleActuator;
+        if(io->activated)
         {
-            R32 activation = brain->h.v[brain->stateSize-brain->outputSize+part->def->rotaryMuscleOutputIdx];
-
+            R32 activation = brain->h.v[brain->stateSize-brain->outputSize+io->index];
             RotaryMuscle *muscle = part->rotaryMuscle;
             Assert(muscle);
             SetMuscleActivation(muscle, activation);

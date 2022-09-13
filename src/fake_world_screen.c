@@ -22,6 +22,26 @@ GetBodyPartShade(BodyPart *part, R32 dragColorIntensity)
     return 1.0-part->body->drag*dragColorIntensity;
 }
 
+internal inline Rect2
+DoSimpleTextLayout(RenderGroup *renderGroup, 
+        FontRenderer *fontRenderer, 
+        Vec2 pos, 
+        Vec4 color,
+        const char *fmt,
+        ...)
+{
+    char buf[512];
+    va_list args;
+
+    va_start(args, fmt);
+    vsnprintf(buf, 512, fmt, args);
+    va_end(args);
+
+    Rect2 size = GetStringSize(fontRenderer, buf, pos);
+    Push2DTextColored(renderGroup, fontRenderer, V2(pos.x, pos.y+size.height), buf, color);
+    return size;
+}
+
 internal inline void
 DrawSolidRigidBody(RenderGroup *renderGroup, 
         RigidBody *body,
@@ -176,7 +196,7 @@ DrawFakeWorld(FakeWorldScreen *screen,
         {
             Creature *creature = world->creatures+creatureIdx;
             Vec3 creatureColor = creature->solidColor;
-            R32 alpha = 0.2;
+            R32 alpha = 0.4f;
             for(U32 bodyPartIdx = 0;
                     bodyPartIdx < creature->nBodyParts;
                     bodyPartIdx++)
@@ -329,10 +349,6 @@ UpdateFakeWorldScreen(AppState *appState,
     FakeWorld *world = screen->world;
     TextureAtlas *defaultAtlas = assets->defaultAtlas;
 
-    char toolTip[512];
-    memset(toolTip, 0, sizeof(toolTip));
-    (void)toolTip;
-
     AtlasRegion *circleRegion = assets->defaultAtlas->regions;
     AtlasRegion *squareRegion = assets->defaultAtlas->regions+1;
 
@@ -353,6 +369,13 @@ UpdateFakeWorldScreen(AppState *appState,
         UpdateCameraDragInput(appState, camera);
         UpdateCameraScrollInput(appState, camera);
         UpdateCameraKeyMovementInput(appState, camera);
+
+        Rect2 bounds;
+        bounds.pos = world->origin;
+        bounds.dims = world->size;
+        if(camera->scale > 2) camera->scale = 2;
+        UpdateCameraSize(camera, appState);
+        KeepCameraInBounds(camera, bounds);
     }
 
     if(!IsKeyActionDown(appState, ACTION_MOUSE_BUTTON_LEFT))
@@ -390,6 +413,7 @@ UpdateFakeWorldScreen(AppState *appState,
             }
         }
     }
+
     // Update camera
     UpdateCamera2D(camera, appState);
 
@@ -500,39 +524,71 @@ UpdateFakeWorldScreen(AppState *appState,
         atY+=size*4+pad*3;
 
         // Draw clocks
+        R32 clockRadius = 20.0f;
         for(U32 clockIdx = 0;
                 clockIdx < creature->nInternalClocks;
                 clockIdx++)
         {
             R32 radians = GetInternalClockValue(creature, clockIdx);
-            R32 radius = 20;
-            DrawClock(screenRenderGroup, V2(atX+radius+radius*2*clockIdx+pad*2*clockIdx, atY+radius), 
-                    radius, radians, squareRegion, circleRegion);
+            DrawClock(screenRenderGroup, 
+                    V2(atX+clockRadius+clockRadius*2*clockIdx+pad*2*clockIdx, atY+clockRadius), 
+                    clockRadius, radians, squareRegion, circleRegion);
         }
+        atY += (clockRadius*2+pad*2);
 
         // Draw inputs
-
         BodyPart *selectedBodyPart = screen->selectedBodyPart;
         R32 lineWidth = 2.0;
-        if(selectedBodyPart && 
-                world->trainingType==TRAIN_DISTANCE_TARGET)
+
+        if(selectedBodyPart)
         {
+            Vec4 textColor = V4(0,0,0,1);
             R32 angle = GetBodyAngle(selectedBodyPart->body);
-            Vec2 dir = V2Polar(-angle, 100.0);
+            Vec2 dir = V2Polar(-angle, 200.0);
             Vec2 pos = CameraToScreenPos(camera, appState, GetBodyPos(selectedBodyPart->body));
-            Vec2 targetPos = CameraToScreenPos(camera, appState, world->target);
             Vec2 to = V2Add(pos, dir);
             Push2DLineColored(screenRenderGroup, 
                     pos, 
                     to, 
                     lineWidth,
-                    squareRegion, V4(1, 0, 0, 1));
-            Push2DLineColored(screenRenderGroup, 
-                    pos, 
-                    targetPos,
-                    lineWidth,
-                    squareRegion,
-                    V4(0, 1, 0, 1));
+                    squareRegion, 
+                    V4(1, 0, 0, 1));
+
+            R32 startDebugX = screenWidth - 300.0f;
+            atX = startDebugX;
+
+            Rect2 size = DoSimpleTextLayout(screenRenderGroup, 
+                    fontRenderer, 
+                    V2(atX, atY), 
+                    textColor,
+                    "Angle (absolute): %.2f", angle);
+            atY+=(size.height+pad);
+            atX=startDebugX;
+
+            if(selectedBodyPart->parent)
+            {
+                BodyPart *parent = selectedBodyPart->parent;
+                R32 parentAngle = GetBodyAngle(parent->body);
+                R32 relativeAngle = angle - parentAngle;
+                pos = CameraToScreenPos(camera, appState, GetBodyPos(parent->body));
+                dir = V2Polar(-parentAngle, 200.0f);
+                to = V2Add(pos, dir);
+
+                Push2DLineColored(screenRenderGroup, 
+                        pos, 
+                        to, 
+                        lineWidth,
+                        squareRegion, 
+                        V4(1, 0, 1, 1));
+
+                size = DoSimpleTextLayout(screenRenderGroup, 
+                        fontRenderer, 
+                        V2(atX, atY), 
+                        textColor,
+                        "Angle (relative): %.2f", relativeAngle);
+                atY+=(size.height+pad);
+                atX=startDebugX;
+            }
         }
     }
 
@@ -546,13 +602,12 @@ UpdateFakeWorldScreen(AppState *appState,
             screen->avgFitness);
     Push2DText(screenRenderGroup, fontRenderer, V2(20, screenHeight-bottomBarHeight/2+8), info);
 
-    // Draw tooltip
-    if(toolTip[0])
-    {
-        Push2DText(screenRenderGroup, fontRenderer, screenCamera->mousePos, toolTip);
-    }
-
-    if(IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT) && !screen->isGuiInputCaptured)
+    R32 dx = appState->mx - appState->mousePressedAtX;
+    R32 dy = appState->my - appState->mousePressedAtY;
+    R32 mouseDiff2 = dx*dx + dy*dy;
+    if(IsKeyActionJustReleased(appState, ACTION_MOUSE_BUTTON_LEFT) && 
+            (!screen->isGuiInputCaptured) &&
+            (mouseDiff2 < 8.0f) )
     {
         if(screen->hitBodyPart)
         {
@@ -562,26 +617,6 @@ UpdateFakeWorldScreen(AppState *appState,
         else
         {
             SetFakeWorldSelection(screen, NULL, NULL);
-        }
-    }
-    if(screen->selectedCreature)
-    {
-        Creature *creature = screen->selectedCreature;
-        BodyPart *part = screen->selectedBodyPart;
-        Vec2 bodyPartPos = CameraToScreenPos(camera, appState, GetBodyPartPos(screen->selectedBodyPart));
-        if(part->def->hasAngleTowardsTargetInput)
-        {
-            R32 activation = creature->brain->x.v[part->def->angleTowardsTargetInputIdx];
-            char bodyPartInfo[128];
-            sprintf(bodyPartInfo, "angle activation = %.2f", activation); 
-            Push2DText(screenRenderGroup, fontRenderer, bodyPartPos, bodyPartInfo);
-        } 
-        else if(part->def->hasAbsoluteAngleInput)
-        {
-            R32 activation = creature->brain->x.v[part->def->absoluteAngleInputIdx];
-            char bodyPartInfo[128];
-            sprintf(bodyPartInfo, "angle activation = %.2f", activation); 
-            Push2DText(screenRenderGroup, fontRenderer, bodyPartPos, bodyPartInfo);
         }
     }
 
@@ -667,7 +702,7 @@ UpdateFakeWorldScreen(AppState *appState,
         R32 parameterScale = 1000.0;
 
         R32 deviationScaled = parameterScale * world->strategies->dev;
-        NKEditFloatPropertyWithTooltip(ctx, "Dev", "How much is each creature mutated", 
+        NKEditFloatPropertyWithTooltip(ctx, "Mutation Rate", "How much is each creature mutated", 
                 1.0, &deviationScaled, parameterScale, 1.0, 1.0);
         world->strategies->dev = deviationScaled/parameterScale;
 
