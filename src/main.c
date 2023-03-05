@@ -158,6 +158,7 @@ main(int argc, char**argv)
     {
         DebugOut("SDL does not work\n");
     }
+    DebugOut("Yeah i can start the program.");
 
     srand(time(0));
     DoTests();

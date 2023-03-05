@@ -9,6 +9,16 @@
 #define DebugOut(args...) printf(args); printf("\n")
 #endif
 
+void WinOutput(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char buf[2048];
+    vsnprintf(buf, 2048, fmt, args);
+    va_end(args);
+}
+
+#define DebugOut(args...) WinOutput(args)
+
 #define Assert(expr) if(!(expr)) {DebugOut("%s %d: assert failed : %s",__FILE__, __LINE__, ""#expr""); \
     *((int *)0)=0;}
 
